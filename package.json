@@ -8,7 +8,7 @@
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
     "typecheck": "tsc --noEmit",
-    "test": "jest --config jest.config.mjs",
+    "test": "node --test 'test/*.test.mjs'",
     "db:migrate:local": "wrangler d1 migrations apply school_class_db --local",
     "db:migrate": "wrangler d1 migrations apply school_class_db --remote",
     "db:seed:local": "wrangler d1 execute school_class_db --local --file=./seed.sql",
@@ -19,9 +19,7 @@
     "hono": "^4.13.19"
   },
   "devDependencies": {
-    "@cloudflare/vitest-pool-workers": "^0.23.0",
     "@cloudflare/workers-types": "^5.20261118.1",
-    "jest": "^30.5.2",
     "typescript": "^7.0.2",
     "wrangler": "^4.164.0"
   }
