@@ -1,0 +1,210 @@
+# 📚 کلاس‌هاب — School Class Hub
+
+A cute, pastel-themed single-page class hub for a school class: the weekly timetable is the centerpiece, with homework details, time-sensitive deadlines, and announcements around it. The student-facing interface is entirely in **Persian (فارسی)** with full RTL layout and Jalali dates.
+
+Deployed on **Cloudflare Workers** (single Worker serving both the static frontend and the JSON API) with **Cloudflare D1** for persistence.
+
+**Production:** https://school.gigaspaceturnip.workers.dev
+
+---
+
+## ✨ Features
+
+### Student view (public, read-only)
+- **Weekly timetable grid** — 7 day columns (شنبه…جمعه), chronological period cards, subject-specific pastel identities, today's column auto-highlighted, friendly empty states.
+- **Interactive lesson details** — clicking a lesson opens a side panel (desktop) / bottom sheet (mobile) with the full homework description, textbook pages, instructions, rep notes, deadline countdown, and downloadable attachments. Escape-to-close, focus trapping, smooth animations.
+- **Time-sensitive tasks** — research, projects, presentations, exams, quizzes, submissions; sorted by deadline; live countdown chips («امروز!», «فردا», «۳ روز مانده», «مهلت گذشته»); expired items archived but accessible; priority indicators; attachments.
+- **Announcements** — pinned items on top, publication dates (Jalali), attachments.
+- **Notification bell** — urgent deadlines and pinned announcements.
+- Fully responsive (desktop / tablet / mobile with horizontal day scrolling), `prefers-reduced-motion` respected.
+
+### Admin panel (`/admin`, authorized users only)
+- First-run **bootstrap** flow to create the class-representative account, then session login (PBKDF2-hashed passwords, HTTP-only cookies, server-side sessions in D1).
+- Full CRUD for lessons (timetable), homework (with attachments, deadlines, instructions, rep notes), standalone tasks, announcements (pin/unpin), subjects (with pastel color), and site settings (class name, welcome message).
+- File uploads (images / PDF / Office, ≤ 1.5 MB each, MIME whitelist) with confirm dialogs for destructive actions.
+
+### Security
+- Public API is strictly read-only; every mutation requires a valid admin session (checked server-side).
+- Server-side input validation on every endpoint (types, ranges, enums, lengths).
+- Rate limiting on login/bootstrap/upload endpoints.
+- Uploads: MIME whitelist, filename sanitization, size caps, `Content-Disposition: attachment` + `X-Content-Type-Options: nosniff` on download (no inline HTML/SVG rendering).
+- No secrets in client code; passwords stored as PBKDF2-SHA256 (100k iterations, per-user salt); session tokens stored only as SHA-256 hashes.
+
+---
+
+## 🧱 Technology stack
+
+| Layer | Technology |
+| --- | --- |
+| Runtime | Cloudflare Workers |
+| API framework | [Hono](https://hono.dev) (TypeScript) |
+| Database | Cloudflare D1 (SQLite) |
+| Attachments | D1 BLOB storage (see note below) |
+| Frontend | Vanilla JS ES modules, handcrafted CSS (no build step) |
+| Font | [Vazirmatn](https://github.com/rastikerdar/vazirmatn) (OFL, self-hosted) |
+| Tooling | Wrangler 4, TypeScript, jest (utils), GitHub Actions |
+
+> **Attachment storage note:** the Cloudflare account in use does not have R2 enabled (the API returns *"Please enable R2 through the Cloudflare Dashboard"*), so attachments are stored as validated BLOB rows in D1 with strict limits (1.5 MB per file, 6 MB per item, safe types only). If R2 is enabled later, `src/attachments.ts` + the two attachment routes are the only places to swap.
+
+---
+
+## 📂 Project structure
+
+```
+├── wrangler.jsonc          # Worker config: assets, D1 binding, vars
+├── migrations/             # D1 SQL migrations
+│   ├── 0001_init.sql       # schema
+│   └── 0002_homework_unique.sql
+├── seed.sql                # initial demo/sample content (idempotent inserts)
+├── src/                    # Worker backend (TypeScript, Hono)
+│   ├── index.ts            # entrypoint, error handling, CORS
+│   ├── auth.ts             # PBKDF2 password hashing, session tokens
+│   ├── validation.ts       # input validation helpers
+│   ├── ratelimit.ts        # per-instance rate limiter
+│   ├── attachments.ts      # upload validation & safe download headers
+│   ├── types.ts            # shared types
+│   └── routes/
+│       ├── public.ts       # read-only student API
+│       └── admin.ts        # authenticated admin API
+├── public/                 # static frontend (served by the Worker)
+│   ├── index.html          # student page (single page)
+│   ├── admin/index.html    # admin panel
+│   ├── css/style.css       # pastel design system
+│   ├── js/utils.js         # Jalali calendar, Persian digits, countdowns
+│   ├── js/app.js           # student app
+│   ├── js/admin.js         # admin app
+│   └── fonts/              # Vazirmatn woff2 + OFL license
+└── .github/workflows/
+    └── deploy.yml          # CI: typecheck → test → deploy to Workers
+```
+
+---
+
+## 🔌 API overview
+
+Public (read-only):
+
+| Method | Path | Description |
+| --- | --- | --- |
+| GET | `/api/health` | liveness probe |
+| GET | `/api/schedule` | weekly timetable (7 day arrays) |
+| GET | `/api/lessons/:id` | lesson detail incl. full homework + attachments |
+| GET | `/api/tasks` | active + expired tasks |
+| GET | `/api/tasks/:id` | task detail |
+| GET | `/api/announcements` | announcement list (pinned first) |
+| GET | `/api/announcements/:id` | announcement detail |
+| GET | `/api/subjects` | subject catalog |
+| GET | `/api/settings` | public site settings |
+| GET | `/api/attachments/:id` | download attachment (as file) |
+
+Admin (session cookie or `Authorization: Bearer <token>`):
+
+`POST /api/admin/auth/status` · `bootstrap` · `login` · `logout` · `GET me`,
+`POST/PUT/DELETE /api/admin/lessons`, `PUT/DELETE /api/admin/lessons/:id/homework`,
+`POST/PUT/DELETE /api/admin/tasks`, `POST /api/admin/tasks/:id/archive`,
+`POST/PUT/DELETE /api/admin/announcements`,
+`POST /api/admin/attachments` (multipart), `DELETE /api/admin/attachments/:id`,
+`POST /api/admin/subjects`, `PUT /api/admin/settings`.
+
+---
+
+## 🛠️ Local development
+
+Requirements: Node.js ≥ 20.
+
+```bash
+npm install
+
+# 1. local D1: apply migrations + sample content
+npm run db:migrate:local
+npm run db:seed:local
+
+# 2. run the Worker + assets locally
+npm run dev          # → http://127.0.0.1:8787
+```
+
+Other scripts:
+
+```bash
+npm run typecheck    # tsc --noEmit
+npm test             # date/countdown utility tests
+npm run db:migrate   # remote migrations (needs CLOUDFLARE_API_TOKEN)
+npm run db:seed      # remote seed (needs CLOUDFLARE_API_TOKEN)
+npm run deploy       # wrangler deploy (needs CLOUDFLARE_API_TOKEN)
+```
+
+First run on a fresh database: open `/admin` — the login card switches to a *create the admin account* form (bootstrap). This is only available while no admin exists.
+
+---
+
+## ☁️ Cloudflare resources
+
+| Resource | Name | Notes |
+| --- | --- | --- |
+| Worker | `school` | serves API + static assets, `workers.dev` route enabled |
+| D1 database | `school_class_db` | binding `DB`, 2 migrations |
+| R2 | — | not enabled on this account; attachments stored in D1 (see note) |
+
+### Environment variables / secrets
+
+Plain vars are set in `wrangler.jsonc`:
+
+| Var | Default | Description |
+| --- | --- | --- |
+| `APP_NAME` | `کلاس‌هاب` | display name |
+| `SESSION_TTL_HOURS` | `12` | admin session lifetime |
+
+No secrets are required for the app itself: admin credentials live in D1 (created via the bootstrap flow). **Never** put Cloudflare API tokens in `wrangler.jsonc` or source files — they belong in CI secrets (`CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`).
+
+### Database setup
+
+```bash
+npx wrangler d1 create school_class_db
+# put the returned database_id into wrangler.jsonc
+
+npx wrangler d1 migrations apply school_class_db --remote
+npx wrangler d1 execute school_class_db --remote --file=./seed.sql -y   # optional sample content
+```
+
+### Deployment
+
+```bash
+export CLOUDFLARE_API_TOKEN=…   # token with Workers Scripts + D1 edit permissions
+export CLOUDFLARE_ACCOUNT_ID=…
+npx wrangler deploy
+```
+
+Or push to `main` and let GitHub Actions deploy (see below).
+
+---
+
+## 🤖 GitHub Actions
+
+`.github/workflows/deploy.yml` runs on every push to `main`:
+
+1. checkout → Node 22 + npm cache
+2. `npm ci`
+3. `npm run typecheck`
+4. `npm test`
+5. `npx wrangler d1 migrations apply school_class_db --remote` (keeps schema current)
+6. `npx wrangler deploy`
+
+Required repository secrets (Settings → Secrets and variables → Actions):
+
+| Secret | Description |
+| --- | --- |
+| `CLOUDFLARE_API_TOKEN` | token with *Workers Scripts:Edit* and *D1:Edit* |
+| `CLOUDFLARE_ACCOUNT_ID` | the Cloudflare account ID |
+
+---
+
+## 🧪 Testing
+
+- `scripts/test_api.sh` — 50+ endpoint checks (public data, auth, CRUD, validation, uploads, security) against any running instance; point `BASE` at the deployed URL to smoke-test production.
+- `scripts/test_utils.mjs` — Jalali conversion anchors, countdown states, Persian digit formatting.
+- Manual UI checks: desktop 1440/1280, mobile 375 (timetable scroll, bottom sheet), keyboard navigation, reduced-motion.
+
+## 📄 License
+
+- Application code: MIT.
+- Vazirmatn font: SIL OFL 1.1 (see `public/fonts/Vazirmatn-OFL.txt`).
