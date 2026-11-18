@@ -50,8 +50,9 @@ test('countdown states', () => {
   assert.equal(countdown(new Date(now - 1000).toISOString()).state, 'passed');
   const c3d = countdown(new Date(now + 3 * 86400_000).toISOString());
   assert.match(c3d.text, /۳ روز مانده|۲ روز مانده/);
+  // +5h may be today, tomorrow, or 'hours left' depending on time of day (Tehran midnight crossing)
   const c5h = countdown(new Date(now + 5 * 3600_000).toISOString());
-  assert.match(c5h.text, /فردا|ساعت/);
+  assert.match(c5h.text, /فردا|ساعت|امروز/);
 });
 
 test('faDigits converts Latin to Persian digits', () => {

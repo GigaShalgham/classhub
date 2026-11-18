@@ -2,13 +2,14 @@
 <html lang="fa" dir="rtl">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#FCFAFD">
   <meta name="description" content="کلاس‌هاب — برنامه هفتگی، تکالیف، مهلت‌ها و اطلاعیه‌های کلاس">
   <title>کلاس‌هاب | برنامه هفتگی کلاس</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
   <link rel="preload" href="/fonts/Vazirmatn-Regular.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/fonts/Vazirmatn-SemiBold.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/Lalezar-Regular.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -18,12 +19,15 @@
         <div class="brand__logo" aria-hidden="true">📚</div>
         <div>
           <div class="brand__name" id="brandName">کلاس‌هاب</div>
-          <div class="brand__date" id="brandDate">…</div>
+          <div class="brand__date">
+            <span id="brandDate">…</span>
+            <span class="brand__clock" id="brandClock">…</span>
+          </div>
         </div>
       </div>
       <div class="header-spacer"></div>
       <div class="welcome-bubble" id="welcomeBubble">امروز هم روز خوبی داشته باشیم!</div>
-      <div class="header-actions" style="position: relative;">
+      <div class="header-actions">
         <button class="icon-btn" id="notifBtn" aria-label="اعلان‌ها" aria-haspopup="true" aria-expanded="false">
           🔔
           <span class="icon-btn__badge hidden" id="notifBadge">۰</span>
@@ -35,9 +39,10 @@
   </header>
 
   <main class="container">
-    <div class="page-hero">
-      <h1 class="page-hero__title">✨ برنامه هفتگی کلاس</h1>
+    <div class="page-hero" id="pageHero">
+      <h1 class="page-hero__title">برنامه هفتگی کلاس</h1>
       <p class="page-hero__sub" id="heroSub">برای دیدن جزئیات تکلیف، روی هر درس بزنید</p>
+      <div class="hero-stats" id="heroStats"></div>
     </div>
 
     <section class="section" aria-label="برنامه هفتگی">
@@ -46,8 +51,13 @@
         <button class="btn btn--ghost btn--sm" id="todayBtn" type="button">برو به امروز</button>
         <span class="section__note">به‌روزرسانی: <span id="updatedAt">…</span></span>
       </div>
-      <div class="tt-scroll" id="ttScroll" tabindex="0" role="region" aria-label="جدول هفتگی — برای مرور روزها به چپ و راست بکشید">
-        <div class="tt-grid" id="ttGrid"></div>
+      <div class="tt-wrap" id="ttWrap">
+        <button class="tt-arrow tt-arrow--prev" id="ttPrev" type="button" aria-label="روزهای قبلی">‹</button>
+        <div class="tt-scroll" id="ttScroll" tabindex="0" role="region" aria-label="جدول هفتگی — برای مرور روزها به چپ و راست بکشید">
+          <div class="tt-grid" id="ttGrid"></div>
+        </div>
+        <button class="tt-arrow tt-arrow--next" id="ttNext" type="button" aria-label="روزهای بعدی">›</button>
+        <div class="tt-dots" id="ttDots" role="tablist" aria-label="پیمایش روزها"></div>
       </div>
     </section>
 
@@ -71,10 +81,21 @@
     </section>
   </main>
 
-  <!-- lesson detail: side panel on desktop, bottom sheet on mobile -->
+  <footer class="site-footer">
+    <div class="site-footer__hearts" aria-hidden="true">🌸 📚 🌸</div>
+    <div id="footerName">کلاس‌هاب</div>
+    <p class="site-footer__note" id="footerNote">با علاقه، توسط سرِ کلاس نگهداری می‌شود.</p>
+  </footer>
+
+  <!-- دکمه شناور «برو به امروز» -->
+  <button class="fab-today" id="fabToday" type="button">
+    <span aria-hidden="true">📌</span> برو به امروز
+  </button>
+
+  <!-- پنل جزئیات: کنار صفحه در دسکتاپ، بات‌شیت در موبایل -->
   <div class="overlay" id="detailOverlay" role="dialog" aria-modal="true" aria-labelledby="detailTitle" hidden>
-    <div class="sheet">
-      <div class="sheet__grip" aria-hidden="true"></div>
+    <div class="sheet" id="detailSheet">
+      <div class="sheet__grip" id="detailGrip" aria-hidden="true"></div>
       <div class="sheet__head">
         <h2 class="sheet__title" id="detailTitle">جزئیات درس</h2>
         <button class="sheet__close" id="detailClose" aria-label="بستن">✕</button>

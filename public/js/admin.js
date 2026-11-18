@@ -1,6 +1,21 @@
 // کلاس‌هاب — admin panel logic
 import { faDigits, formatJalali, formatJalaliDateTime, countdown, WEEK_DAY_NAMES, KIND_LABELS, KIND_ICONS } from './utils.js';
 
+// ایموجی اختصاصی هر درس (همان نگاشت صفحه دانش‌آموز)
+const SUBJECT_EMOJI = [
+  ['ریاضی', '📐'], ['فیزیک', '🧲'], ['شیمی', '⚗️'], ['زیست', '🌿'], ['ادبیات', '📖'],
+  ['فارسی', '📖'], ['انگلیسی', '🗣️'], ['عربی', '🕌'], ['تاریخ', '🏺'], ['جغرافیا', '🗺️'],
+  ['دینی', '🕊️'], ['ورزش', '⚽'], ['هنر', '🎨'], ['کارگاه', '🔧'], ['نجوم', '🔭'],
+  ['اقتصاد', '💰'], ['فلسفه', '🤔'], ['روان', '🧠'], ['کامپیوتر', '💻'], ['برنامه', '💻'],
+];
+function subjectEmoji(name) {
+  if (!name) return '📚';
+  for (const [key, emoji] of SUBJECT_EMOJI) {
+    if (name.includes(key)) return emoji;
+  }
+  return '📚';
+}
+
 const $ = (sel) => document.querySelector(sel);
 
 const state = {
@@ -233,7 +248,7 @@ function renderLessonsTab() {
       count += 1;
       const row = el('div', { class: 'admin-row' },
         el('div', { class: 'admin-row__main' },
-          el('div', { class: 'admin-row__title', text: `${lesson.subject_name} — ${WEEK_DAY_NAMES[lesson.day]}، زنگ ${faDigits(lesson.period)}` }),
+          el('div', { class: 'admin-row__title', text: `${subjectEmoji(lesson.subject_name)} ${lesson.subject_name} — ${WEEK_DAY_NAMES[lesson.day]}، زنگ ${faDigits(lesson.period)}` }),
           el('div', { class: 'admin-row__sub', text: `${faDigits(lesson.start_time)}–${faDigits(lesson.end_time)} · ${lesson.homework ? `تکلیف: ${lesson.homework.title}` : 'بدون تکلیف'}` })),
         el('button', { class: 'btn btn--ghost btn--sm', type: 'button', onclick: () => editLesson(lesson), text: '✏️ ویرایش' }),
         el('button', { class: 'btn btn--ghost btn--sm', type: 'button', onclick: () => openHwEditor(lesson), text: '📝 تکلیف' }),
@@ -251,7 +266,7 @@ function renderLessonsTab() {
 async function openHwEditor(lesson) {
   state.hwLessonId = lesson.id;
   state.pendingUploads = [];
-  $('#hwTitle').textContent = `تکلیف: ${lesson.subject_name} (${WEEK_DAY_NAMES[lesson.day]}، زنگ ${faDigits(lesson.period)})`;
+  $('#hwTitle').textContent = `تکلیف: ${subjectEmoji(lesson.subject_name)} ${lesson.subject_name} (${WEEK_DAY_NAMES[lesson.day]}، زنگ ${faDigits(lesson.period)})`;
   $('#hwTitleInput').value = lesson.homework?.title || '';
   $('#hwDesc').value = '';
   $('#hwPages').value = '';
