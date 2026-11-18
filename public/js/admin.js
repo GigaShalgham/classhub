@@ -1,5 +1,6 @@
 // کلاس‌هاب — admin panel logic
 import { faDigits, formatJalali, formatJalaliDateTime, countdown, WEEK_DAY_NAMES, KIND_LABELS, KIND_ICONS } from './utils.js';
+import { periodsPerDay, periodTimes, CLASS_DAYS } from './schedule.js';
 
 // ایموجی اختصاصی هر درس (همان نگاشت صفحه دانش‌آموز)
 const SUBJECT_EMOJI = [
@@ -155,25 +156,14 @@ async function refreshAll() {
   fillSettingsForm();
 }
 
-// ---------- lessons tab ----------
+// ---------- lessons tab: weekly grid editor ----------
+// هر خانه گرید = (day, period). درس انتخابی با lessonهای سرور همگام می‌شود.
+const grid = {
+  cells: {},     // "d-p" -> { lessonId, subjectId, hwSet }
+  dirty: new Set(),
+};
+
 function fillSelects() {
-  const daySel = $('#lessonDay');
-  if (!daySel.options.length) {
-    for (let d = 0; d < 7; d++) {
-      daySel.append(el('option', { value: d, text: WEEK_DAY_NAMES[d] }));
-    }
-  }
-  const perSel = $('#lessonPeriod');
-  if (!perSel.options.length) {
-    for (let p = 1; p <= 12; p++) {
-      perSel.append(el('option', { value: p, text: `زنگ ${faDigits(p)}` }));
-    }
-  }
-  const subjSel = $('#lessonSubject');
-  subjSel.textContent = '';
-  for (const s of state.subjects) {
-    subjSel.append(el('option', { value: s.id, text: s.name }));
-  }
   const taskSubjSel = $('#taskSubject');
   taskSubjSel.textContent = '';
   taskSubjSel.append(el('option', { value: '', text: '— بدون درس —' }));
@@ -182,47 +172,157 @@ function fillSelects() {
   }
 }
 
-async function submitLesson(e) {
-  e.preventDefault();
-  const id = $('#lessonId').value;
-  const payload = {
-    day: Number($('#lessonDay').value),
-    period: Number($('#lessonPeriod').value),
-    subjectId: Number($('#lessonSubject').value),
-    startTime: $('#lessonStart').value.trim(),
-    endTime: $('#lessonEnd').value.trim(),
-  };
-  try {
-    if (id) {
-      await api(`/api/admin/lessons/${id}`, { method: 'PUT', body: payload });
-      toast('درس به‌روزرسانی شد ✅', 'success');
-    } else {
-      await api('/api/admin/lessons', { method: 'POST', body: payload });
-      toast('درس جدید اضافه شد ✅', 'success');
+function gridKey(day, period) { return `${day}-${period}`; }
+
+function renderGrid() {
+  const head = $('#gridHead');
+  const body = $('#gridBody');
+  head.textContent = '';
+  body.textContent = '';
+
+  // سرستون: زنگ + بازه زمانی
+  const hr = el('tr', {},
+    el('th', { text: 'زنگ ↓', style: 'text-align:right;' }),
+  );
+  for (let p = 1; p <= 4; p++) {
+    const [s, e] = periodTimes(0, p);
+    hr.append(el('th', {}, `${faDigits(p)}`,
+      el('span', { class: 'grid-day-sub', text: `${s}–${e}` })));
+  }
+  head.append(hr);
+
+  // سلول‌ها از داده سرور
+  grid.cells = {};
+  for (let d = 0; d < 7; d++) {
+    for (const l of state.scheduleDays[d] || []) {
+      grid.cells[gridKey(d, l.period)] = {
+        lessonId: l.id, subjectId: l.subject_id, hwSet: !!l.homework,
+      };
     }
-    resetLessonForm();
-    refreshAll();
-  } catch (err) {
-    toast(err.message, 'error');
+  }
+
+  for (const d of CLASS_DAYS) {
+    const nPeriods = periodsPerDay(d);
+    const tr = el('tr', { class: 'grid-row' });
+    tr.append(el('td', { class: 'grid-row__day' },
+      WEEK_DAY_NAMES[d],
+      el('small', { text: d === 2 ? 'تا ۱۲:۱۵' : 'تا ۱۳:۴۵' })));
+    for (let p = 1; p <= 4; p++) {
+      if (p > nPeriods) {
+        tr.append(el('td', { class: 'grid-cell grid-cell--disabled' }));
+        continue;
+      }
+      tr.append(gridCellEl(d, p));
+    }
+    body.append(tr);
+  }
+  grid.dirty.clear();
+  updateGridStatus();
+}
+
+function gridCellEl(day, period) {
+  const [t0, t1] = periodTimes(day, period);
+  const cellData = grid.cells[gridKey(day, period)];
+  const td = el('td', { class: 'grid-cell' });
+
+  const sel = el('select', { class: 'grid-cell__select', 'aria-label': `درس ${WEEK_DAY_NAMES[day]} زنگ ${faDigits(period)}` });
+  sel.append(el('option', { value: '', text: '— خالی —' }));
+  for (const s of state.subjects) {
+    sel.append(el('option', { value: s.id, text: s.name }));
+  }
+  sel.value = cellData?.subjectId ?? '';
+  if (!cellData?.subjectId) sel.classList.add('grid-cell__select--empty');
+  sel.addEventListener('change', () => {
+    sel.classList.toggle('grid-cell__select--empty', !sel.value);
+    td.classList.add('grid-cell--dirty');
+    grid.dirty.add(gridKey(day, period));
+    updateGridStatus();
+  });
+
+  const hwBtn = el('button', {
+    class: `grid-cell__hw${cellData?.hwSet ? ' grid-cell__hw--set' : ''}`,
+    type: 'button',
+    title: cellData?.hwSet ? 'ویرایش تکلیف' : 'ثبت تکلیف',
+    'aria-label': `تکلیف ${WEEK_DAY_NAMES[day]} زنگ ${faDigits(period)}`,
+  }, '📝');
+  hwBtn.addEventListener('click', () => {
+    const cur = grid.cells[gridKey(day, period)];
+    if (!cur?.subjectId) {
+      toast('اول درس این خانه را انتخاب و برنامه را ذخیره کنید.', 'error');
+      return;
+    }
+    if (!cur.lessonId) {
+      toast('برای فعال‌شدن دکمه تکلیف، اول برنامه را ذخیره کنید.', 'error');
+      return;
+    }
+    // درس از state سرور
+    const lesson = (state.scheduleDays[day] || []).find((l) => l.period === period);
+    if (lesson) openHwEditor(lesson);
+  });
+
+  const meta = el('div', { class: 'grid-cell__meta' },
+    el('span', { class: 'grid-cell__time', text: `${t0}–${t1}` }),
+    hwBtn);
+
+  td.append(sel, meta);
+  return td;
+}
+
+function updateGridStatus() {
+  const st = $('#gridStatus');
+  if (grid.dirty.size) {
+    st.className = 'field__hint grid-status--dirty';
+    st.textContent = `${faDigits(grid.dirty.size)} خانه تغییر کرده — ذخیره نکنید از دست می‌رود!`;
+  } else {
+    st.className = 'field__hint grid-status--saved';
+    st.textContent = 'همه تغییرات ذخیره شده ✓';
   }
 }
 
-function resetLessonForm() {
-  $('#lessonId').value = '';
-  $('#lessonSubmit').textContent = 'ذخیره درس';
-  $('#lessonStart').value = '';
-  $('#lessonEnd').value = '';
-}
-
-function editLesson(lesson) {
-  $('#lessonId').value = lesson.id;
-  $('#lessonDay').value = lesson.day;
-  $('#lessonPeriod').value = lesson.period;
-  $('#lessonSubject').value = lesson.subject_id;
-  $('#lessonStart').value = lesson.start_time;
-  $('#lessonEnd').value = lesson.end_time;
-  $('#lessonSubmit').textContent = 'به‌روزرسانی درس';
-  $('#lessonForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+async function saveGrid() {
+  if (!grid.dirty.size) { toast('تغییری برای ذخیره نیست.', 'info'); return; }
+  const btn = $('#gridSave');
+  btn.disabled = true;
+  let done = 0;
+  const errors = [];
+  try {
+    for (const key of grid.dirty) {
+      const [d, p] = key.split('-').map(Number);
+      const cell = grid.cells[key] ?? { lessonId: null, subjectId: null, hwSet: false };
+      const tdSel = document.querySelector(`#gridEditor select[aria-label="درس ${WEEK_DAY_NAMES[d]} زنگ ${faDigits(p)}"]`);
+      const newSubject = tdSel ? Number(tdSel.value) : null;
+      const [t0, t1] = periodTimes(d, p);
+      try {
+        if (!newSubject) {
+          // خالی‌کردن خانه
+          if (cell.lessonId) {
+            await api(`/api/admin/lessons/${cell.lessonId}`, { method: 'DELETE' });
+          }
+        } else if (cell.lessonId) {
+          await api(`/api/admin/lessons/${cell.lessonId}`, {
+            method: 'PUT',
+            body: { day: d, period: p, subjectId: newSubject, startTime: t0, endTime: t1 },
+          });
+        } else {
+          await api('/api/admin/lessons', {
+            method: 'POST',
+            body: { day: d, period: p, subjectId: newSubject, startTime: t0, endTime: t1 },
+          });
+        }
+        done += 1;
+      } catch (err) {
+        errors.push(`${WEEK_DAY_NAMES[d]} زنگ ${faDigits(p)}: ${err.message}`);
+      }
+    }
+    if (errors.length) {
+      toast(`ذخیره ${faDigits(done)} خانه؛ ${faDigits(errors.length)} خطا:\n${errors.join('\n')}`, 'error');
+    } else {
+      toast(`برنامه ذخیره شد (${faDigits(done)} خانه) ✅`, 'success');
+    }
+    await refreshAll();
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 async function deleteLesson(lesson) {
@@ -239,6 +339,7 @@ async function deleteLesson(lesson) {
 
 function renderLessonsTab() {
   fillSelects();
+  renderGrid();
   const list = $('#lessonsList');
   list.textContent = '';
   let count = 0;
@@ -250,7 +351,6 @@ function renderLessonsTab() {
         el('div', { class: 'admin-row__main' },
           el('div', { class: 'admin-row__title', text: `${subjectEmoji(lesson.subject_name)} ${lesson.subject_name} — ${WEEK_DAY_NAMES[lesson.day]}، زنگ ${faDigits(lesson.period)}` }),
           el('div', { class: 'admin-row__sub', text: `${faDigits(lesson.start_time)}–${faDigits(lesson.end_time)} · ${lesson.homework ? `تکلیف: ${lesson.homework.title}` : 'بدون تکلیف'}` })),
-        el('button', { class: 'btn btn--ghost btn--sm', type: 'button', onclick: () => editLesson(lesson), text: '✏️ ویرایش' }),
         el('button', { class: 'btn btn--ghost btn--sm', type: 'button', onclick: () => openHwEditor(lesson), text: '📝 تکلیف' }),
         el('button', { class: 'btn btn--danger btn--sm', type: 'button', onclick: () => deleteLesson(lesson), text: '🗑️' }),
       );
@@ -258,7 +358,7 @@ function renderLessonsTab() {
     }
   }
   if (!count) {
-    list.append(el('div', { class: 'empty-state', text: 'هنوز درسی ثبت نشده است. از فرم بالا شروع کنید!' }));
+    list.append(el('div', { class: 'empty-state', text: 'هنوز درسی ثبت نشده است؛ از جدول بالا برنامه هفتگی را بچینید!' }));
   }
 }
 
@@ -682,8 +782,7 @@ $('#loginForm').addEventListener('submit', async (e) => {
 
 // wire events
 $('#logoutBtn').addEventListener('click', handleLogout);
-$('#lessonForm').addEventListener('submit', submitLesson);
-$('#lessonReset').addEventListener('click', resetLessonForm);
+$('#gridSave').addEventListener('click', saveGrid);
 $('#taskForm').addEventListener('submit', submitTask);
 $('#taskReset').addEventListener('click', resetTaskForm);
 $('#annForm').addEventListener('submit', submitAnn);

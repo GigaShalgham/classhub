@@ -22,7 +22,8 @@ export function str(v: unknown, name: string, opts: { min?: number; max?: number
   }
   if (typeof v !== 'string') bad(`${name} باید متن باشد.`);
   const s = v.trim();
-  if (required && s.length < Math.max(min, 1)) bad(`${name} نمی‌تواند خالی باشد.`);
+  if (required && s.length === 0) bad(`${name} نمی‌تواند خالی باشد.`);
+  if (s.length > 0 && s.length < min) bad(`${name} باید حداقل ${min} نویسه باشد.`);
   if (s.length > max) bad(`${name} بیش از حد بلند است (حداکثر ${max} نویسه).`);
   return s;
 }

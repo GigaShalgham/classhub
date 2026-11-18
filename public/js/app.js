@@ -3,6 +3,7 @@ import {
   faDigits, formatJalali, formatJalaliDateTime, faTime, countdown,
   WEEK_DAY_NAMES, iranDayIndex, KIND_LABELS, KIND_ICONS, PRIORITY_LABELS,
 } from './utils.js';
+import { periodsPerDay } from './schedule.js';
 
 const $ = (sel) => document.querySelector(sel);
 
@@ -81,7 +82,8 @@ function dateOfIranDay(dayIdx) {
 /** درس بعدیِ امروز را پیدا می‌کند (بر اساس ساعت فعلی تهران) */
 function nextLessonToday() {
   const todayIdx = iranDayIndex(new Date());
-  const lessons = state.days[todayIdx] || [];
+  const lessons = (state.days[todayIdx] || [])
+    .filter((l) => l.period <= (periodsPerDay(todayIdx) || 12)); // دوشنبه ۳ زنگ، جمعه تعطیل
   if (!lessons.length) return null;
   const now = new Date();
   const tehran = new Date(now.getTime() + 3.5 * 3600_000);
@@ -117,10 +119,10 @@ function tickClock() {
 
 // ---------- هیرو ----------
 function renderHero() {
-  const totalLessons = state.days.reduce((s, d) => s + (d?.length ?? 0), 0);
-  const totalHw = state.days.reduce(
-    (s, d) => s + (d ?? []).filter((l) => l.homework).length, 0,
-  );
+  const maxPeriods = (d) => periodsPerDay(d) || 12;
+  const dayLessons = (d) => (state.days[d] ?? []).filter((l) => l.period <= maxPeriods(d));
+  const totalLessons = state.days.reduce((s, _, d) => s + dayLessons(d).length, 0);
+  const totalHw = state.days.reduce((s, _, d) => s + dayLessons(d).filter((l) => l.homework).length, 0);
   const next = nextLessonToday();
   const stats = $('#heroStats');
   stats.textContent = '';
@@ -130,7 +132,7 @@ function renderHero() {
   stats.append(el('div', { class: 'stat-chip' },
     el('span', { text: '🗓️' }),
     `${todayName}، `,
-    el('b', { text: faDigits((state.days[todayIdx] ?? []).length) }),
+    el('b', { text: faDigits(dayLessons(todayIdx).length) }),
     ' زنگ'));
   stats.append(el('div', { class: 'stat-chip' },
     el('span', { text: '📚' }),
@@ -146,7 +148,7 @@ function renderHero() {
       'درس بعدی: ',
       el('b', { text: `${subjectEmoji(next.subject_name)} ${next.subject_name}` }),
       ` (${faTime(next.start_time)})`));
-  } else if ((state.days[todayIdx] ?? []).length) {
+  } else if (dayLessons(todayIdx).length) {
     stats.append(el('div', { class: 'stat-chip' }, el('span', { text: '🌙' }), 'کلاس‌های امروز تمام شد'));
   }
 }
@@ -223,7 +225,9 @@ function renderTimetable() {
         el('div', { text: d === 6 ? 'تعطیل آخر هفته' : 'کلاسی نیست؛ نفس بکش!' }),
       ));
     } else {
-      for (const lesson of lessons) col.append(lessonCard(lesson));
+      // فقط زنگ‌های مجاز روز (دوشنبه ۳ زنگ، جمعه تعطیل) — اضافه‌ها نادیده گرفته می‌شوند
+      const maxP = periodsPerDay(d) || 12;
+      for (const lesson of lessons.filter((l) => l.period <= maxP)) col.append(lessonCard(lesson));
     }
     grid.append(col);
   }

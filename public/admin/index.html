@@ -74,42 +74,27 @@
       <!-- ===== Lessons tab ===== -->
       <section class="admin-panel" id="tab-lessons" role="tabpanel">
         <div class="admin-card">
-          <h2 class="admin-card__title">➕ افزودن / ویرایش درس</h2>
-          <form id="lessonForm" novalidate>
-            <input type="hidden" id="lessonId">
-            <div class="form-grid">
-              <div class="field">
-                <label class="field__label" for="lessonDay">روز هفته <span class="field__req">*</span></label>
-                <select class="select" id="lessonDay" required></select>
-              </div>
-              <div class="field">
-                <label class="field__label" for="lessonPeriod">زنگ <span class="field__req">*</span></label>
-                <select class="select" id="lessonPeriod" required></select>
-              </div>
-              <div class="field">
-                <label class="field__label" for="lessonSubject">درس <span class="field__req">*</span></label>
-                <select class="select" id="lessonSubject" required></select>
-              </div>
-              <div class="field">
-                <label class="field__label" for="lessonTimes">ساعت کلاس <span class="field__req">*</span></label>
-                <div style="display:flex;gap:8px;align-items:center;">
-                  <input class="input input--time" id="lessonStart" type="text" inputmode="numeric" placeholder="07:30" required>
-                  <span class="muted">تا</span>
-                  <input class="input input--time" id="lessonEnd" type="text" inputmode="numeric" placeholder="08:15" required>
-                </div>
-                <span class="field__hint">مثال: 07:30</span>
-              </div>
+          <h2 class="admin-card__title">🗓️ برنامه هفتگی کلاس</h2>
+          <p class="field__hint" style="margin-top:-10px;">
+            درس هر خانه را از فهرست انتخاب کنید — ساعت‌ها خودکار بر اساس زنگ‌های استاندارد (۰۷:۴۵ تا ۱۳:۴۵؛ دوشنبه تا ۱۲:۱۵) پر می‌شوند. برای خالی‌کردن یک خانه «—» را انتخاب کنید.
+          </p>
+          <div class="tt-wrap admin-tt-wrap">
+            <div class="tt-scroll admin-tt-scroll">
+              <table class="grid-editor" id="gridEditor" aria-label="ویرایش برنامه هفتگی">
+                <thead id="gridHead"></thead>
+                <tbody id="gridBody"></tbody>
+              </table>
             </div>
-            <div class="btn-row">
-              <button class="btn btn--primary" type="submit" id="lessonSubmit">ذخیره درس</button>
-              <button class="btn btn--ghost" type="button" id="lessonReset">پاک‌کردن فرم</button>
-            </div>
-          </form>
+          </div>
+          <div class="btn-row" style="margin-top:14px;">
+            <button class="btn btn--primary" type="button" id="gridSave">💾 ذخیره کل برنامه</button>
+            <span class="field__hint" id="gridStatus"></span>
+          </div>
         </div>
 
         <div class="admin-card">
-          <h2 class="admin-card__title">📝 مدیریت تکلیف این درس</h2>
-          <p class="field__hint" style="margin-top:-8px;">ابتدا درس را از لیست زیر انتخاب کنید، بعد تکلیف آن را ویرایش کنید.</p>
+          <h2 class="admin-card__title">📝 تکالیف ثبت‌شده</h2>
+          <p class="field__hint" style="margin-top:-8px;">برای ویرایش تکلیف هر درس، در جدول بالا روی دکمه 📝 همان خانه بزنید.</p>
           <div class="admin-list" id="lessonsList"></div>
         </div>
       </section>
