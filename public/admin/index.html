@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#FCFAFD">
+  <meta name="robots" content="noindex, nofollow">
+  <title>مدیریت کلاس | کلاس‌هاب</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚙️</text></svg>">
+  <link rel="preload" href="/fonts/Vazirmatn-Regular.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header__inner">
+      <div class="brand">
+        <div class="brand__logo" aria-hidden="true">⚙️</div>
+        <div>
+          <div class="brand__name">پنل مدیریت کلاس</div>
+          <div class="brand__date" id="brandDate">…</div>
+        </div>
+      </div>
+      <div class="header-spacer"></div>
+      <div class="header-actions">
+        <a class="icon-btn" href="/" aria-label="بازگشت به سایت کلاس" title="بازگشت به سایت کلاس">🏠</a>
+        <button class="icon-btn" id="logoutBtn" aria-label="خروج" title="خروج">🚪</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- login / bootstrap view -->
+    <div class="admin-enter" id="loginView">
+      <div class="login-card">
+        <div class="login-card__logo" aria-hidden="true">🔑</div>
+        <h1 class="login-card__title">ورود مدیر کلاس</h1>
+        <p class="login-card__sub" id="loginSub">این بخش مخصوص سرِ کلاس است</p>
+        <form id="loginForm" novalidate>
+          <div class="field">
+            <label class="field__label" for="loginUser">نام کاربری</label>
+            <input class="input" id="loginUser" autocomplete="username" required>
+          </div>
+          <div class="field">
+            <label class="field__label" for="loginPass">گذرواژه</label>
+            <input class="input" id="loginPass" type="password" autocomplete="current-password" required>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn--primary" type="submit" id="loginSubmit" style="flex:1;">ورود</button>
+          </div>
+          <p class="field__hint" style="margin-top:12px;" id="loginHint"></p>
+        </form>
+      </div>
+    </div>
+
+    <!-- admin dashboard -->
+    <div id="adminView" class="hidden">
+      <div class="page-hero">
+        <h1 class="page-hero__title">🛠️ مدیریت کلاس‌هاب</h1>
+        <p class="page-hero__sub">خوش آمدید، <span id="adminName">مدیر</span>! اینجا می‌توانید برنامه، تکالیف، مهلت‌ها و اطلاعیه‌ها را ویرایش کنید.</p>
+      </div>
+
+      <nav class="admin-tabs" id="adminTabs" role="tablist" aria-label="بخش‌های مدیریت">
+        <button class="admin-tab admin-tab--active" data-tab="lessons" role="tab" aria-selected="true" type="button">🗓️ برنامه و تکالیف</button>
+        <button class="admin-tab" data-tab="tasks" role="tab" aria-selected="false" type="button">⏳ مهلت‌ها</button>
+        <button class="admin-tab" data-tab="announcements" role="tab" aria-selected="false" type="button">📣 اطلاعیه‌ها</button>
+        <button class="admin-tab" data-tab="subjects" role="tab" aria-selected="false" type="button">🎨 درس‌ها</button>
+        <button class="admin-tab" data-tab="settings" role="tab" aria-selected="false" type="button">⚙️ تنظیمات</button>
+      </nav>
+
+      <!-- ===== Lessons tab ===== -->
+      <section class="admin-panel" id="tab-lessons" role="tabpanel">
+        <div class="admin-card">
+          <h2 class="admin-card__title">➕ افزودن / ویرایش درس</h2>
+          <form id="lessonForm" novalidate>
+            <input type="hidden" id="lessonId">
+            <div class="form-grid">
+              <div class="field">
+                <label class="field__label" for="lessonDay">روز هفته <span class="field__req">*</span></label>
+                <select class="select" id="lessonDay" required></select>
+              </div>
+              <div class="field">
+                <label class="field__label" for="lessonPeriod">زنگ <span class="field__req">*</span></label>
+                <select class="select" id="lessonPeriod" required></select>
+              </div>
+              <div class="field">
+                <label class="field__label" for="lessonSubject">درس <span class="field__req">*</span></label>
+                <select class="select" id="lessonSubject" required></select>
+              </div>
+              <div class="field">
+                <label class="field__label" for="lessonTimes">ساعت کلاس <span class="field__req">*</span></label>
+                <div style="display:flex;gap:8px;align-items:center;">
+                  <input class="input input--time" id="lessonStart" type="text" inputmode="numeric" placeholder="07:30" required>
+                  <span class="muted">تا</span>
+                  <input class="input input--time" id="lessonEnd" type="text" inputmode="numeric" placeholder="08:15" required>
+                </div>
+                <span class="field__hint">مثال: 07:30</span>
+              </div>
+            </div>
+            <div class="btn-row">
+              <button class="btn btn--primary" type="submit" id="lessonSubmit">ذخیره درس</button>
+              <button class="btn btn--ghost" type="button" id="lessonReset">پاک‌کردن فرم</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="admin-card">
+          <h2 class="admin-card__title">📝 مدیریت تکلیف این درس</h2>
+          <p class="field__hint" style="margin-top:-8px;">ابتدا درس را از لیست زیر انتخاب کنید، بعد تکلیف آن را ویرایش کنید.</p>
+          <div class="admin-list" id="lessonsList"></div>
+        </div>
+      </section>
+
+      <!-- ===== Tasks tab ===== -->
+      <section class="admin-panel hidden" id="tab-tasks" role="tabpanel">
+        <div class="admin-card">
+          <h2 class="admin-card__title">➕ ایجاد مهلت / تکلیف زمان‌دار</h2>
+          <form id="taskForm" novalidate>
+            <input type="hidden" id="taskId">
+            <div class="form-grid">
+              <div class="field">
+                <label class="field__label" for="taskKind">نوع <span class="field__req">*</span></label>
+                <select class="select" id="taskKind" required>
+                  <option value="research">تحقیق</option>
+                  <option value="project">پروژه</option>
+                  <option value="presentation">ارائه</option>
+                  <option value="exam">امتحان</option>
+                  <option value="quiz">آزمونک</option>
+                  <option value="submission">تحویل</option>
+                </select>
+              </div>
+              <div class="field">
+                <label class="field__label" for="taskSubject">درس مرتبط</label>
+                <select class="select" id="taskSubject"></select>
+              </div>
+              <div class="field" style="grid-column: 1 / -1;">
+                <label class="field__label" for="taskTitle">عنوان <span class="field__req">*</span></label>
+                <input class="input" id="taskTitle" required maxlength="200">
+              </div>
+              <div class="field" style="grid-column: 1 / -1;">
+                <label class="field__label" for="taskDesc">توضیحات</label>
+                <textarea class="textarea" id="taskDesc" maxlength="4000"></textarea>
+              </div>
+              <div class="field">
+                <label class="field__label" for="taskDue">مهلت (تاریخ و ساعت) <span class="field__req">*</span></label>
+                <input class="input" id="taskDue" type="datetime-local" required>
+                <span class="field__hint">به وقت تهران ذخیره می‌شود.</span>
+              </div>
+              <div class="field">
+                <label class="field__label" for="taskPriority">اولویت</label>
+                <select class="select" id="taskPriority">
+                  <option value="low">کم</option>
+                  <option value="normal" selected>معمولی</option>
+                  <option value="high">مهم</option>
+                </select>
+              </div>
+            </div>
+            <div class="btn-row">
+              <button class="btn btn--primary" type="submit" id="taskSubmit">ذخیره</button>
+              <button class="btn btn--ghost" type="button" id="taskReset">پاک‌کردن فرم</button>
+            </div>
+          </form>
+        </div>
+        <div class="admin-card">
+          <h2 class="admin-card__title">📋 مهلت‌های موجود</h2>
+          <div class="admin-list" id="tasksList"></div>
+        </div>
+      </section>
+
+      <!-- ===== Announcements tab ===== -->
+      <section class="admin-panel hidden" id="tab-announcements" role="tabpanel">
+        <div class="admin-card">
+          <h2 class="admin-card__title">➕ انتشار اطلاعیه</h2>
+          <form id="annForm" novalidate>
+            <input type="hidden" id="annId">
+            <div class="field">
+              <label class="field__label" for="annTitle">عنوان <span class="field__req">*</span></label>
+              <input class="input" id="annTitle" required maxlength="200">
+            </div>
+            <div class="field">
+              <label class="field__label" for="annBody">متن اطلاعیه <span class="field__req">*</span></label>
+              <textarea class="textarea" id="annBody" required maxlength="4000"></textarea>
+            </div>
+            <div class="field">
+              <label class="field__label" style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                <input type="checkbox" id="annPinned" style="width:18px;height:18px;accent-color:#8A6FB8;">
+                سنجاق کردن در بالای صفحه
+              </label>
+            </div>
+            <div class="btn-row">
+              <button class="btn btn--primary" type="submit" id="annSubmit">انتشار</button>
+              <button class="btn btn--ghost" type="button" id="annReset">پاک‌کردن فرم</button>
+            </div>
+          </form>
+        </div>
+        <div class="admin-card">
+          <h2 class="admin-card__title">📋 اطلاعیه‌های منتشرشده</h2>
+          <div class="admin-list" id="annsList"></div>
+        </div>
+      </section>
+
+      <!-- ===== Subjects tab ===== -->
+      <section class="admin-panel hidden" id="tab-subjects" role="tabpanel">
+        <div class="admin-card">
+          <h2 class="admin-card__title">➕ افزودن درس جدید</h2>
+          <form id="subjectForm" novalidate class="form-grid">
+            <div class="field">
+              <label class="field__label" for="subjectName">نام درس <span class="field__req">*</span></label>
+              <input class="input" id="subjectName" required maxlength="60" placeholder="مثلاً: نجوم">
+            </div>
+            <div class="field">
+              <label class="field__label" for="subjectColor">رنگ درس <span class="field__req">*</span></label>
+              <select class="select" id="subjectColor">
+                <option value="lavender">بنفش روشن</option>
+                <option value="blue">آبی ملایم</option>
+                <option value="mint">سبز نعنایی</option>
+                <option value="pink">صورتی ملایم</option>
+                <option value="cream">کرمی</option>
+                <option value="green">سبز روشن</option>
+              </select>
+            </div>
+            <div class="btn-row" style="grid-column:1/-1;">
+              <button class="btn btn--primary" type="submit">افزودن درس</button>
+            </div>
+          </form>
+        </div>
+        <div class="admin-card">
+          <h2 class="admin-card__title">🎨 درس‌های تعریف‌شده</h2>
+          <div class="admin-list" id="subjectsList"></div>
+        </div>
+      </section>
+
+      <!-- ===== Settings tab ===== -->
+      <section class="admin-panel hidden" id="tab-settings" role="tabpanel">
+        <div class="admin-card">
+          <h2 class="admin-card__title">⚙️ تنظیمات ظاهر سایت</h2>
+          <form id="settingsForm" novalidate>
+            <div class="field">
+              <label class="field__label" for="setClassName">نام کلاس</label>
+              <input class="input" id="setClassName" maxlength="120">
+            </div>
+            <div class="field">
+              <label class="field__label" for="setWelcome">پیام خوش‌آمد (بالای سایت)</label>
+              <input class="input" id="setWelcome" maxlength="200">
+            </div>
+            <div class="field">
+              <label class="field__label" for="setNote">یادداشت پایین (اختیاری)</label>
+              <input class="input" id="setNote" maxlength="300">
+            </div>
+            <div class="btn-row">
+              <button class="btn btn--primary" type="submit">ذخیره تنظیمات</button>
+            </div>
+          </form>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- homework editor overlay -->
+  <div class="overlay" id="hwOverlay" role="dialog" aria-modal="true" aria-labelledby="hwTitle" hidden>
+    <div class="sheet">
+      <div class="sheet__grip" aria-hidden="true"></div>
+      <div class="sheet__head">
+        <h2 class="sheet__title" id="hwTitle">تکلیف درس</h2>
+        <button class="sheet__close" id="hwClose" aria-label="بستن">✕</button>
+      </div>
+      <div class="sheet__body">
+        <form id="hwForm" novalidate>
+          <div class="field">
+            <label class="field__label" for="hwTitleInput">عنوان تکلیف <span class="field__req">*</span></label>
+            <input class="input" id="hwTitleInput" required maxlength="200">
+          </div>
+          <div class="field">
+            <label class="field__label" for="hwDesc">توضیحات کامل</label>
+            <textarea class="textarea" id="hwDesc" maxlength="4000" placeholder="شرح کامل تکلیف برای دانش‌آموزان…"></textarea>
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label class="field__label" for="hwPages">صفحات کتاب</label>
+              <input class="input" id="hwPages" maxlength="200" placeholder="مثلاً: صفحه ۴۲ تا ۴۴">
+            </div>
+            <div class="field">
+              <label class="field__label" for="hwDue">مهلت تحویل (اختیاری)</label>
+              <input class="input" id="hwDue" type="datetime-local">
+            </div>
+          </div>
+          <div class="field">
+            <label class="field__label" for="hwInstructions">دستورالعمل تکلیف</label>
+            <textarea class="textarea" id="hwInstructions" maxlength="2000" style="min-height:70px;"></textarea>
+          </div>
+          <div class="field">
+            <label class="field__label" for="hwNotes">یادداشت سرِ کلاس</label>
+            <textarea class="textarea" id="hwNotes" maxlength="2000" style="min-height:70px;"></textarea>
+          </div>
+          <div class="field">
+            <label class="field__label">پیوست‌ها (تصویر / PDF / آفیس — هر فایل تا ۱.۵ مگابایت)</label>
+            <div class="upload-row" id="hwUploadRow"></div>
+            <input type="file" id="hwFile" class="hidden" multiple
+              accept=".png,.jpg,.jpeg,.webp,.gif,.pdf,.txt,.doc,.docx,.ppt,.pptx,.xls,.xlsx">
+            <div class="btn-row" style="margin-top:8px;">
+              <button class="btn btn--ghost btn--sm" type="button" id="hwAddFile">📎 افزودن فایل</button>
+            </div>
+            <div class="admin-list" id="hwExistingFiles" style="margin-top:10px;"></div>
+          </div>
+          <div class="btn-row" style="margin-top:6px;">
+            <button class="btn btn--primary" type="submit" id="hwSubmit">ذخیره تکلیف</button>
+            <button class="btn btn--danger" type="button" id="hwDelete">حذف تکلیف</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- confirm dialog -->
+  <div class="overlay" id="confirmOverlay" role="dialog" aria-modal="true" aria-labelledby="confirmTitle" hidden>
+    <div class="sheet confirm-dialog">
+      <div class="sheet__head" style="border-bottom:none;">
+        <h2 class="sheet__title" id="confirmTitle" style="font-size:16px;">تأیید عملیات</h2>
+      </div>
+      <div class="sheet__body" style="padding-top:0;">
+        <p id="confirmText" style="margin:0 0 18px;">آیا مطمئن هستید؟</p>
+        <div class="btn-row">
+          <button class="btn btn--danger" id="confirmYes" type="button">بله، انجام بده</button>
+          <button class="btn btn--ghost" id="confirmNo" type="button">بی‌خیال</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-region" id="toastRegion" aria-live="polite"></div>
+
+  <script type="module" src="/js/admin.js"></script>
+</body>
+</html>
