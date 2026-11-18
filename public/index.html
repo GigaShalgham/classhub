@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#FCFAFD">
+  <meta name="description" content="کلاس‌هاب — برنامه هفتگی، تکالیف، مهلت‌ها و اطلاعیه‌های کلاس">
+  <title>کلاس‌هاب | برنامه هفتگی کلاس</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
+  <link rel="preload" href="/fonts/Vazirmatn-Regular.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/Vazirmatn-SemiBold.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header__inner">
+      <div class="brand">
+        <div class="brand__logo" aria-hidden="true">📚</div>
+        <div>
+          <div class="brand__name" id="brandName">کلاس‌هاب</div>
+          <div class="brand__date" id="brandDate">…</div>
+        </div>
+      </div>
+      <div class="header-spacer"></div>
+      <div class="welcome-bubble" id="welcomeBubble">امروز هم روز خوبی داشته باشیم!</div>
+      <div class="header-actions" style="position: relative;">
+        <button class="icon-btn" id="notifBtn" aria-label="اعلان‌ها" aria-haspopup="true" aria-expanded="false">
+          🔔
+          <span class="icon-btn__badge hidden" id="notifBadge">۰</span>
+        </button>
+        <div class="notifications-panel hidden" id="notifPanel" role="menu" aria-label="اعلان‌های مهم"></div>
+        <a class="icon-btn" href="/admin" aria-label="ورود مدیر کلاس" title="ورود مدیر کلاس">⚙️</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="page-hero">
+      <h1 class="page-hero__title">✨ برنامه هفتگی کلاس</h1>
+      <p class="page-hero__sub" id="heroSub">برای دیدن جزئیات تکلیف، روی هر درس بزنید</p>
+    </div>
+
+    <section class="section" aria-label="برنامه هفتگی">
+      <div class="section__head">
+        <h2 class="section__title"><span class="emoji" aria-hidden="true">🗓️</span> برنامه هفتگی</h2>
+        <button class="btn btn--ghost btn--sm" id="todayBtn" type="button">برو به امروز</button>
+        <span class="section__note">به‌روزرسانی: <span id="updatedAt">…</span></span>
+      </div>
+      <div class="tt-scroll" id="ttScroll" tabindex="0" role="region" aria-label="جدول هفتگی — برای مرور روزها به چپ و راست بکشید">
+        <div class="tt-grid" id="ttGrid"></div>
+      </div>
+    </section>
+
+    <section class="section" aria-label="مهلت‌ها و تکالیف زمان‌دار">
+      <div class="section__head">
+        <h2 class="section__title"><span class="emoji" aria-hidden="true">⏳</span> مهلت‌ها و تکالیف زمان‌دار</h2>
+        <span class="section__note">مرتب‌شده بر اساس نزدیک‌ترین مهلت</span>
+      </div>
+      <div class="tasks-grid" id="tasksGrid"></div>
+      <div class="btn-row" style="margin-top: 14px;">
+        <button class="btn btn--ghost btn--sm" id="showExpiredBtn" type="button">آرشیو موارد گذشته</button>
+      </div>
+      <div class="tasks-grid" id="expiredGrid" style="margin-top: 14px; display: none;"></div>
+    </section>
+
+    <section class="section" aria-label="اطلاعیه‌ها">
+      <div class="section__head">
+        <h2 class="section__title"><span class="emoji" aria-hidden="true">📣</span> اطلاعیه‌ها</h2>
+      </div>
+      <div class="ann-list" id="annList"></div>
+    </section>
+  </main>
+
+  <!-- lesson detail: side panel on desktop, bottom sheet on mobile -->
+  <div class="overlay" id="detailOverlay" role="dialog" aria-modal="true" aria-labelledby="detailTitle" hidden>
+    <div class="sheet">
+      <div class="sheet__grip" aria-hidden="true"></div>
+      <div class="sheet__head">
+        <h2 class="sheet__title" id="detailTitle">جزئیات درس</h2>
+        <button class="sheet__close" id="detailClose" aria-label="بستن">✕</button>
+      </div>
+      <div class="sheet__body" id="detailBody"></div>
+    </div>
+  </div>
+
+  <div class="toast-region" id="toastRegion" aria-live="polite"></div>
+
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>
