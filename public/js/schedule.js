@@ -1,5 +1,6 @@
 // کلاس‌هاب — ساختار زنگ‌های کلاس (مشترک بین دانش‌آموز و مدیر)
-// دوشنبه ۳ زنگ (پایان ۱۲:۱۵) · بقیه روزها ۴ زنگ (پایان ۱۳:۴۵) · جمعه تعطیل
+// دوشنبه ۳ زنگ (پایان ۱۲:۱۵) · شنبه تا چهارشنبه ۴ زنگ (پایان ۱۳:۴۵)
+// پنجشنبه و جمعه تعطیل
 // زنگ‌های ۷۵ دقیقه‌ای با تفریح‌های ۱۵ و ۳۰ دقیقه‌ای (ناهار)
 
 export const PERIODS_NORMAL = 4;
@@ -8,7 +9,7 @@ export const PERIODS_MONDAY = 3;
 /** تعداد زنگ‌های یک روز هفته (0=شنبه … 6=جمعه) */
 export function periodsPerDay(day) {
   if (day === 2) return PERIODS_MONDAY; // دوشنبه
-  if (day === 6) return 0;              // جمعه: تعطیل
+  if (day === 5 || day === 6) return 0; // پنجشنبه و جمعه: تعطیل
   return PERIODS_NORMAL;
 }
 
@@ -24,4 +25,4 @@ export function periodTimes(day, period) {
 }
 
 /** روزهای کلاس‌دار (برای گرید مدیر) */
-export const CLASS_DAYS = [0, 1, 2, 3, 4, 5];
+export const CLASS_DAYS = [0, 1, 2, 3, 4];

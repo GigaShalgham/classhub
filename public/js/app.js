@@ -219,13 +219,14 @@ function renderTimetable() {
     head.append(el('span', { class: 'day-col__date', text: formatJalali(dateOfIranDay(d), { withYear: false }) }));
     col.append(head);
 
-    if (!lessons.length) {
+    if (!lessons.length || periodsPerDay(d) === 0) {
+      const off = d === 5 || d === 6;
       col.append(el('div', { class: 'day-empty' },
-        el('span', { class: 'face', text: d === 6 ? '🛌' : '☁️' }),
-        el('div', { text: d === 6 ? 'تعطیل آخر هفته' : 'کلاسی نیست؛ نفس بکش!' }),
+        el('span', { class: 'face', text: off ? '🛌' : '☁️' }),
+        el('div', { text: off ? 'تعطیل آخر هفته' : 'کلاسی نیست؛ نفس بکش!' }),
       ));
     } else {
-      // فقط زنگ‌های مجاز روز (دوشنبه ۳ زنگ، جمعه تعطیل) — اضافه‌ها نادیده گرفته می‌شوند
+      // فقط زنگ‌های مجاز روز (دوشنبه ۳ زنگ) — اضافه‌ها نادیده گرفته می‌شوند
       const maxP = periodsPerDay(d) || 12;
       for (const lesson of lessons.filter((l) => l.period <= maxP)) col.append(lessonCard(lesson));
     }

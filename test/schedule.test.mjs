@@ -2,12 +2,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { periodsPerDay, periodTimes, CLASS_DAYS, PERIODS_MONDAY, PERIODS_NORMAL } from '../public/js/schedule.js';
 
-test('monday has 3 periods, others 4, friday off', () => {
+test('monday has 3 periods, others 4, thu+fri off', () => {
   assert.equal(periodsPerDay(2), PERIODS_MONDAY);
   assert.equal(PERIODS_MONDAY, 3);
   assert.equal(periodsPerDay(0), PERIODS_NORMAL);
   assert.equal(PERIODS_NORMAL, 4);
-  assert.equal(periodsPerDay(6), 0);
+  assert.equal(periodsPerDay(5), 0); // پنجشنبه تعطیل
+  assert.equal(periodsPerDay(6), 0); // جمعه تعطیل
 });
 
 test('standard period times end at 12:15 (monday) and 13:45 (others)', () => {
@@ -17,6 +18,6 @@ test('standard period times end at 12:15 (monday) and 13:45 (others)', () => {
   assert.deepEqual(periodTimes(3, 2), ['09:15', '10:30']);
 });
 
-test('CLASS_DAYS covers Sat..Thu, no Friday', () => {
-  assert.deepEqual(CLASS_DAYS, [0, 1, 2, 3, 4, 5]);
+test('CLASS_DAYS covers Sat..Wed, no Thu/Fri', () => {
+  assert.deepEqual(CLASS_DAYS, [0, 1, 2, 3, 4]);
 });

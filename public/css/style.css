@@ -106,6 +106,10 @@
 /* ---------- پایه ---------- */
 * { box-sizing: border-box; }
 
+/* اتریبیوت hidden باید همیشه بر display کلاس‌ها غلبه کند
+   (بدون این، overlay های بسته با display:flex کل صفحه را می‌پوشانند و کلیک را می‌بلعند) */
+[hidden] { display: none !important; }
+
 html { scroll-behavior: smooth; }
 
 body {
