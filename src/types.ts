@@ -29,6 +29,9 @@ export interface Lesson {
   subject_id: number;
   subject_name: string;
   color_key: ColorKey;
+  alt_subject_id: number | null;   // درس دومِ زنگ گردشی
+  alt_subject_name: string | null;
+  alt_color_key: ColorKey | null;
   start_time: string;
   end_time: string;
   homework: Homework | null;

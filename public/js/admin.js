@@ -1,13 +1,14 @@
 // کلاس‌هاب — admin panel logic
-import { faDigits, formatJalali, formatJalaliDateTime, countdown, WEEK_DAY_NAMES, KIND_LABELS, KIND_ICONS } from './utils.js';
-import { periodsPerDay, periodTimes, CLASS_DAYS } from './schedule.js';
+import { faDigits, formatJalali, formatJalaliDateTime, countdown, WEEK_DAY_NAMES, KIND_LABELS, KIND_ICONS, JALALI_MONTHS, toJalali, fromJalali, iranDayIndex, rollingWindow } from './utils.js';
+import { periodsPerDay, periodTimes, PERIOD_TABLE, CLASS_DAYS } from './schedule.js';
 
 // ایموجی اختصاصی هر درس (همان نگاشت صفحه دانش‌آموز)
 const SUBJECT_EMOJI = [
-  ['ریاضی', '📐'], ['فیزیک', '🧲'], ['شیمی', '⚗️'], ['زیست', '🌿'], ['ادبیات', '📖'],
-  ['فارسی', '📖'], ['انگلیسی', '🗣️'], ['عربی', '🕌'], ['تاریخ', '🏺'], ['جغرافیا', '🗺️'],
-  ['دینی', '🕊️'], ['ورزش', '⚽'], ['هنر', '🎨'], ['کارگاه', '🔧'], ['نجوم', '🔭'],
-  ['اقتصاد', '💰'], ['فلسفه', '🤔'], ['روان', '🧠'], ['کامپیوتر', '💻'], ['برنامه', '💻'],
+  ['کارگاه', '🔧'], ['ریاضی', '📐'], ['هندسه', '📐'], ['فیزیک', '🧲'], ['شیمی', '⚗️'],
+  ['زیست', '🌿'], ['ادبیات', '📖'], ['فارسی', '📖'], ['نگارش', '✍️'], ['انگلیسی', '🗣️'],
+  ['عربی', '🕌'], ['تاریخ', '🏺'], ['جغرافیا', '🗺️'], ['دینی', '🕊️'], ['ورزش', '⚽'],
+  ['هنر', '🎨'], ['دفاعی', '🛡️'], ['آزمایشگاه', '🧪'], ['نجوم', '🔭'], ['اقتصاد', '💰'],
+  ['فلسفه', '🤔'], ['روان', '🧠'], ['کامپیوتر', '💻'], ['برنامه', '💻'],
 ];
 function subjectEmoji(name) {
   if (!name) return '📚';
@@ -153,6 +154,7 @@ async function refreshAll() {
   renderTasksTab();
   renderAnnsTab();
   renderSubjectsTab();
+  renderCalendar();
   fillSettingsForm();
 }
 
@@ -185,7 +187,7 @@ function renderGrid() {
     el('th', { text: 'زنگ ↓', style: 'text-align:right;' }),
   );
   for (let p = 1; p <= 4; p++) {
-    const [s, e] = periodTimes(0, p);
+    const [s, e] = PERIOD_TABLE[p - 1];
     hr.append(el('th', {}, `${faDigits(p)}`,
       el('span', { class: 'grid-day-sub', text: `${s}–${e}` })));
   }
@@ -196,7 +198,7 @@ function renderGrid() {
   for (let d = 0; d < 7; d++) {
     for (const l of state.scheduleDays[d] || []) {
       grid.cells[gridKey(d, l.period)] = {
-        lessonId: l.id, subjectId: l.subject_id, hwSet: !!l.homework,
+        lessonId: l.id, subjectId: l.subject_id, altSubjectId: l.alt_subject_id ?? null, hwSet: !!l.homework,
       };
     }
   }
@@ -207,11 +209,7 @@ function renderGrid() {
     tr.append(el('td', { class: 'grid-row__day' },
       WEEK_DAY_NAMES[d],
       el('small', { text: d === 2 ? 'تا ۱۲:۱۵' : 'تا ۱۳:۴۵' })));
-    for (let p = 1; p <= 4; p++) {
-      if (p > nPeriods) {
-        tr.append(el('td', { class: 'grid-cell grid-cell--disabled' }));
-        continue;
-      }
+    for (let p = 1; p <= nPeriods; p++) {
       tr.append(gridCellEl(d, p));
     }
     body.append(tr);
@@ -232,8 +230,31 @@ function gridCellEl(day, period) {
   }
   sel.value = cellData?.subjectId ?? '';
   if (!cellData?.subjectId) sel.classList.add('grid-cell__select--empty');
-  sel.addEventListener('change', () => {
+
+  // درس گردشی (دوم): زنگ‌هایی که هفته‌به‌هفته بین دو درس می‌چرخند
+  const altSel = el('select', { class: 'grid-cell__select grid-cell__select--alt', 'aria-label': `درس گردشی ${WEEK_DAY_NAMES[day]} زنگ ${faDigits(period)}` });
+  const rebuildAlt = () => {
+    altSel.textContent = '';
+    altSel.append(el('option', { value: '', text: '🔄 گردشی: ندارد' }));
+    const mainId = Number(sel.value);
+    for (const s of state.subjects) {
+      if (Number(s.id) === mainId) continue;
+      altSel.append(el('option', { value: s.id, text: `🔄 گردشی: ${s.name}` }));
+    }
+    // اگر درس اصلی تغییر کرده، انتخاب قبلی گردشی معتبر می‌ماند مگر همانِ اصلی شود
+    const curVal = cellData && Number(sel.value) === Number(cellData.subjectId) ? cellData.altSubjectId : null;
+    altSel.value = curVal ?? '';
+    altSel.classList.toggle('grid-cell__select--hidden', !sel.value);
+  };
+  rebuildAlt();
+  const onSelChange = () => {
     sel.classList.toggle('grid-cell__select--empty', !sel.value);
+    td.classList.add('grid-cell--dirty');
+    grid.dirty.add(gridKey(day, period));
+    updateGridStatus();
+  };
+  sel.addEventListener('change', () => { onSelChange(); rebuildAlt(); });
+  altSel.addEventListener('change', () => {
     td.classList.add('grid-cell--dirty');
     grid.dirty.add(gridKey(day, period));
     updateGridStatus();
@@ -264,7 +285,7 @@ function gridCellEl(day, period) {
     el('span', { class: 'grid-cell__time', text: `${t0}–${t1}` }),
     hwBtn);
 
-  td.append(sel, meta);
+  td.append(sel, altSel, meta);
   return td;
 }
 
@@ -288,9 +309,11 @@ async function saveGrid() {
   try {
     for (const key of grid.dirty) {
       const [d, p] = key.split('-').map(Number);
-      const cell = grid.cells[key] ?? { lessonId: null, subjectId: null, hwSet: false };
+      const cell = grid.cells[key] ?? { lessonId: null, subjectId: null, altSubjectId: null, hwSet: false };
       const tdSel = document.querySelector(`#gridEditor select[aria-label="درس ${WEEK_DAY_NAMES[d]} زنگ ${faDigits(p)}"]`);
+      const tdAlt = document.querySelector(`#gridEditor select[aria-label="درس گردشی ${WEEK_DAY_NAMES[d]} زنگ ${faDigits(p)}"]`);
       const newSubject = tdSel ? Number(tdSel.value) : null;
+      const newAlt = tdAlt && tdAlt.value ? Number(tdAlt.value) : null;
       const [t0, t1] = periodTimes(d, p);
       try {
         if (!newSubject) {
@@ -301,12 +324,12 @@ async function saveGrid() {
         } else if (cell.lessonId) {
           await api(`/api/admin/lessons/${cell.lessonId}`, {
             method: 'PUT',
-            body: { day: d, period: p, subjectId: newSubject, startTime: t0, endTime: t1 },
+            body: { day: d, period: p, subjectId: newSubject, altSubjectId: newAlt, startTime: t0, endTime: t1 },
           });
         } else {
           await api('/api/admin/lessons', {
             method: 'POST',
-            body: { day: d, period: p, subjectId: newSubject, startTime: t0, endTime: t1 },
+            body: { day: d, period: p, subjectId: newSubject, altSubjectId: newAlt, startTime: t0, endTime: t1 },
           });
         }
         done += 1;
@@ -347,9 +370,12 @@ function renderLessonsTab() {
     const lessons = state.scheduleDays[d] || [];
     for (const lesson of lessons) {
       count += 1;
+      const title = lesson.alt_subject_name
+        ? `${subjectEmoji(lesson.subject_name)} ${lesson.subject_name} 🔄 ${subjectEmoji(lesson.alt_subject_name)} ${lesson.alt_subject_name} — ${WEEK_DAY_NAMES[lesson.day]}، زنگ ${faDigits(lesson.period)}`
+        : `${subjectEmoji(lesson.subject_name)} ${lesson.subject_name} — ${WEEK_DAY_NAMES[lesson.day]}، زنگ ${faDigits(lesson.period)}`;
       const row = el('div', { class: 'admin-row' },
         el('div', { class: 'admin-row__main' },
-          el('div', { class: 'admin-row__title', text: `${subjectEmoji(lesson.subject_name)} ${lesson.subject_name} — ${WEEK_DAY_NAMES[lesson.day]}، زنگ ${faDigits(lesson.period)}` }),
+          el('div', { class: 'admin-row__title', text: title }),
           el('div', { class: 'admin-row__sub', text: `${faDigits(lesson.start_time)}–${faDigits(lesson.end_time)} · ${lesson.homework ? `تکلیف: ${lesson.homework.title}` : 'بدون تکلیف'}` })),
         el('button', { class: 'btn btn--ghost btn--sm', type: 'button', onclick: () => openHwEditor(lesson), text: '📝 تکلیف' }),
         el('button', { class: 'btn btn--danger btn--sm', type: 'button', onclick: () => deleteLesson(lesson), text: '🗑️' }),
@@ -728,6 +754,239 @@ async function submitSettings(e) {
   } catch (err) { toast(err.message, 'error'); }
 }
 
+// ---------- calendar tab (monthly) ----------
+// مدیر می‌تواند هر ماه شمسی را ببیند و برای هر روز مهلت/امتحان ثبت کند.
+const cal = {
+  jy: 0, jm: 0,   // ماه در حال نمایش
+};
+
+function jalaliMonthLength(jy, jm) {
+  if (jm <= 6) return 31;
+  if (jm <= 11) return 30;
+  // اسفند: کبیسه؟ — سال کبیسه جلالی اگر باقیمانده سال به ۳۳ در این مجموعه باشد
+  const remainders = [1, 5, 9, 13, 17, 22, 26, 30];
+  return remainders.includes(jy % 33) ? 30 : 29;
+}
+
+function initCalendar() {
+  const { jy, jm } = toJalali(new Date());
+  cal.jy = jy; cal.jm = jm;
+  $('#calPrev').addEventListener('click', () => {
+    cal.jm -= 1;
+    if (cal.jm < 1) { cal.jm = 12; cal.jy -= 1; }
+    renderCalendar();
+  });
+  $('#calNext').addEventListener('click', () => {
+    cal.jm += 1;
+    if (cal.jm > 12) { cal.jm = 1; cal.jy += 1; }
+    renderCalendar();
+  });
+  $('#calToday').addEventListener('click', () => {
+    const t = toJalali(new Date());
+    cal.jy = t.jy; cal.jm = t.jm;
+    renderCalendar();
+  });
+}
+
+/** مهلت‌های یک روز مشخص (به وقت تهران) */
+function tasksOnJalaliDay(jy, jm, jd) {
+  // از fromJalali نونِ روز محلی می‌سازیم؛ بازه تهران روز = [03:30 UTC, +24h]
+  const local = fromJalali(jy, jm, jd);         // نون محلی
+  const startUtc = Date.UTC(local.getFullYear(), local.getMonth(), local.getDate()) - 3.5 * 3600_000;
+  const endUtc = startUtc + 86_400_000;
+  const all = [...state.tasks.active, ...state.tasks.expired];
+  return all.filter((t) => {
+    const ts = new Date(t.due_at).getTime();
+    return ts >= startUtc && ts < endUtc;
+  });
+}
+
+function renderCalendar() {
+  $('#calTitle').textContent = `${JALALI_MONTHS[cal.jm - 1]} ${faDigits(cal.jy)}`;
+  const cells = $('#calGrid');
+  cells.textContent = '';
+
+  const today = toJalali(new Date());
+  const monthLen = jalaliMonthLength(cal.jy, cal.jm);
+  // روز هفته‌ی روز اول ماه: از fromJalali
+  const first = fromJalali(cal.jy, cal.jm, 1);
+  const firstDow = iranDayIndex(first); // 0=شنبه
+
+  // سلول‌های خالی ابتدای ماه
+  for (let i = 0; i < firstDow; i++) cells.append(el('div', { class: 'cal-cell cal-cell--pad' }));
+
+  for (let jd = 1; jd <= monthLen; jd++) {
+    const isToday = today.jy === cal.jy && today.jm === cal.jm && today.jd === jd;
+    const date = fromJalali(cal.jy, cal.jm, jd);
+    const dayIdx = iranDayIndex(date);
+    const isOff = dayIdx === 5 || dayIdx === 6;
+    const dayTasks = tasksOnJalaliDay(cal.jy, cal.jm, jd);
+    const nLessons = periodsPerDay(dayIdx);
+
+    const cell = el('button', {
+      class: `cal-cell${isToday ? ' cal-cell--today' : ''}${isOff ? ' cal-cell--off' : ''}`,
+      type: 'button',
+      'aria-label': `${WEEK_DAY_NAMES[dayIdx]} ${faDigits(jd)} ${JALALI_MONTHS[cal.jm - 1]}`,
+      onclick: () => openCalDay(jy0(), jm0(), jd),
+    },
+      el('span', { class: 'cal-cell__num', text: faDigits(jd) }),
+      el('span', { class: 'cal-cell__dots' },
+        nLessons ? el('i', { class: 'cal-dot cal-dot--lesson', title: `${faDigits(nLessons)} زنگ` }) : null,
+        ...dayTasks.slice(0, 3).map((t) => el('i', {
+          class: `cal-dot cal-dot--task${t.priority === 'high' ? ' cal-dot--high' : ''}`,
+          title: `${KIND_LABELS[t.kind] || t.kind}: ${t.title}`,
+        })),
+        dayTasks.length > 3 ? el('i', { class: 'cal-dot cal-dot--more' }) : null,
+      ),
+    );
+    cells.append(cell);
+  }
+
+  // لیست مهلت‌های ماه
+  const list = $('#calMonthTasks');
+  list.textContent = '';
+  const all = [...state.tasks.active, ...state.tasks.expired]
+    .filter((t) => {
+      const d = toJalali(new Date(new Date(t.due_at).getTime() + 3.5 * 3600_000));
+      return d.jy === cal.jy && d.jm === cal.jm;
+    })
+    .sort((a, b) => a.due_at.localeCompare(b.due_at));
+  if (!all.length) {
+    list.append(el('div', { class: 'empty-state', text: 'در این ماه مهلتی ثبت نشده است.' }));
+  } else {
+    for (const t of all) {
+      const cd = countdown(t.due_at);
+      list.append(el('div', { class: 'admin-row' },
+        el('div', { class: 'admin-row__main' },
+          el('div', { class: 'admin-row__title', text: `${KIND_ICONS[t.kind]} ${t.title}` }),
+          el('div', { class: 'admin-row__sub', text: `${t.subject_name ? t.subject_name + ' · ' : ''}${formatJalaliDateTime(t.due_at)} · ${cd.text}` })),
+        el('button', { class: 'btn btn--ghost btn--sm', type: 'button', onclick: () => editTask(t), text: '✏️' }),
+        el('button', { class: 'btn btn--danger btn--sm', type: 'button', onclick: () => deleteTask(t), text: '🗑️' })));
+    }
+  }
+}
+
+// مقادیر جاری ماه برای openCalDay (کلوژر تمیزتر)
+function jy0() { return cal.jy; }
+function jm0() { return cal.jm; }
+
+/** شیت جزئیات یک روز: زنگ‌ها + مهلت‌ها + افزودن سریع مهلت */
+function openCalDay(jy, jm, jd) {
+  const date = fromJalali(jy, jm, jd);
+  const dayIdx = iranDayIndex(date);
+  $('#dayTitle').textContent = `${WEEK_DAY_NAMES[dayIdx]} ${faDigits(jd)} ${JALALI_MONTHS[jm - 1]} ${faDigits(jy)}`;
+  const body = $('#dayBody');
+  body.textContent = '';
+
+  // تاریخ برای datetime-local (پیش‌فرض ۸ صبح تهران)
+  const defaultLocal = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}T08:00`;
+
+  const wrap = el('div', { class: 'detail-lesson' });
+
+  // زنگ‌های روز
+  const nP = periodsPerDay(dayIdx);
+  const lessons = (state.scheduleDays[dayIdx] || []).filter((l) => l.period <= (nP || 12));
+  const lessonsBlock = el('div', { class: 'detail-block' },
+    el('p', { class: 'detail-block__title', text: `🗓️ زنگ‌های این روز (${faDigits(lessons.length)})` }));
+  if (!lessons.length) {
+    lessonsBlock.append(el('p', { class: 'detail-block__text detail-block__text--muted', text: 'این روز کلاسی نیست — تعطیل.' }));
+  } else {
+    const lList = el('div', { class: 'cal-day-lessons' });
+    for (const l of lessons) {
+      const name = l.alt_subject_name
+        ? `${l.subject_name} / ${l.alt_subject_name} (گردشی)`
+        : l.subject_name;
+      lList.append(el('div', { class: 'cal-day-lesson' },
+        el('span', { class: 'cal-day-lesson__p', text: faDigits(l.period) }),
+        el('span', { class: 'cal-day-lesson__name', text: name }),
+        el('span', { class: 'cal-day-lesson__time', text: `${faDigits(l.start_time)}–${faDigits(l.end_time)}` }),
+        el('button', { class: 'btn btn--ghost btn--sm', type: 'button', text: '📝', onclick: () => { closeOverlay($('#dayOverlay')); openHwEditor(l); } })));
+    }
+    lessonsBlock.append(lList);
+  }
+  wrap.append(lessonsBlock);
+
+  // مهلت‌های روز
+  const dayTasks = tasksOnJalaliDay(jy, jm, jd);
+  const tasksBlock = el('div', { class: 'detail-block' },
+    el('p', { class: 'detail-block__title', text: `⏳ مهلت‌های این روز (${faDigits(dayTasks.length)})` }));
+  if (!dayTasks.length) {
+    tasksBlock.append(el('p', { class: 'detail-block__text detail-block__text--muted', text: 'برای این روز چیزی ثبت نشده است.' }));
+  } else {
+    const tList = el('div', { class: 'admin-list' });
+    for (const t of dayTasks) {
+      tList.append(el('div', { class: 'admin-row' },
+        el('div', { class: 'admin-row__main' },
+          el('div', { class: 'admin-row__title', text: `${KIND_ICONS[t.kind]} ${t.title}` }),
+          el('div', { class: 'admin-row__sub', text: `${formatJalaliDateTime(t.due_at)} · ${countdown(t.due_at).text}` })),
+        el('button', { class: 'btn btn--ghost btn--sm', type: 'button', text: '✏️', onclick: () => { closeOverlay($('#dayOverlay')); editTask(t); } }),
+        el('button', { class: 'btn btn--danger btn--sm', type: 'button', text: '🗑️', onclick: () => { closeOverlay($('#dayOverlay')); deleteTask(t); } })));
+    }
+    tasksBlock.append(tList);
+  }
+  wrap.append(tasksBlock);
+
+  // افزودن سریع مهلت
+  wrap.append(el('div', { class: 'detail-block' },
+    el('p', { class: 'detail-block__title', text: '➕ افزودن مهلت به همین روز' }),
+    el('form', { id: 'dayQuickTask', onsubmit: async (e) => {
+      e.preventDefault();
+      const title = $('#dayQtTitle').value.trim();
+      const time = $('#dayQtTime').value || '08:00';
+      if (!title) { toast('عنوان را بنویسید.', 'error'); return; }
+      // ساعت انتخابی به وقت تهران فرض می‌شود؛ تاریخ همان روز است
+      const localDate = defaultLocal.slice(0, 10);
+      const fakeLocal = `${localDate}T${time}:00`;
+      const utc = new Date(new Date(`${fakeLocal}Z`).getTime() - 3.5 * 3600_000);
+      try {
+        await api('/api/admin/tasks', {
+          method: 'POST',
+          body: {
+            kind: $('#dayQtKind').value,
+            title,
+            subjectId: $('#dayQtSubject').value ? Number($('#dayQtSubject').value) : null,
+            dueAt: utc.toISOString().slice(0, 19) + 'Z',
+            priority: $('#dayQtPriority').value,
+          },
+        });
+        toast('مهلت اضافه شد ✅', 'success');
+        await refreshAll();
+        openCalDay(jy, jm, jd); // بازکردن مجدد شیت با داده تازه
+      } catch (err) { toast(err.message, 'error'); }
+    } },
+      el('div', { class: 'form-grid' },
+        el('div', { class: 'field' },
+          el('label', { class: 'field__label', for: 'dayQtKind', text: 'نوع' }),
+          el('select', { class: 'select', id: 'dayQtKind' },
+            el('option', { value: 'exam', text: 'امتحان' }),
+            el('option', { value: 'quiz', text: 'آزمونک' }),
+            el('option', { value: 'submission', text: 'تحویل' }),
+            el('option', { value: 'project', text: 'پروژه' }),
+            el('option', { value: 'research', text: 'تحقیق' }),
+            el('option', { value: 'presentation', text: 'ارائه' }))),
+        el('div', { class: 'field' },
+          el('label', { class: 'field__label', for: 'dayQtSubject', text: 'درس (اختیاری)' }),
+          (() => { const s = el('select', { class: 'select', id: 'dayQtSubject' }); s.append(el('option', { value: '', text: '— بدون درس —' })); for (const sub of state.subjects) s.append(el('option', { value: sub.id, text: sub.name })); return s; })()),
+        el('div', { class: 'field', style: 'grid-column: 1/-1;' },
+          el('label', { class: 'field__label', for: 'dayQtTitle', text: 'عنوان' }),
+          el('input', { class: 'input', id: 'dayQtTitle', maxlength: '200', placeholder: 'مثلاً: امتحان فصل ۳' })),
+        el('div', { class: 'field' },
+          el('label', { class: 'field__label', for: 'dayQtTime', text: 'ساعت (تهران)' }),
+          el('input', { class: 'input input--time', id: 'dayQtTime', type: 'time', value: '08:00' })),
+        el('div', { class: 'field' },
+          el('label', { class: 'field__label', for: 'dayQtPriority', text: 'اولویت' }),
+          el('select', { class: 'select', id: 'dayQtPriority' },
+            el('option', { value: 'low', text: 'کم' }),
+            el('option', { value: 'normal', text: 'معمولی', selected: '' }),
+            el('option', { value: 'high', text: 'مهم' })))),
+      el('div', { class: 'btn-row', style: 'margin-top:4px;' },
+        el('button', { class: 'btn btn--primary', type: 'submit', text: 'افزودن' })))));
+
+  body.append(wrap);
+  openOverlay($('#dayOverlay'));
+  $('#dayClose').focus();
+}
+
 // ---------- tabs ----------
 function switchTab(name) {
   for (const btn of document.querySelectorAll('.admin-tab')) {
@@ -792,6 +1051,10 @@ $('#settingsForm').addEventListener('submit', submitSettings);
 $('#hwForm').addEventListener('submit', submitHomework);
 $('#hwDelete').addEventListener('click', deleteHomework);
 $('#hwClose').addEventListener('click', () => closeOverlay($('#hwOverlay')));
+$('#dayClose').addEventListener('click', () => closeOverlay($('#dayOverlay')));
+$('#dayOverlay').addEventListener('mousedown', (e) => {
+  if (e.target === $('#dayOverlay')) closeOverlay($('#dayOverlay'));
+});
 $('#hwOverlay').addEventListener('mousedown', (e) => {
   if (e.target === $('#hwOverlay')) closeOverlay($('#hwOverlay'));
 });
@@ -812,8 +1075,10 @@ for (const btn of document.querySelectorAll('.admin-tab')) {
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     if (!$('#hwOverlay').hidden) closeOverlay($('#hwOverlay'));
+    if (!$('#dayOverlay').hidden) closeOverlay($('#dayOverlay'));
     if (!$('#confirmOverlay').hidden) $('#confirmNo').click();
   }
 });
 
+initCalendar();
 boot();

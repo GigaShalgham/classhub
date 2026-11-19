@@ -9,15 +9,17 @@ const WEEK_DAYS = 7;
 
 const publicRoutes = new Hono<{ Bindings: Env }>();
 
-/** lessons with subject info + latest homework + attachment counts */
+/** lessons with subject info + rotating alt subject + latest homework + attachment counts */
 function lessonQuery() {
   return `
     SELECT l.id, l.day, l.period, l.start_time AS startTime, l.end_time AS endTime,
            s.id AS subjectId, s.name AS subjectName, s.color_key AS colorKey,
+           a.id AS altSubjectId, a.name AS altSubjectName, a.color_key AS altColorKey,
            h.id AS hwId, h.title AS hwTitle, h.due_at AS hwDueAt,
-           (SELECT COUNT(*) FROM attachments a WHERE a.parent_type='homework' AND a.parent_id = h.id) AS hwAtt
+           (SELECT COUNT(*) FROM attachments a2 WHERE a2.parent_type='homework' AND a2.parent_id = h.id) AS hwAtt
     FROM lessons l
     JOIN subjects s ON s.id = l.subject_id
+    LEFT JOIN subjects a ON a.id = l.alt_subject_id
     LEFT JOIN homework h ON h.lesson_id = l.id
     ORDER BY l.day, l.period
   `;
@@ -26,6 +28,7 @@ function lessonQuery() {
 interface LessonRow {
   id: number; day: number; period: number; startTime: string; endTime: string;
   subjectId: number; subjectName: string; colorKey: string;
+  altSubjectId: number | null; altSubjectName: string | null; altColorKey: string | null;
   hwId: number | null; hwTitle: string | null; hwDueAt: string | null; hwAtt: number;
 }
 
@@ -37,6 +40,9 @@ function rowToLesson(r: LessonRow): Lesson {
     subject_id: r.subjectId,
     subject_name: r.subjectName,
     color_key: r.colorKey as Lesson['color_key'],
+    alt_subject_id: r.altSubjectId ?? null,
+    alt_subject_name: r.altSubjectName ?? null,
+    alt_color_key: (r.altColorKey ?? null) as Lesson['alt_color_key'],
     start_time: r.startTime,
     end_time: r.endTime,
     homework: r.hwId ? {
@@ -69,11 +75,13 @@ publicRoutes.get('/lessons/:id', async (c) => {
   if (!Number.isInteger(id)) return c.json({ ok: false, error: 'شناسه نامعتبر.' }, 400);
   const row = await c.env.DB.prepare(`
     SELECT l.*, s.name AS subjectName, s.color_key AS colorKey,
+           sa.id AS altSubjectId, sa.name AS altSubjectName, sa.color_key AS altColorKey,
            h.id AS hwId, h.title AS hwTitle, h.description AS hwDescription,
            h.textbook_pages AS hwPages, h.instructions AS hwInstructions,
            h.notes AS hwNotes, h.due_at AS hwDueAt, h.created_at AS hwCreated, h.updated_at AS hwUpdated
     FROM lessons l
     JOIN subjects s ON s.id = l.subject_id
+    LEFT JOIN subjects sa ON sa.id = l.alt_subject_id
     LEFT JOIN homework h ON h.lesson_id = l.id
     WHERE l.id = ?
   `).bind(id).first<Record<string, unknown>>();
@@ -96,6 +104,9 @@ publicRoutes.get('/lessons/:id', async (c) => {
       subject_id: row.subjectId ?? row.subject_id,
       subject_name: row.subjectName,
       color_key: row.colorKey,
+      alt_subject_id: row.altSubjectId ?? null,
+      alt_subject_name: row.altSubjectName ?? null,
+      alt_color_key: row.altColorKey ?? null,
       homework: hwId ? {
         id: hwId,
         lesson_id: id,

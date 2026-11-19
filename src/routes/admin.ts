@@ -137,19 +137,32 @@ async function subjectExists(db: D1Database, subjectId: number): Promise<boolean
   return Boolean(r);
 }
 
+/** اعتبارسنجی درس گردشی: null یا عدد معتبر در subjects */
+function parseAltSubject(body: Record<string, unknown>): number | null | 'invalid' {
+  const raw = body.altSubjectId ?? body.alt_subject_id;
+  if (raw === undefined || raw === null || raw === '') return null;
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n < 1 || n > 10_000) return 'invalid';
+  return n;
+}
+
 adminRoutes.post('/lessons', requireAdmin(), async (c) => {
   const body = await readJson(c.req.raw);
   const day = int(body.day, 'روز', 0, 6);
   const period = int(body.period, 'زنگ', 1, 12);
   const subjectId = int(body.subjectId ?? body.subject_id, 'درس', 1, 10_000);
+  const altRaw = parseAltSubject(body);
+  if (altRaw === 'invalid') bad('درس گردشی نامعتبر است.');
+  const altSubjectId = altRaw && altRaw === subjectId ? null : altRaw; // همان درس؟ گردشی بی‌معنی است
   const startTime = timeStr(body.startTime ?? body.start_time, 'ساعت شروع');
   const endTime = timeStr(body.endTime ?? body.end_time, 'ساعت پایان');
   if (endTime <= startTime) bad('ساعت پایان باید بعد از شروع باشد.');
   if (!(await subjectExists(c.env.DB, subjectId))) bad('درس انتخاب‌شده وجود ندارد.');
+  if (altSubjectId && !(await subjectExists(c.env.DB, altSubjectId))) bad('درس گردشی انتخاب‌شده وجود ندارد.');
   try {
     const r = await c.env.DB.prepare(
-      'INSERT INTO lessons (day, period, subject_id, start_time, end_time) VALUES (?, ?, ?, ?, ?)',
-    ).bind(day, period, subjectId, startTime, endTime).run();
+      'INSERT INTO lessons (day, period, subject_id, alt_subject_id, start_time, end_time) VALUES (?, ?, ?, ?, ?, ?)',
+    ).bind(day, period, subjectId, altSubjectId, startTime, endTime).run();
     return c.json({ ok: true, id: r.meta.last_row_id });
   } catch (e) {
     if (String(e).includes('UNIQUE')) return c.json({ ok: false, error: 'این روز و زنگ قبلاً پر شده است.' }, 409);
@@ -163,14 +176,18 @@ adminRoutes.put('/lessons/:id', requireAdmin(), async (c) => {
   const day = int(body.day, 'روز', 0, 6);
   const period = int(body.period, 'زنگ', 1, 12);
   const subjectId = int(body.subjectId ?? body.subject_id, 'درس', 1, 10_000);
+  const altRaw = parseAltSubject(body);
+  if (altRaw === 'invalid') bad('درس گردشی نامعتبر است.');
+  const altSubjectId = altRaw && altRaw === subjectId ? null : altRaw;
   const startTime = timeStr(body.startTime ?? body.start_time, 'ساعت شروع');
   const endTime = timeStr(body.endTime ?? body.end_time, 'ساعت پایان');
   if (endTime <= startTime) bad('ساعت پایان باید بعد از شروع باشد.');
   if (!(await subjectExists(c.env.DB, subjectId))) bad('درس انتخاب‌شده وجود ندارد.');
+  if (altSubjectId && !(await subjectExists(c.env.DB, altSubjectId))) bad('درس گردشی انتخاب‌شده وجود ندارد.');
   try {
     const r = await c.env.DB.prepare(
-      `UPDATE lessons SET day=?, period=?, subject_id=?, start_time=?, end_time=?, updated_at=datetime('now') WHERE id=?`,
-    ).bind(day, period, subjectId, startTime, endTime, id).run();
+      `UPDATE lessons SET day=?, period=?, subject_id=?, alt_subject_id=?, start_time=?, end_time=?, updated_at=datetime('now') WHERE id=?`,
+    ).bind(day, period, subjectId, altSubjectId, startTime, endTime, id).run();
     if (!r.meta.changes) return c.json({ ok: false, error: 'درس پیدا نشد.' }, 404);
     return c.json({ ok: true });
   } catch (e) {

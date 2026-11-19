@@ -21,18 +21,15 @@ function div(a, b) {
   return Math.floor(a / b);
 }
 
-/** Gregorian -> Jalali */
-export function toJalali(date) {
-  const gy = date.getFullYear();
-  const gm = date.getMonth() + 1;
-  const gd = date.getDate();
+/** Gregorian y/m/d numbers -> Jalali (timezone-safe core) */
+export function toJalaliParts(gy, gm, gd) {
   const g_d_m = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
   let jy = gy <= 1600 ? 0 : 979;
   const gy2 = gy <= 1600 ? gy - 621 : gy - 1600;
   const gm2 = gm > 2 ? 1 : 0;
   let days = (365 * gy2) + div(gy2 + 3, 4) - div(gy2 + 99, 100)
     + div(gy2 + 399, 400) - 80 + gd + g_d_m[gm - 1];
-  days += (((gy2 % 4 === 0 && gy2 % 100 !== 0) || (gy2 % 400 === 0)) && gm > 2) ? 1 : 0;
+  days += (((gy2 % 4 === 0 && gy2 % 100 !== 0) || gy2 % 400 === 0) && gm > 2) ? 1 : 0;
   let jy2 = jy + 33 * div(days, 12053);
   days %= 12053;
   jy2 += 4 * div(days, 1461);
@@ -45,6 +42,11 @@ export function toJalali(date) {
   const jd = 1 + ((days < 186) ? (days % 31) : ((days - 186) % 30));
   jy = jy2;
   return { jy, jm, jd };
+}
+
+/** Gregorian -> Jalali */
+export function toJalali(date) {
+  return toJalaliParts(date.getFullYear(), date.getMonth() + 1, date.getDate());
 }
 
 /** Jalali -> Gregorian (returns a Date at local noon for safety) */
@@ -91,6 +93,41 @@ export function iranDayIndex(date) {
   return (date.getDay() + 1) % 7;
 }
 
+/* ---------- زمان تهران (UTC+3:30، بدون ساعت تابستانی از ۲۰۲۲) ---------- */
+
+/** y/m/d در تقویم تهران برای یک لحظه‌ی زمانی */
+export function tehranYMD(ms) {
+  const t = new Date(ms + 3.5 * 3600_000);
+  return { y: t.getUTCFullYear(), m: t.getUTCMonth() + 1, d: t.getUTCDate() };
+}
+
+/** شماره‌ی روز تهران (روز سپری‌شده از epoch به وقت تهران) */
+export function tehranDayNumber(ms = Date.now()) {
+  const { y, m, d } = tehranYMD(ms);
+  return Math.floor(Date.UTC(y, m - 1, d) / 86_400_000);
+}
+
+/** ساعت تهران «HH:MM» برای یک لحظه‌ی زمانی */
+export function tehranHHMM(ms) {
+  const t = new Date(ms + 3.5 * 3600_000);
+  return `${String(t.getUTCHours()).padStart(2, '0')}:${String(t.getUTCMinutes()).padStart(2, '0')}`;
+}
+
+/**
+ * پنجره‌ی غلتان n روزه از «امروزِ تهران».
+ * همیشه از امروز شروع می‌شود و هرگز روز گذشته نشان نمی‌دهد.
+ * خروجی: آرایه‌ای از { date, dayIdx } — date نونِ روز محلی است.
+ */
+export function rollingWindow(n, now = Date.now()) {
+  const { y, m, d } = tehranYMD(now);
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    const date = new Date(y, m - 1, d + i, 12, 0, 0); // نونِ محلی: امن برای DST نبودن
+    out.push({ date, dayIdx: iranDayIndex(date) });
+  }
+  return out;
+}
+
 /** Format a Jalali date like «۱۸ آبان ۱۴۰۵». */
 export function formatJalali(date, opts = {}) {
   const { jy, jm, jd } = toJalali(date);
@@ -106,12 +143,20 @@ export function formatJalaliDateTime(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return '—';
-  // convert to Tehran time (UTC+3:30, no DST since 2022)
   const tehran = new Date(d.getTime() + (3.5 * 3600_000));
   const { jy, jm, jd } = toJalali(tehran);
   const hh = String(tehran.getUTCHours()).padStart(2, '0');
   const mm = String(tehran.getUTCMinutes()).padStart(2, '0');
   return `${faDigits(jd)} ${JALALI_MONTHS[jm - 1]} ${faDigits(jy)}، ساعت ${faDigits(hh + ':' + mm)}`;
+}
+
+/** فقط بخش تاریخ شمسی یک ISO به وقت تهران: «۱۸ آبان» */
+export function jalaliDateOnly(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '—';
+  const { jy, jm, jd } = toJalali(new Date(d.getTime() + 3.5 * 3600_000));
+  return `${faDigits(jd)} ${JALALI_MONTHS[jm - 1]}`;
 }
 
 /** Format HH:MM with Persian digits. */

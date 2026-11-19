@@ -8,7 +8,7 @@
   <title>مدیریت کلاس | کلاس‌هاب</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚙️</text></svg>">
   <link rel="preload" href="/fonts/Vazirmatn-Regular.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="/fonts/Lalezar-Regular.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/Estedad-Bold.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -65,18 +65,48 @@
 
       <nav class="admin-tabs" id="adminTabs" role="tablist" aria-label="بخش‌های مدیریت">
         <button class="admin-tab admin-tab--active" data-tab="lessons" role="tab" aria-selected="true" type="button">🗓️ برنامه و تکالیف</button>
+        <button class="admin-tab" data-tab="calendar" role="tab" aria-selected="false" type="button">📅 تقویم ماهانه</button>
         <button class="admin-tab" data-tab="tasks" role="tab" aria-selected="false" type="button">⏳ مهلت‌ها</button>
         <button class="admin-tab" data-tab="announcements" role="tab" aria-selected="false" type="button">📣 اطلاعیه‌ها</button>
         <button class="admin-tab" data-tab="subjects" role="tab" aria-selected="false" type="button">🎨 درس‌ها</button>
         <button class="admin-tab" data-tab="settings" role="tab" aria-selected="false" type="button">⚙️ تنظیمات</button>
       </nav>
 
+      <!-- ===== Calendar tab ===== -->
+      <section class="admin-panel hidden" id="tab-calendar" role="tabpanel">
+        <div class="admin-card">
+          <div class="cal-head">
+            <button class="btn btn--ghost btn--sm" id="calPrev" type="button" aria-label="ماه قبل">› قبل</button>
+            <h2 class="admin-card__title cal-title" id="calTitle" style="margin:0;">…</h2>
+            <button class="btn btn--ghost btn--sm" id="calNext" type="button" aria-label="ماه بعد">بعد ‹</button>
+            <button class="btn btn--ghost btn--sm" id="calToday" type="button">این ماه</button>
+          </div>
+          <p class="field__hint" style="margin:6px 0 12px;">
+            نمای ماهانه — روی هر روز بزنید تا زنگ‌ها و مهلت‌هایش را ببینید و مهلت جدید اضافه کنید. روزهای تعطیل (پنجشنبه و جمعه) کم‌رنگ‌ترند.
+          </p>
+          <div class="cal-week" aria-hidden="true">
+            <span>ش</span><span>ی</span><span>د</span><span>س</span><span>چ</span><span>پ</span><span>ج</span>
+          </div>
+          <div class="cal-grid" id="calGrid"></div>
+          <div class="cal-legend">
+            <span><i class="cal-dot cal-dot--lesson"></i> روز کلاسی</span>
+            <span><i class="cal-dot cal-dot--task"></i> مهلت</span>
+            <span><i class="cal-dot cal-dot--task cal-dot--high"></i> مهلت مهم</span>
+            <span><i class="cal-dot cal-dot--more"></i> چند مهلت</span>
+          </div>
+        </div>
+        <div class="admin-card">
+          <h2 class="admin-card__title">⏳ مهلت‌های این ماه</h2>
+          <div class="admin-list" id="calMonthTasks"></div>
+        </div>
+      </section>
+
       <!-- ===== Lessons tab ===== -->
       <section class="admin-panel" id="tab-lessons" role="tabpanel">
         <div class="admin-card">
           <h2 class="admin-card__title">🗓️ برنامه هفتگی کلاس</h2>
           <p class="field__hint" style="margin-top:-10px;">
-            درس هر خانه را از فهرست انتخاب کنید — ساعت‌ها خودکار بر اساس زنگ‌های استاندارد (۰۷:۴۵ تا ۱۳:۴۵؛ دوشنبه تا ۱۲:۱۵) پر می‌شوند. برای خالی‌کردن یک خانه «—» را انتخاب کنید.
+            درس هر خانه را از فهرست انتخاب کنید — ساعت‌ها خودکار بر اساس زنگ‌های استاندارد (۰۷:۴۵ تا ۱۳:۴۵؛ دوشنبه تا ۱۲:۱۵) پر می‌شوند. برای خالی‌کردن یک خانه «—» را انتخاب کنید. اگر زنگی هفته‌به‌هفته بین دو درس می‌چرخد (مثل هندسه/دفاعی)، درس دوم را از فهرست «🔄 گردشی» همان خانه انتخاب کنید.
           </p>
           <div class="tt-wrap admin-tt-wrap">
             <div class="tt-scroll admin-tt-scroll">
@@ -296,6 +326,18 @@
           </div>
         </form>
       </div>
+    </div>
+  </div>
+
+  <!-- calendar day sheet -->
+  <div class="overlay" id="dayOverlay" role="dialog" aria-modal="true" aria-labelledby="dayTitle" hidden>
+    <div class="sheet">
+      <div class="sheet__grip" aria-hidden="true"></div>
+      <div class="sheet__head">
+        <h2 class="sheet__title" id="dayTitle">روز</h2>
+        <button class="sheet__close" id="dayClose" aria-label="بستن">✕</button>
+      </div>
+      <div class="sheet__body" id="dayBody"></div>
     </div>
   </div>
 

@@ -1,8 +1,8 @@
 /* ================================================================
-   کلاس‌هاب — Cute Pastel Design System v2 ✨
-   فونت‌ها: وزیرمتن (۷ وزن) + لاله‌زار (تیترها)
-   پالت: بنفش #E9DDF8 · صورتی #F9DDE7 · نعنایی #DDF1E5 ·
-         کرم #FFF0D8 · پس‌زمینه #FCFAFD · متن #373343
+   کلاس‌هاب — Pastel Slate Design System v3
+   فونت‌ها: وزیرمتن (۷ وزن) + استعداد (تیترها)
+   پالت: آبی فولادی #D9E4F2 · نیلی #D6DFF5 · سبزآبی #D8EEE9 ·
+         کرم #F5EEDC · پس‌زمینه #FAFBFD · متن #2C3242
    ================================================================ */
 
 /* ---------- فونت‌ها ---------- */
@@ -42,41 +42,46 @@
   font-weight: 900; font-style: normal; font-display: swap;
 }
 @font-face {
-  font-family: 'Lalezar';
-  src: url('/fonts/Lalezar-Regular.woff2') format('woff2');
-  font-weight: 400; font-style: normal; font-display: swap;
+  font-family: 'Estedad';
+  src: url('/fonts/Estedad-Bold.woff2') format('woff2');
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Estedad';
+  src: url('/fonts/Estedad-ExtraBold.woff2') format('woff2');
+  font-weight: 800; font-style: normal; font-display: swap;
 }
 
 /* ---------- توکن‌ها ---------- */
 :root {
-  /* پالت پاستلی */
-  --lavender: #E9DDF8;
-  --pink: #F9DDE7;
-  --mint: #DDF1E5;
-  --cream: #FFF0D8;
-  --blue: #DDE8F8;
-  --green: #E3F0D8;
-  --bg: #FCFAFD;
-  --text: #373343;
-  --sub: #918B9B;
+  /* پالت پاستلی خنثی‌تر (steel blue / indigo / teal) */
+  --lavender: #D9E4F2;   /* آبی فولادی (سابق: بنفش) */
+  --pink: #F2DEDE;       /* رز خنثی (سابق: صورتی پررنگ) */
+  --mint: #D8EEE9;       /* سبزآبی */
+  --cream: #F5EEDC;      /* کرم */
+  --blue: #D6DFF5;       /* نیلی */
+  --green: #E2EFD8;      /* سبز زیتونی روشن */
+  --bg: #FAFBFD;
+  --text: #2C3242;
+  --sub: #7C8496;
   --white: #FFFFFF;
 
-  --lavender-deep: #8A6FB8;
-  --pink-deep: #C2739B;
-  --mint-deep: #4E9E78;
-  --cream-deep: #C08A3E;
-  --blue-deep: #5B7FB8;
-  --green-deep: #6B9142;
+  --lavender-deep: #4C6E9E;  /* آبی فولادی عمیق */
+  --pink-deep: #B06A6A;      /* رز عمیق */
+  --mint-deep: #3E8A7C;      /* تیال عمیق */
+  --cream-deep: #A97F36;     /* خردلی عمیق */
+  --blue-deep: #5566B0;      /* نیلی عمیق */
+  --green-deep: #5F8A3C;     /* سبز عمیق */
 
   --surface: #FFFFFF;
-  --surface-2: #F7F3FA;
-  --surface-3: #F2EDF7;
-  --border: #EDE7F3;
-  --border-strong: #DCCFEA;
+  --surface-2: #F3F5F9;
+  --surface-3: #EBEEF4;
+  --border: #E4E8F0;
+  --border-strong: #CBD3E1;
 
   /* تایپوگرافی سیال */
   --font-body: 'Vazirmatn', 'Segoe UI', Tahoma, sans-serif;
-  --font-display: 'Lalezar', 'Vazirmatn', 'Segoe UI', sans-serif;
+  --font-display: 'Estedad', 'Vazirmatn', 'Segoe UI', sans-serif;
 
   --fs-xs: clamp(10.5px, 0.5vw + 9px, 12px);
   --fs-sm: clamp(12px, 0.4vw + 10.5px, 13.5px);
@@ -84,20 +89,20 @@
   --fs-md: clamp(15px, 0.6vw + 12.5px, 17px);
   --fs-lg: clamp(18px, 1vw + 14px, 22px);
   --fs-xl: clamp(22px, 1.8vw + 16px, 30px);
-  --fs-hero: clamp(30px, 3.5vw + 18px, 46px);
+  --fs-hero: clamp(28px, 3.2vw + 17px, 42px);
 
-  /* گردی */
-  --radius-xs: 8px;
-  --radius-sm: 12px;
-  --radius-md: 16px;
-  --radius-lg: 22px;
-  --radius-xl: 30px;
+  /* گردی — کمی مرددتر */
+  --radius-xs: 7px;
+  --radius-sm: 10px;
+  --radius-md: 13px;
+  --radius-lg: 17px;
+  --radius-xl: 22px;
 
-  /* سایه‌های نرم بنفش‌فام */
-  --shadow-xs: 0 1px 2px rgba(85, 60, 120, 0.05);
-  --shadow-soft: 0 1px 2px rgba(85, 60, 120, 0.04), 0 8px 24px -6px rgba(85, 60, 120, 0.10);
-  --shadow-hover: 0 2px 4px rgba(85, 60, 120, 0.06), 0 16px 40px -8px rgba(85, 60, 120, 0.16);
-  --shadow-pop: 0 4px 8px rgba(85, 60, 120, 0.08), 0 24px 64px -12px rgba(85, 60, 120, 0.24);
+  /* سایه‌های خاکستری-آبی */
+  --shadow-xs: 0 1px 2px rgba(52, 66, 92, 0.06);
+  --shadow-soft: 0 1px 2px rgba(52, 66, 92, 0.05), 0 8px 24px -6px rgba(52, 66, 92, 0.11);
+  --shadow-hover: 0 2px 4px rgba(52, 66, 92, 0.07), 0 16px 40px -8px rgba(52, 66, 92, 0.17);
+  --shadow-pop: 0 4px 8px rgba(52, 66, 92, 0.09), 0 24px 64px -12px rgba(52, 66, 92, 0.24);
 
   --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
   --ease-out: cubic-bezier(0.22, 0.9, 0.36, 1);
@@ -125,17 +130,17 @@ body {
   overflow-x: hidden;
 }
 
-/* پس‌زمینه تزئینی: هاله‌های پاستلی + نقطه‌های ریز */
+/* پس‌زمینه تزئینی: هاله‌های پاستلی خنثی + نقطه‌های ریز */
 body::before {
   content: '';
   position: fixed;
   inset: 0;
   z-index: -2;
   background-image:
-    radial-gradient(circle at 12% 6%, rgba(233, 221, 248, 0.6) 0, transparent 30%),
-    radial-gradient(circle at 88% 2%, rgba(249, 221, 231, 0.55) 0, transparent 26%),
-    radial-gradient(circle at 96% 90%, rgba(221, 241, 229, 0.55) 0, transparent 28%),
-    radial-gradient(circle at 3% 94%, rgba(255, 240, 216, 0.55) 0, transparent 26%);
+    radial-gradient(circle at 12% 6%, rgba(217, 228, 242, 0.65) 0, transparent 30%),
+    radial-gradient(circle at 88% 2%, rgba(214, 223, 245, 0.55) 0, transparent 26%),
+    radial-gradient(circle at 96% 90%, rgba(216, 238, 233, 0.55) 0, transparent 28%),
+    radial-gradient(circle at 3% 94%, rgba(245, 238, 220, 0.5) 0, transparent 26%);
   pointer-events: none;
 }
 body::after {
@@ -143,7 +148,7 @@ body::after {
   position: fixed;
   inset: 0;
   z-index: -1;
-  background-image: radial-gradient(rgba(138, 111, 184, 0.07) 1.2px, transparent 1.2px);
+  background-image: radial-gradient(rgba(76, 110, 158, 0.07) 1.2px, transparent 1.2px);
   background-size: 26px 26px;
   pointer-events: none;
   mask-image: linear-gradient(180deg, rgba(0,0,0,.5), rgba(0,0,0,.15) 40%, rgba(0,0,0,.4));
@@ -172,7 +177,7 @@ h1, h2, h3, h4 { line-height: 1.5; }
 ::-webkit-scrollbar-thumb:hover { background: var(--lavender-deep); }
 
 :focus-visible {
-  outline: 3px solid rgba(138, 111, 184, 0.5);
+  outline: 3px solid rgba(76, 110, 158, 0.5);
   outline-offset: 2px;
   border-radius: 4px;
 }
@@ -221,7 +226,7 @@ h1, h2, h3, h4 { line-height: 1.5; }
   position: absolute;
   inset: -3px;
   border-radius: 18px;
-  border: 2px dashed rgba(138, 111, 184, 0.35);
+  border: 2px dashed rgba(76, 110, 158, 0.4);
   opacity: 0;
   transition: opacity 0.3s;
 }
@@ -229,7 +234,7 @@ h1, h2, h3, h4 { line-height: 1.5; }
 
 .brand__name {
   font-family: var(--font-display);
-  font-weight: 400;
+  font-weight: 700;
   font-size: clamp(16px, 1.3vw, 20px);
   white-space: nowrap;
   overflow: hidden;
@@ -259,9 +264,9 @@ h1, h2, h3, h4 { line-height: 1.5; }
 
 .welcome-bubble {
   display: none;
-  background: linear-gradient(135deg, var(--cream), #FFF7E6);
-  border: 1px solid #F3E2BC;
-  color: #7A5A20;
+  background: linear-gradient(135deg, var(--cream), #FBF6E9);
+  border: 1px solid #E5D9B8;
+  color: #77591F;
   border-radius: 999px;
   padding: 7px 18px;
   font-size: var(--fs-sm);
@@ -307,7 +312,7 @@ h1, h2, h3, h4 { line-height: 1.5; }
   position: absolute;
   top: -5px;
   inset-inline-start: -5px;
-  background: linear-gradient(135deg, var(--pink-deep), #D988AB);
+  background: linear-gradient(135deg, var(--pink-deep), #C08080);
   color: #fff;
   font-size: 10.5px;
   font-weight: 800;
@@ -334,7 +339,7 @@ h1, h2, h3, h4 { line-height: 1.5; }
 .page-hero {
   position: relative;
   margin: clamp(6px, 1.5vw, 18px) 0 clamp(18px, 2.5vw, 30px);
-  background: linear-gradient(120deg, var(--lavender) 0%, var(--pink) 45%, var(--cream) 100%);
+  background: linear-gradient(120deg, var(--lavender) 0%, var(--blue) 45%, var(--cream) 100%);
   border-radius: var(--radius-xl);
   padding: clamp(22px, 3.5vw, 42px) clamp(18px, 4vw, 48px);
   overflow: hidden;
@@ -369,18 +374,18 @@ h1, h2, h3, h4 { line-height: 1.5; }
 
 .page-hero__title {
   font-family: var(--font-display);
-  font-weight: 400;
+  font-weight: 700;
   font-size: var(--fs-hero);
   margin: 0 0 6px;
   line-height: 1.45;
-  color: #4A3D63;
+  color: #333B52;
   text-shadow: 0 1px 0 rgba(255,255,255,0.5);
   position: relative;
   z-index: 1;
 }
 
 .page-hero__sub {
-  color: #6E6184;
+  color: #5A6379;
   font-size: var(--fs-md);
   margin: 0;
   position: relative;
@@ -405,7 +410,7 @@ h1, h2, h3, h4 { line-height: 1.5; }
   padding: 7px 18px;
   font-size: var(--fs-sm);
   font-weight: 600;
-  color: #57496F;
+  color: #3E4A6B;
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -416,7 +421,7 @@ h1, h2, h3, h4 { line-height: 1.5; }
 .stat-chip:nth-child(3) { animation-delay: 0.14s; }
 .stat-chip b {
   font-family: var(--font-display);
-  font-weight: 400;
+  font-weight: 700;
   font-size: 1.25em;
   color: var(--lavender-deep);
 }
@@ -434,13 +439,13 @@ h1, h2, h3, h4 { line-height: 1.5; }
 
 .section__title {
   font-family: var(--font-display);
-  font-weight: 400;
+  font-weight: 700;
   font-size: var(--fs-xl);
   margin: 0;
   display: flex;
   align-items: center;
   gap: 12px;
-  color: #4A3D63;
+  color: #333B52;
 }
 
 .section__title .emoji {
@@ -554,7 +559,7 @@ h1, h2, h3, h4 { line-height: 1.5; }
 .tt-dot--today { background: var(--lavender-deep); }
 .tt-dot--active {
   width: 26px;
-  background: linear-gradient(90deg, var(--lavender-deep), var(--pink-deep));
+  background: linear-gradient(90deg, var(--lavender-deep), var(--blue-deep));
 }
 .tt-dot:hover { transform: scale(1.35); }
 
@@ -581,9 +586,9 @@ h1, h2, h3, h4 { line-height: 1.5; }
 /* روبان بالای ستون امروز */
 .day-col--today {
   border-color: rgba(138, 111, 184, 0.45);
-  box-shadow: 0 0 0 3px rgba(233, 221, 248, 0.55), var(--shadow-soft);
+  box-shadow: 0 0 0 3px rgba(217, 228, 242, 0.65), var(--shadow-soft);
   background:
-    linear-gradient(180deg, rgba(233, 221, 248, 0.28), rgba(255, 255, 255, 0) 150px),
+    linear-gradient(180deg, rgba(217, 228, 242, 0.5), rgba(255, 255, 255, 0) 150px),
     var(--surface);
 }
 .day-col--today::before {
@@ -592,7 +597,7 @@ h1, h2, h3, h4 { line-height: 1.5; }
   top: 0;
   inset-inline: 0;
   height: 5px;
-  background: linear-gradient(90deg, var(--lavender-deep), var(--pink-deep), var(--cream-deep));
+  background: linear-gradient(90deg, var(--lavender-deep), var(--blue-deep), var(--cream-deep));
   border-radius: 5px 5px 0 0;
 }
 
@@ -608,7 +613,7 @@ h1, h2, h3, h4 { line-height: 1.5; }
 
 .day-col__name {
   font-family: var(--font-display);
-  font-weight: 400;
+  font-weight: 700;
   font-size: clamp(15px, 1.1vw, 18px);
 }
 
@@ -621,8 +626,8 @@ h1, h2, h3, h4 { line-height: 1.5; }
 }
 
 .day-col__today-tag {
-  background: linear-gradient(135deg, var(--lavender), var(--pink));
-  color: #57496F;
+  background: linear-gradient(135deg, var(--lavender), var(--blue));
+  color: #3E4A6B;
   font-size: 10.5px;
   font-weight: 800;
   padding: 3px 11px;
@@ -735,7 +740,7 @@ h1, h2, h3, h4 { line-height: 1.5; }
   font-weight: 800;
   padding: 2px 9px;
   border-radius: 999px;
-  background: linear-gradient(135deg, var(--pink-deep), #D988AB);
+  background: linear-gradient(135deg, var(--pink-deep), #C08080);
   color: #fff;
   box-shadow: var(--shadow-xs);
   animation: badge-pop 0.4s var(--ease-spring);
@@ -744,7 +749,7 @@ h1, h2, h3, h4 { line-height: 1.5; }
 /* هویت رنگی درس‌ها */
 .sub-lavender { background: var(--lavender); }
 .sub-lavender .lesson-card__period { background: var(--lavender-deep); }
-.sub-lavender:hover { background: #F2EAFB; }
+.sub-lavender:hover { background: #E8EFF8; }
 
 .sub-blue { background: var(--blue); }
 .sub-blue .lesson-card__period { background: var(--blue-deep); }
@@ -756,7 +761,7 @@ h1, h2, h3, h4 { line-height: 1.5; }
 
 .sub-pink { background: var(--pink); }
 .sub-pink .lesson-card__period { background: var(--pink-deep); }
-.sub-pink:hover { background: #FBEAF1; }
+.sub-pink:hover { background: #F7E9E9; }
 
 .sub-cream { background: var(--cream); }
 .sub-cream .lesson-card__period { background: var(--cream-deep); }
@@ -926,7 +931,7 @@ h1, h2, h3, h4 { line-height: 1.5; }
 
 .ann-card--pinned {
   background: linear-gradient(120deg, rgba(249, 221, 231, 0.35), var(--surface) 55%);
-  border-color: rgba(194, 115, 155, 0.35);
+  border-color: rgba(176, 106, 106, 0.35);
 }
 
 .ann-card__head { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
@@ -1014,10 +1019,10 @@ h1, h2, h3, h4 { line-height: 1.5; }
 
 .sheet__title {
   font-family: var(--font-display);
-  font-weight: 400;
+  font-weight: 700;
   font-size: clamp(17px, 1.3vw, 21px);
   margin: 0;
-  color: #4A3D63;
+  color: #333B52;
   line-height: 1.6;
 }
 
@@ -1108,14 +1113,15 @@ h1, h2, h3, h4 { line-height: 1.5; }
   padding: 0 8px;
   box-shadow: var(--shadow-xs);
   font-family: var(--font-display);
+  font-weight: 700;
 }
 
 .detail-hero__subject {
   font-family: var(--font-display);
-  font-weight: 400;
+  font-weight: 700;
   font-size: clamp(19px, 1.5vw, 23px);
   margin: 0;
-  color: #4A3D63;
+  color: #333B52;
 }
 
 .detail-hero__meta { font-size: var(--fs-sm); color: var(--sub); }
@@ -1222,9 +1228,9 @@ h1, h2, h3, h4 { line-height: 1.5; }
 .btn[disabled] { opacity: 0.55; cursor: not-allowed; }
 
 .btn--primary {
-  background: linear-gradient(135deg, var(--lavender-deep), var(--pink-deep));
+  background: linear-gradient(135deg, var(--lavender-deep), var(--blue-deep));
   color: #fff;
-  box-shadow: 0 6px 18px rgba(154, 106, 194, 0.32);
+  box-shadow: 0 6px 18px rgba(76, 110, 158, 0.32);
 }
 .btn--primary::after {
   content: '';
@@ -1238,7 +1244,7 @@ h1, h2, h3, h4 { line-height: 1.5; }
   transition: inset-inline-start 0.6s;
   pointer-events: none;
 }
-.btn--primary:hover { box-shadow: 0 8px 26px rgba(154, 106, 194, 0.45); transform: translateY(-1px); }
+.btn--primary:hover { box-shadow: 0 8px 26px rgba(76, 110, 158, 0.45); transform: translateY(-1px); }
 .btn--primary:hover::after { inset-inline-start: 130%; }
 
 .btn--ghost { background: var(--surface); border-color: var(--border-strong); color: var(--text); }
@@ -1263,7 +1269,7 @@ h1, h2, h3, h4 { line-height: 1.5; }
   font-family: var(--font-display);
   font-size: 15px;
   color: #fff;
-  background: linear-gradient(135deg, var(--lavender-deep), var(--pink-deep));
+  background: linear-gradient(135deg, var(--lavender-deep), var(--blue-deep));
   box-shadow: var(--shadow-pop);
   cursor: pointer;
   display: inline-flex;
@@ -1431,7 +1437,7 @@ h1, h2, h3, h4 { line-height: 1.5; }
   width: 190px;
   height: 190px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--lavender), var(--pink));
+  background: linear-gradient(135deg, var(--lavender), var(--blue));
   opacity: 0.35;
   filter: blur(4px);
   pointer-events: none;
@@ -1441,7 +1447,7 @@ h1, h2, h3, h4 { line-height: 1.5; }
   width: 70px;
   height: 70px;
   border-radius: 22px;
-  background: linear-gradient(135deg, var(--lavender), var(--pink));
+  background: linear-gradient(135deg, var(--lavender), var(--blue));
   display: grid;
   place-items: center;
   font-size: 34px;
@@ -1453,10 +1459,10 @@ h1, h2, h3, h4 { line-height: 1.5; }
 .login-card__title {
   text-align: center;
   font-family: var(--font-display);
-  font-weight: 400;
+  font-weight: 700;
   font-size: var(--fs-lg);
   margin: 0 0 4px;
-  color: #4A3D63;
+  color: #333B52;
 }
 .login-card__sub { text-align: center; color: var(--sub); font-size: var(--fs-sm); margin: 0 0 24px; }
 
@@ -1494,7 +1500,7 @@ h1, h2, h3, h4 { line-height: 1.5; }
 }
 .admin-tab:hover { color: var(--text); background: var(--surface-2); }
 .admin-tab--active {
-  background: linear-gradient(135deg, var(--lavender), #F2E4FA);
+  background: linear-gradient(135deg, var(--lavender), #E3ECF7);
   color: var(--lavender-deep);
   box-shadow: var(--shadow-xs);
 }
@@ -1582,9 +1588,9 @@ h1, h2, h3, h4 { line-height: 1.5; }
 
 .grid-editor th {
   font-family: var(--font-display);
-  font-weight: 400;
+  font-weight: 700;
   font-size: 14.5px;
-  color: #4A3D63;
+  color: #333B52;
   padding: 6px 8px;
   white-space: nowrap;
   text-align: center;
@@ -1607,7 +1613,7 @@ h1, h2, h3, h4 { line-height: 1.5; }
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 .grid-cell:hover { border-color: var(--border-strong); }
-.grid-cell--dirty { border-color: var(--lavender-deep); box-shadow: 0 0 0 3px rgba(233, 221, 248, 0.55); }
+.grid-cell--dirty { border-color: var(--lavender-deep); box-shadow: 0 0 0 3px rgba(217, 228, 242, 0.65); }
 
 .grid-cell--disabled {
   background: repeating-linear-gradient(-45deg, var(--surface-2), var(--surface-2) 6px, #F1ECF5 6px, #F1ECF5 12px);
@@ -1639,6 +1645,16 @@ h1, h2, h3, h4 { line-height: 1.5; }
 .grid-cell__select:focus { outline: none; }
 .grid-cell__select:focus-visible { outline: 3px solid var(--lavender); border-radius: 10px; }
 .grid-cell__select--empty { color: var(--sub); font-weight: 500; }
+
+/* درس گردشی (دوم) — زیر select اصلی */
+.grid-cell__select--alt {
+  padding: 0 12px 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--blue-deep);
+}
+.grid-cell__select--alt option { color: var(--text); font-weight: 500; }
+.grid-cell__select--hidden { display: none; }
 
 .grid-cell__meta {
   display: flex;
@@ -1688,8 +1704,9 @@ h1, h2, h3, h4 { line-height: 1.5; }
     align-items: baseline;
     gap: 8px;
     font-family: var(--font-display);
+    font-weight: 700;
     font-size: 17px;
-    color: #4A3D63;
+    color: #333B52;
     padding: 0 6px;
   }
   .grid-row__day small { font-family: var(--font-body); font-size: 11px; color: var(--sub); }
@@ -1703,8 +1720,9 @@ h1, h2, h3, h4 { line-height: 1.5; }
   .grid-row__day {
     display: table-cell;
     font-family: var(--font-display);
+    font-weight: 700;
     font-size: 16px;
-    color: #4A3D63;
+    color: #333B52;
     padding: 6px 10px;
     white-space: nowrap;
     text-align: right;
@@ -1712,6 +1730,146 @@ h1, h2, h3, h4 { line-height: 1.5; }
   }
   .grid-row__day small { display: block; font-family: var(--font-body); font-size: 10.5px; color: var(--sub); }
   .grid-cell { display: table-cell; vertical-align: top; }
+}
+
+/* ================================================================
+   تقویم ماهانه (پنل مدیریت)
+   ================================================================ */
+.cal-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+.cal-title { flex: 1; text-align: center; }
+
+.cal-week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+  margin-bottom: 6px;
+}
+.cal-week span {
+  text-align: center;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--sub);
+  padding: 4px 0;
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+}
+
+.cal-cell {
+  aspect-ratio: 1 / 1;
+  min-height: 44px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 4px 2px;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.cal-cell:hover { border-color: var(--border-strong); box-shadow: var(--shadow-xs); transform: translateY(-1px); }
+.cal-cell:focus-visible { outline: 3px solid var(--lavender); outline-offset: 1px; }
+
+.cal-cell--pad { background: transparent; border-color: transparent; cursor: default; pointer-events: none; }
+.cal-cell--off { background: var(--surface-2); }
+.cal-cell--off .cal-cell__num { color: var(--sub); }
+.cal-cell--today {
+  border-color: var(--lavender-deep);
+  box-shadow: 0 0 0 3px rgba(217, 228, 242, 0.65);
+  background: linear-gradient(180deg, rgba(217, 228, 242, 0.5), rgba(255, 255, 255, 0) 70%), var(--surface);
+}
+
+.cal-cell__num {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.cal-cell__dots {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+  height: 7px;
+}
+.cal-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  display: inline-block;
+}
+.cal-dot--lesson { background: var(--lavender-deep); }
+.cal-dot--task { background: var(--cream-deep); }
+.cal-dot--high { background: #C05A5A; }
+.cal-dot--more { background: var(--sub); width: 5px; height: 5px; }
+
+.cal-legend {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  font-size: var(--fs-xs);
+  color: var(--sub);
+}
+.cal-legend span { display: inline-flex; align-items: center; gap: 6px; }
+
+/* شیت روزِ تقویم */
+.cal-day-lessons { display: flex; flex-direction: column; gap: 7px; }
+.cal-day-lesson {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 11px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  flex-wrap: wrap;
+}
+.cal-day-lesson__p {
+  min-width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: var(--lavender-deep);
+  color: #fff;
+  font-weight: 800;
+  font-size: 12px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.cal-day-lesson__name { font-weight: 700; font-size: var(--fs-sm); flex: 1; min-width: 120px; }
+.cal-day-lesson__time { font-size: var(--fs-xs); color: var(--sub); font-variant-numeric: tabular-nums; }
+
+/* نشان گردشی در شیت روز */
+.cal-day-lesson__name .rotating-tag {
+  font-size: 10px;
+  background: var(--blue);
+  color: var(--blue-deep);
+  border-radius: 999px;
+  padding: 1px 8px;
+  margin-inline-start: 6px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* موبایل: سلول‌های تقویم کمی فشرده‌تر */
+@media (max-width: 480px) {
+  .cal-grid, .cal-week { gap: 4px; }
+  .cal-cell { min-height: 40px; gap: 3px; }
 }
 
 /* ================================================================

@@ -3,7 +3,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   toJalali, fromJalali, formatJalali, countdown, faDigits,
-  iranDayIndex, formatJalaliDateTime,
+  iranDayIndex, formatJalaliDateTime, tehranYMD, tehranDayNumber,
+  rollingWindow, jalaliDateOnly, toJalaliParts,
 } from '../public/js/utils.js';
 
 // Known Jalali anchors:
@@ -13,6 +14,11 @@ import {
 test('toJalali: 2026-11-18 -> 1405/8/27', () => {
   const d = toJalali(new Date(2026, 10, 18));
   assert.deepEqual([d.jy, d.jm, d.jd], [1405, 8, 27]);
+});
+
+test('toJalaliParts matches toJalali', () => {
+  const d = new Date(2026, 10, 18);
+  assert.deepEqual(toJalaliParts(2026, 11, 18), toJalali(d));
 });
 
 test('toJalali: Nowruz 1405', () => {
@@ -63,4 +69,60 @@ test('formatJalaliDateTime renders Tehran time', () => {
   const s = formatJalaliDateTime('2026-11-23T12:00:00Z');
   assert.ok(s.includes('آذر'), `expected آذر in ${s}`);
   assert.ok(s.includes('۱۵:۳۰'), `expected ۱۵:۳۰ in ${s}`);
+});
+
+// ---------- تهران و پنجره غلتان ----------
+
+test('tehranYMD: نیمه‌شب تهران = روز قبلِ UTC', () => {
+  // 2026-11-19 01:00 UTC = 2026-11-19 04:30 تهران -> همان روز
+  const a = tehranYMD(Date.UTC(2026, 10, 19, 1, 0));
+  assert.deepEqual([a.y, a.m, a.d], [2026, 11, 19]);
+  // 2026-11-19 22:00 UTC = 2026-11-20 01:30 تهران -> فردا
+  const b = tehranYMD(Date.UTC(2026, 10, 19, 22, 0));
+  assert.deepEqual([b.y, b.m, b.d], [2026, 11, 20]);
+});
+
+test('tehranDayNumber: روز بعدِ تهران دقیقاً +۱', () => {
+  const t1 = Date.UTC(2026, 10, 19, 10, 0);
+  const t2 = Date.UTC(2026, 10, 20, 10, 0);
+  assert.equal(tehranDayNumber(t2) - tehranDayNumber(t1), 1);
+  //跨越 نیمه‌شب تهران (20:00 UTC = 23:30 تهران همان روز؛ 21:00 UTC = 00:30 فردا)
+  const t3 = Date.UTC(2026, 10, 19, 20, 0);
+  const t4 = Date.UTC(2026, 10, 19, 21, 0);
+  assert.equal(tehranDayNumber(t4) - tehranDayNumber(t3), 1);
+});
+
+test('rollingWindow: ۷ روز متوالی از امروزِ تهران، هرگز گذشته نه', () => {
+  // چهارشنبه ۲۷ آبان ۱۴۰۵ = 2026-11-18 ساعت ۱۰:۰۰ UTC
+  const now = Date.UTC(2026, 10, 18, 10, 0);
+  const win = rollingWindow(7, now);
+  assert.equal(win.length, 7);
+  // روز اول = امروز (چهارشنبه=4)
+  assert.equal(win[0].dayIdx, 4);
+  // ترتیب dayIdx: 4,5,6,0,1,2,3 (چهارشنبه تا چهارشنبه بعد)
+  assert.deepEqual(win.map((w) => w.dayIdx), [4, 5, 6, 0, 1, 2, 3]);
+  // تاریخ‌ها صعودی و پیوسته‌اند
+  for (let i = 1; i < win.length; i++) {
+    const diff = (win[i].date - win[i - 1].date) / 86_400_000;
+    assert.equal(diff, 1, `روز ${i} فاصله ${diff} دارد`);
+  }
+  // تاریخ شمسی روز اول همان امروز است
+  const j = toJalali(win[0].date);
+  assert.equal(j.jd, 27);
+  assert.equal(j.jm, 8);
+  assert.equal(j.jy, 1405);
+});
+
+test('rollingWindow: نیمه‌شب تهران درست شروع می‌شود', () => {
+  // 2026-11-19 20:30 UTC = 2026-11-20 00:00 تهران دقیق -> پنجره از ۲۰ نوامبر (جمعه) شروع می‌شود
+  const now = Date.UTC(2026, 10, 19, 20, 30);
+  const win = rollingWindow(3, now);
+  const j = toJalali(win[0].date);
+  assert.equal(j.jd, 29); // 29 آبان
+  assert.equal(iranDayIndex(win[0].date), 6); // جمعه
+});
+
+test('jalaliDateOnly', () => {
+  assert.equal(jalaliDateOnly('2026-11-23T12:00:00Z'), '۲ آذر');
+  assert.equal(jalaliDateOnly(null), '—');
 });
