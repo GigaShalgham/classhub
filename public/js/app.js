@@ -58,8 +58,10 @@ const state = {
 // ---------- API (مقاوم به شبکه ضعیف) ----------
 // هر درخواست: مهلت زمانی + تلاش مجدد خودکار — روی شبکه‌ای که پکت می‌اندازد،
 // یک fetch ساده ممکن است تا ابد معطل بماند و صفحه «نصفه» بماند.
-const API_TIMEOUT_MS = 12_000;
-const API_RETRIES = 2;
+// مهلت و فاصله‌ی تلاش‌ها پیش‌رونده است: شبکه‌ی خیلی کند فرصت بیشتری می‌گیرد
+// (تایم‌اوت کوتاه ثابت روی خطِ شش-کیلوبیت-بر-ثانیه خودش عامل شکست می‌شود).
+const API_TIMEOUT_SCHEDULE = [10_000, 20_000, 35_000, 60_000];
+const RETRY_BACKOFF_MS = [800, 1_600, 3_200];
 
 function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
 
@@ -75,16 +77,18 @@ async function fetchOnce(path, timeoutMs) {
 
 async function api(path) {
   let lastErr;
-  for (let attempt = 0; attempt <= API_RETRIES; attempt++) {
+  const attempts = API_TIMEOUT_SCHEDULE.length;
+  for (let attempt = 0; attempt < attempts; attempt++) {
     try {
-      const res = await fetchOnce(path, API_TIMEOUT_MS);
+      const res = await fetchOnce(path, API_TIMEOUT_SCHEDULE[attempt]);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return await res.json();
     } catch (err) {
       lastErr = err;
       // فقط خطای شبکه/مهلت را دوباره امتحان می‌کنیم، نه پاسخ‌های معتبر سرور را
-      if (attempt < API_RETRIES && (err.name === 'AbortError' || err.name === 'TypeError')) {
-        await sleep(700 * (attempt + 1)); // فاصله کوتاه قبل از تلاش مجدد
+      const retryable = err.name === 'AbortError' || err.name === 'TypeError';
+      if (attempt < attempts - 1 && retryable) {
+        await sleep(RETRY_BACKOFF_MS[attempt] ?? 3_200);
         continue;
       }
       throw lastErr;
