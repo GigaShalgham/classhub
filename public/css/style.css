@@ -1872,6 +1872,36 @@ h1, h2, h3, h4 { line-height: 1.5; }
   .cal-cell { min-height: 40px; gap: 3px; }
 }
 
+/* ---------- خطای راه‌اندازی (اینترنت قطع/ضعیف) ---------- */
+.boot-error {
+  max-width: 480px;
+  margin: 8vh auto 0;
+  padding: 40px 28px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+.boot-error__icon { font-size: 44px; line-height: 1; }
+.boot-error__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-lg);
+  color: var(--text);
+}
+.boot-error__text {
+  margin: 0;
+  color: var(--sub);
+  font-size: var(--fs-base);
+  line-height: 2;
+}
+
 /* ================================================================
    انیمیشن‌ها
    ================================================================ */

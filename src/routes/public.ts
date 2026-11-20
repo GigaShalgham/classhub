@@ -231,6 +231,93 @@ publicRoutes.get('/settings', async (c) => {
   return c.json({ ok: true, settings: out });
 });
 
+/**
+ * بوت‌استرپ: همه‌چیز صفحه اصلی در «یک» پاسخ.
+ * قبلاً ۴ درخواست جداگانه (schedule/tasks/announcements/settings) از مرورگر به D1
+ * می‌رفت که روی اینترنت ضعیف یعنی ۴ برابر احتمال گیرکردن. اینجا همان کوئری‌ها
+ * در یک batch واحد D1 اجرا می‌شوند و فقط یک پاسخ به مرورگر برمی‌گردد.
+ * ساختار خروجی دقیقاً همان ۴ اندپوینت قبلی است تا سمت کلاینت بدون تغییر با آن
+ * کار کند (و مسیر fallback قدیمی هم سالم بماند).
+ * این تابع هم برای GET /api/bootstrap استفاده می‌شود و هم برای تزریق SSR در صفحه اصلی.
+ */
+export async function bootstrapPayload(db: D1Database) {
+  // یک رفت‌وبرگشت به D1 برای هر ۴ مجموعه کوئری
+  const [schedRes, taskRes, annRes, setRes] = await db.batch([
+    db.prepare(lessonQuery()),
+    db.prepare(`
+      SELECT t.id, t.kind, t.title, t.description, t.due_at AS dueAt, t.priority, t.archived,
+             s.id AS subjectId, s.name AS subjectName, s.color_key AS colorKey,
+             (SELECT COUNT(*) FROM attachments a WHERE a.parent_type='task' AND a.parent_id = t.id) AS att
+      FROM tasks t
+      LEFT JOIN subjects s ON s.id = t.subject_id
+      ORDER BY t.archived, t.due_at
+    `),
+    db.prepare(`
+      SELECT n.id, n.title, n.body, n.pinned, n.published_at AS publishedAt,
+             (SELECT COUNT(*) FROM attachments a WHERE a.parent_type='announcement' AND a.parent_id = n.id) AS att
+      FROM announcements n
+      ORDER BY n.pinned DESC, n.published_at DESC
+    `),
+    db.prepare(
+      'SELECT key, value FROM settings WHERE key IN (?,?,?)',
+    ).bind('class_name', 'welcome_message', 'admin_note'),
+  ]);
+
+  // برنامه هفتگی
+  const days: (Lesson[] | null)[] = Array.from({ length: WEEK_DAYS }, () => null);
+  for (const r of (schedRes.results ?? []) as unknown as LessonRow[]) {
+    (days[r.day] ??= []).push(rowToLesson(r));
+  }
+
+  // مهلت‌ها (تفکیک فعال/گذشته)
+  const now = Date.now();
+  const active: Task[] = [];
+  const expired: Task[] = [];
+  for (const r of (taskRes.results ?? []) as unknown as Record<string, unknown>[]) {
+    const t: Task = {
+      id: r.id as number,
+      kind: r.kind as Task['kind'],
+      title: r.title as string,
+      subject_id: (r.subjectId ?? null) as number | null,
+      subject_name: (r.subjectName ?? null) as string | null,
+      color_key: (r.colorKey ?? null) as Task['color_key'],
+      description: r.description as string,
+      due_at: r.dueAt as string,
+      priority: r.priority as Task['priority'],
+      archived: Boolean(r.archived),
+      created_at: '',
+      updated_at: '',
+      attachment_count: (r.att ?? 0) as number,
+    };
+    if (t.archived || new Date(t.due_at).getTime() < now) expired.push(t);
+    else active.push(t);
+  }
+  active.sort((a, b) => a.due_at.localeCompare(b.due_at));
+  expired.sort((a, b) => b.due_at.localeCompare(a.due_at));
+
+  // اطلاعیه‌ها
+  const announcements: Announcement[] = ((annRes.results ?? []) as unknown as Record<string, unknown>[]).map((r) => ({
+    id: r.id as number,
+    title: r.title as string,
+    body: r.body as string,
+    pinned: Boolean(r.pinned),
+    published_at: r.publishedAt as string,
+    attachment_count: (r.att ?? 0) as number,
+  }));
+
+  // تنظیمات
+  const settings: Record<string, string> = {};
+  for (const r of (setRes.results ?? []) as unknown as { key: string; value: string }[]) {
+    settings[r.key] = r.value;
+  }
+
+  return { ok: true, days, tasks: { active, expired }, announcements, settings };
+}
+
+publicRoutes.get('/bootstrap', async (c) => {
+  return c.json(await bootstrapPayload(c.env.DB));
+});
+
 // Attachment download — public read (students need to see homework files).
 // Content-Disposition: attachment prevents rendering untrusted HTML/SVG inline.
 publicRoutes.get('/attachments/:id', async (c) => {
