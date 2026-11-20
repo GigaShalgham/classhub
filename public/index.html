@@ -9,21 +9,12 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
   <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
   <link rel="manifest" href="/manifest.webmanifest">
-  <link rel="preload" href="/fonts/Vazirmatn-Regular.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="/fonts/Vazirmatn-SemiBold.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="/fonts/Estedad-Bold.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="modulepreload" href="/js/utils.js">
   <link rel="modulepreload" href="/js/schedule.js">
   <link rel="stylesheet" href="/css/style.css">
   <!--__BOOT__-->
 </head>
 <body>
-  <noscript>
-    <div style="margin:24px auto;max-width:640px;padding:18px 22px;border:1.5px solid #CBD3E1;border-radius:14px;background:#fff;font-family:Tahoma,sans-serif;line-height:2;text-align:center;">
-      برای نمایش برنامه هفتگی، جاوااسکریپت باید در مرورگر فعال باشد.<br>
-      اگر فعال نیست، از تنظیمات مرورگر آن را روشن کنید و صفحه را دوباره باز کنید.
-    </div>
-  </noscript>
   <header class="site-header">
     <div class="site-header__inner">
       <div class="brand">
@@ -64,11 +55,8 @@
       </div>
       <div class="tt-wrap" id="ttWrap">
         <button class="tt-arrow tt-arrow--prev" id="ttPrev" type="button" aria-label="روزهای قبلی">‹</button>
-        <div class="tt-scroll" id="ttScroll" tabindex="0" role="region" aria-label="جدول هفتگی — برای مرور روزها به چپ و راست بکشید">
-          <div class="tt-grid" id="ttGrid"></div>
-        </div>
+        <!--TT--><!--/TT-->
         <button class="tt-arrow tt-arrow--next" id="ttNext" type="button" aria-label="روزهای بعدی">›</button>
-        <div class="tt-dots" id="ttDots" role="tablist" aria-label="پیمایش روزها"></div>
       </div>
     </section>
 
@@ -77,7 +65,7 @@
         <h2 class="section__title"><span class="emoji" aria-hidden="true">⏳</span> مهلت‌ها و تکالیف زمان‌دار</h2>
         <span class="section__note">مرتب‌شده بر اساس نزدیک‌ترین مهلت</span>
       </div>
-      <div class="tasks-grid" id="tasksGrid"></div>
+      <!--TASKS--><!--/TASKS-->
       <div class="btn-row" style="margin-top: 14px;">
         <button class="btn btn--ghost btn--sm" id="showExpiredBtn" type="button">آرشیو موارد گذشته</button>
       </div>
@@ -88,7 +76,7 @@
       <div class="section__head">
         <h2 class="section__title"><span class="emoji" aria-hidden="true">📣</span> اطلاعیه‌ها</h2>
       </div>
-      <div class="ann-list" id="annList"></div>
+      <!--ANN--><!--/ANN-->
     </section>
   </main>
 

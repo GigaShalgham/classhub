@@ -3,18 +3,17 @@
 // under /api/*. Backend runs on Hono, data in D1, attachments as validated
 // BLOBs in D1 (R2 unavailable on this account).
 //
-// صفحه اصلی (/) با تزریق داده رندر می‌شود: Worker HTML را از assets می‌گیرد،
-// همان کوئری‌های /api/bootstrap را اجرا می‌کند و خروجی را داخل
-// <script id="__BOOT__"> می‌نویسد. مرورگر صفحه را «یک‌تکه» می‌گیرد و
-// مرحله دوم (درخواست‌های جداگانه برای داده) حذف می‌شود — برای اینترنت ضعیف.
-// نکته: پاسخ اتمی (نه استریم) — روی شبکه‌ی ناپایدار پایدارتر است و
-// فشرده‌سازی خودکار edge را حفظ می‌کند.
+// صفحه اصلی (/) با رندر سمت سرور (SSR) جواب داده می‌شود: Worker همان
+// کوئری‌های /api/bootstrap را اجرا می‌کند، داده را داخل <script id="__BOOT__">
+// و «محتوای کامل رندرشده» (جدول، مهلت‌ها، اطلاعیه‌ها) را در خود HTML می‌نویسد.
+// روی اینترنت اختلال‌دار اگر فقط همین یک فایل برسد، برنامه کامل دیده می‌شود.
 
 import { Hono, type Context } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
-import publicRoutes, { bootstrapPayload } from './routes/public';
+import publicRoutes from './routes/public';
 import adminRoutes from './routes/admin';
+import { renderSSRIndex } from './ssr';
 import { ValidationError } from './validation';
 
 export interface Env {
@@ -54,40 +53,26 @@ app.route('/api/admin', adminRoutes);
 
 app.get('/api/health', (c) => c.json({ ok: true, name: c.env.APP_NAME, time: new Date().toISOString() }));
 
-// ---------- SSR صفحه اصلی: HTML + داده در یک پاسخ ----------
-
-const JSON_SAFE = /<\/script/g;
-
-/** escape کردن </script> داخل JSON تا از تزریق HTML جلوگیری شود */
-function jsonForScript(obj: unknown): string {
-  return JSON.stringify(obj).replace(JSON_SAFE, '<\\/script');
-}
+// ---------- SSR صفحه اصلی: HTML + محتوای رندرشده + داده در یک پاسخ ----------
 
 /**
- * صفحه اصلی: HTML + داده در یک پاسخ اتمی (Content-Length مشخص).
- * روی شبکه‌ی ناپایدار، پاسخ «تک‌تکه و کامل» پایدارتر از استریم است: اگر بسته‌ای
- * گم شود TCP خودش دوباره می‌فرستد و مرورگر یا کل صفحه را می‌گیرد یا هیچ.
- * پاسخ اتمی فشرده‌سازی خودکار edge را هم حفظ می‌کند (حجم روی شبکه ~۳ برابر کمتر).
- * اگر D1 جواب نداد، همان HTML خام می‌رود و کلاینت خودش fetch می‌کند.
+ * صفحه اصلی با رندر سمت سرور (ssr.ts): جدول هفتگی، مهلت‌ها و اطلاعیه‌ها
+ * به‌صورت HTML کامل داخل خود پاسخ می‌آیند. روی اینترنت اختلال‌دار اگر فقط
+ * همین یک فایل برسد، برنامه کامل و خوانا دیده می‌شود؛ app.js بعداً همان
+ * ساختار را می‌سازد و تعامل‌ها را فعال می‌کند (بدون پرش — کلاس‌ها یکسان‌اند).
+ * اگر D1 جواب نداد، HTML خام می‌رود و کلاینت خودش fetch می‌کند.
  */
 async function serveIndex(c: Context<{ Bindings: Env }>, asFallback: boolean) {
+  if (!asFallback) {
+    const ssr = await renderSSRIndex(c.env);
+    if (ssr) return new Response(ssr, { headers: htmlHeaders() });
+  }
+  // مسیر پشتیبان: HTML خام بدون SSR
   const assetRes = await c.env.ASSETS.fetch(new Request(new URL('/index.html', c.req.url)));
   if (!assetRes.ok) {
     return c.text('Not Found', 404);
   }
-  const html = await assetRes.text();
-
-  if (asFallback) return new Response(html, { headers: htmlHeaders() });
-
-  try {
-    const boot = await bootstrapPayload(c.env.DB);
-    const inject = `<script id="__BOOT__" type="application/json">${jsonForScript(boot)}</script>`;
-    return new Response(html.replace('<!--__BOOT__-->', inject), { headers: htmlHeaders() });
-  } catch (e) {
-    // داده در دسترس نبود: HTML خام تحویل شود؛ کلاینت خودش fetch می‌کند
-    console.error('boot inject failed:', e instanceof Error ? e.message : e);
-    return new Response(html, { headers: htmlHeaders() });
-  }
+  return new Response(await assetRes.text(), { headers: htmlHeaders() });
 }
 
 function htmlHeaders(): Headers {
@@ -116,7 +101,7 @@ app.use('*', async (c, next) => {
 });
 
 app.get('/', (c) => serveIndex(c, false));
-// اگر به هر دلیلی تزریق شکست خورد، مسیر پشتیبان HTML خام می‌دهد
+// مسیر پشتیبان: HTML خام بدون SSR (اگر رندر سمت سرور به مشکل خورد)
 app.get('/index.html', (c) => serveIndex(c, true));
 
 export default app;

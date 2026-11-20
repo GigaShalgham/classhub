@@ -271,6 +271,7 @@ function lessonCard(lesson, dateMs) {
 const WINDOW_DAYS = 7;
 
 function renderTimetable() {
+  // SSR ممکن است جدول را از قبل ساخته باشد؛ ساختار جایگزین می‌شود (کلاس‌ها یکسان)
   const grid = $('#ttGrid');
   grid.textContent = '';
   const windowDays = rollingWindow(WINDOW_DAYS);
@@ -984,7 +985,8 @@ $('#ttNext').addEventListener('click', () => {
   const scroll = $('#ttScroll');
   scroll.scrollBy({ left: -scroll.clientWidth * 0.8, behavior: 'smooth' });
 });
-$('#ttScroll').addEventListener('scroll', () => {
+// ttScroll/ttDots را SSR ساخته است؛ اگر نبود (fallback خام) در renderTimetable ساخته می‌شود
+$('#ttScroll')?.addEventListener('scroll', () => {
   updateScrollState();
   updateDots();
 }, { passive: true });
