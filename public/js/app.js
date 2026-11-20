@@ -1031,3 +1031,51 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').catch(() => { /* ثبت نشد — سایت بدون کش هم کار می‌کند */ });
   });
 }
+
+// ---------- نصب روی گوشی (PWA) ----------
+// با «افزودن به صفحه اصلی»، کلاس‌هاب مثل یک اپ مستقل باز می‌شود و حتی وقتی
+// فیلترینگ اجازه‌ی ورود نداد، نسخه‌ی ذخیره‌شده از کش سرویس‌ورکر نشان داده می‌شود.
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  showInstallHint();
+});
+
+function showInstallHint() {
+  if (localStorage.getItem('kh-install-hint-dismissed') === '1') return;
+  if (document.querySelector('.install-hint')) return;
+  const canInstall = !!deferredInstallPrompt;
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const hint = el('div', { class: 'install-hint fade-up' },
+    el('span', { class: 'install-hint__icon', 'aria-hidden': 'true', text: '📲' }),
+    el('div', { class: 'install-hint__text' },
+      el('b', { text: 'کلاس‌هاب را روی گوشی نصب کن ' }),
+      isIOS
+        ? 'تا همیشه سریع و بدون فیلترینگ باز شود: دکمه‌ی Share ↗ بعد «Add to Home Screen».'
+        : 'تا همیشه سریع و بدون فیلترینگ باز شود.'),
+    canInstall
+      ? el('button', {
+          class: 'btn btn--primary btn--sm', type: 'button', text: 'نصب',
+          onclick: async () => {
+            deferredInstallPrompt.prompt();
+            const { outcome } = await deferredInstallPrompt.userChoice;
+            if (outcome) hideInstallHint();
+          },
+        })
+      : null,
+    el('button', {
+      class: 'install-hint__close', type: 'button', 'aria-label': 'بستن', text: '✕',
+      onclick: () => {
+        localStorage.setItem('kh-install-hint-dismissed', '1');
+        hideInstallHint();
+      },
+    }));
+  document.body.append(hint);
+}
+
+function hideInstallHint() {
+  document.querySelector('.install-hint')?.remove();
+}
+// اگر مرورگر هنوز آماده‌ی نصب را اعلام نکرده (مثلاً بعد از نصب موفق)، راهنمای iOS/اندروید دستی نشان می‌دهیم
+window.addEventListener('appinstalled', () => hideInstallHint());

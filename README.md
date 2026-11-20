@@ -4,7 +4,7 @@ A cute, pastel-themed single-page class hub for a school class: the weekly timet
 
 Deployed on **Cloudflare Workers** (single Worker serving both the static frontend and the JSON API) with **Cloudflare D1** for persistence.
 
-**Production:** https://school.gigaspaceturnip.workers.dev
+**Production:** https://school.sigmababyboy.ccwu.cc
 
 ---
 

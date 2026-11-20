@@ -1,21 +1,25 @@
 // کلاس‌هاب — سرویس‌ورکر
-// هدف: دوستان با اینترنت ضعیف هم سایت را سریع و پایدار ببینند.
+// هدف: دوستان با اینترنت ضعیف/مختل‌شده هم سایت را سریع و پایدار ببینند.
 //
 // راهبرد:
-//  - HTML صفحه اصلی: «شبکه اول با مهلت» — ۴ ثانیه به شبکه فرصت می‌دهیم؛
-//    اگر دیر شد (اینترنت مختل‌شده) فوراً آخرین HTML موفق از کش می‌آید و
-//    رفرش در پس‌زمینه ادامه می‌یابد. کشِ HTML حداکثر ۲۴ ساعت اعتبار دارد.
+//  - HTML صفحه اصلی: «شبکه اول با مهلت» — به شبکه ۳ ثانیه فرصت می‌دهیم تا
+//    پاسخ «کامل» را بیاورد؛ اگر دیر کرد فوراً آخرین HTML موفق از کش می‌آید.
+//    (نکته مهم: کش فقط وقتی ذخیره می‌شود که کل بدنه رسیده باشد، نه فقط هدرها —
+//    پاسخ ناقص روی شبکه‌ی ناپایدار بدتر از پاسخ نیست.)
+//    کش تازه ۲۴ ساعت؛ اگر شبکه کاملاً بی‌رمق بود، نسخه‌ی تا ۷ روز قبل هم
+//    به‌عنوان نجات‌بخش نشان داده می‌شود (برنامه‌ی هفتگی زیاد عوض نمی‌شود).
 //  - فایل‌های استاتیک (JS/CSS/فونت): «stale-while-revalidate» — فوراً از کش
 //    سرو می‌شوند و در پس‌زمینه به‌روز می‌شوند (کش حداکثر ۷ روز).
 //  - /api/*: هرگز کش نمی‌شود (داده زنده است؛ خود fetch در app.js تایم‌اوت دارد).
 //  - حالت آفلاین کامل: اگر نه شبکه بود و نه کش، صفحه ساده «آفلاین» نشان داده می‌شود.
 
-const VERSION = 'v3.2';
+const VERSION = 'v3.3';
 const STATIC_CACHE = `ch-static-${VERSION}`;
 const HTML_CACHE = `ch-html-${VERSION}`;
 const MAX_STATIC_AGE_MS = 7 * 24 * 3600_000;   // ۷ روز
 const MAX_HTML_AGE_MS = 24 * 3600_000;         // ۲۴ ساعت
-const NETWORK_GRACE_MS = 4_000;                // مهلت شبکه قبل از رفتن به کش
+const EMERGENCY_HTML_AGE_MS = 7 * 24 * 3600_000; // نجات‌بخش: تا ۷ روز
+const NETWORK_GRACE_MS = 3_000;                // مهلت شبکه قبل از رفتن به کش
 
 self.addEventListener('install', (event) => {
   // بدون waitUntil: نصب بی‌صدا؛ کش‌ها در اولین fetch ساخته می‌شوند
@@ -50,6 +54,14 @@ async function freshCached(cacheName, request, maxAgeMs) {
   return hit;
 }
 
+/** کلید کش ناوبری: بدون پارامترهای query (مثل utm_source در start_url مانیفست) —
+ *  محتوای صفحه به query وابسته نیست؛ حذفش تضمین می‌کند کش «همیشه» پیدا شود */
+function navCacheKey(req) {
+  const url = new URL(req.url);
+  url.search = '';
+  return url.toString();
+}
+
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET') return;
@@ -80,27 +92,37 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // --- HTML صفحه اصلی: شبکه اول با مهلت ۴ ثانیه، سپس کش ---
+  // --- HTML صفحه اصلی: شبکه اول با مهلت ۳ ثانیه، سپس کش ---
   if (req.mode === 'navigate' || (req.headers.get('accept') || '').includes('text/html')) {
     event.respondWith((async () => {
+      const cacheKey = navCacheKey(req);
       const cache = await caches.open(HTML_CACHE);
-      const cached = await freshCached(HTML_CACHE, req, MAX_HTML_AGE_MS);
+      const cached = await freshCached(HTML_CACHE, cacheKey, MAX_HTML_AGE_MS);
+      const emergency = cached ? null : await freshCached(HTML_CACHE, cacheKey, EMERGENCY_HTML_AGE_MS);
 
-      const network = fetch(req).then((res) => {
+      // شبکه فقط وقتی کش می‌شود که «کل بدنه» رسیده باشد — نه فقط هدرها.
+      // پاسخِ ناقص/نیمه‌رسیده روی شبکه‌ی ناپایدار بدتر از پاسخ نیست.
+      const network = fetch(req).then(async (res) => {
         if (res && res.ok) {
-          cache.put(req, res.clone()).catch(() => {});
+          try {
+            const body = await res.clone().text();
+            if (body.includes('id="__BOOT__"')) {
+              cache.put(cacheKey, new Response(body, res)).catch(() => {});
+              return res;
+            }
+          } catch { /* بدنه ناقص — کش نمی‌شود */ }
         }
         return res;
       }).catch(() => null);
 
-      // کش تازه نداریم → فقط شبکه (رفتار قبلی)
-      if (!cached) {
+      // هیچ کشی نداریم → فقط شبکه (اولین بازدید)
+      if (!cached && !emergency) {
         const fresh = await network;
         if (fresh) return fresh;
         return new Response(OFFLINE_HTML, { status: 503, headers: { 'content-type': 'text/html;charset=UTF-8' } });
       }
 
-      // مسابقه: شبکه تا ۴ ثانیه؛ اگر دیر کرد، کش فوراً نمایش داده می‌شود
+      // مسابقه: شبکه تا ۳ ثانیه؛ اگر دیر کرد، کش فوراً نمایش داده می‌شود
       const winner = await Promise.race([
         network,
         new Promise((resolve) => setTimeout(() => resolve('SLOW'), NETWORK_GRACE_MS)),
@@ -108,7 +130,7 @@ self.addEventListener('fetch', (event) => {
       if (winner !== 'SLOW' && winner) return winner;
 
       // شبکه کند/گیر است → نسخه کش‌شده (داده SSR داخل خودش دارد) + رفرش پس‌زمینه
-      return cached;
+      return cached || emergency;
     })());
   }
 });
