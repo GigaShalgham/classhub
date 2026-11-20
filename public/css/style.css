@@ -5,51 +5,26 @@
          کرم #F5EEDC · پس‌زمینه #FAFBFD · متن #2C3242
    ================================================================ */
 
-/* ---------- فونت‌ها ---------- */
-@font-face {
-  font-family: 'Vazirmatn';
-  src: url('/fonts/Vazirmatn-Light.woff2') format('woff2');
-  font-weight: 300; font-style: normal; font-display: swap;
-}
+/* ---------- فونت‌ها (زیرمجموعه‌شده برای اینترنت ضعیف) ---------- */
 @font-face {
   font-family: 'Vazirmatn';
   src: url('/fonts/Vazirmatn-Regular.woff2') format('woff2');
-  font-weight: 400; font-style: normal; font-display: swap;
-}
-@font-face {
-  font-family: 'Vazirmatn';
-  src: url('/fonts/Vazirmatn-Medium.woff2') format('woff2');
-  font-weight: 500; font-style: normal; font-display: swap;
+  font-weight: 400 500; font-style: normal; font-display: swap;
 }
 @font-face {
   font-family: 'Vazirmatn';
   src: url('/fonts/Vazirmatn-SemiBold.woff2') format('woff2');
-  font-weight: 600; font-style: normal; font-display: swap;
-}
-@font-face {
-  font-family: 'Vazirmatn';
-  src: url('/fonts/Vazirmatn-Bold.woff2') format('woff2');
-  font-weight: 700; font-style: normal; font-display: swap;
+  font-weight: 600 700; font-style: normal; font-display: swap;
 }
 @font-face {
   font-family: 'Vazirmatn';
   src: url('/fonts/Vazirmatn-ExtraBold.woff2') format('woff2');
-  font-weight: 800; font-style: normal; font-display: swap;
-}
-@font-face {
-  font-family: 'Vazirmatn';
-  src: url('/fonts/Vazirmatn-Black.woff2') format('woff2');
-  font-weight: 900; font-style: normal; font-display: swap;
-}
-@font-face {
-  font-family: 'Estedad';
-  src: url('/fonts/Estedad-Bold.woff2') format('woff2');
-  font-weight: 700; font-style: normal; font-display: swap;
+  font-weight: 800 900; font-style: normal; font-display: swap;
 }
 @font-face {
   font-family: 'Estedad';
   src: url('/fonts/Estedad-ExtraBold.woff2') format('woff2');
-  font-weight: 800; font-style: normal; font-display: swap;
+  font-weight: 700 800; font-style: normal; font-display: swap;
 }
 
 /* ---------- توکن‌ها ---------- */

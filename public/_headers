@@ -1,0 +1,11 @@
+# کش طولانی برای فایل‌های ثابت (فونت/عکس) — کلید رفع مشکل اینترنت ضعیف:
+# قبلاً max-age=0 بود یعنی هر بازدید همه‌چیز از نو دانلود می‌شد.
+# نام فایل‌ها با تغییر محتوا عوض می‌شوند یا استایل/اسکریپت با no-cache می‌مانند.
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/css/*
+  Cache-Control: public, max-age=86400
+
+/js/*
+  Cache-Control: public, max-age=86400
