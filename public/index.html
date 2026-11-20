@@ -1930,7 +1930,7 @@ h1, h2, h3, h4 { line-height: 1.5; }
           <span class="icon-btn__badge hidden" id="notifBadge">۰</span>
         </button>
         <div class="notifications-panel hidden" id="notifPanel" role="menu" aria-label="اعلان‌های مهم"></div>
-        <a class="icon-btn" href="/admin" aria-label="ورود مدیر کلاس" title="ورود مدیر کلاس">⚙️</a>
+        <a class="icon-btn" href="/admin" id="adminLink" aria-label="ورود مدیر کلاس" title="ورود مدیر کلاس">⚙️</a>
       </div>
     </div>
   </header>
@@ -3189,6 +3189,11 @@ $('#showExpiredBtn').addEventListener('click', () => {
   grid.style.display = show ? '' : 'none';
   $('#showExpiredBtn').textContent = show ? 'پنهان کردن آرشیو' : 'آرشیو موارد گذشته';
 });
+
+// روی آینه‌ی استاتیک، دکمه‌ی ادمین باید به سایت زنده برود نه /admin آینه (۴۰۴).
+if (window.__BOOTSTRAP__ && $('#adminLink')) {
+  $('#adminLink').href = 'https://school.gigaspaceturnip.workers.dev/admin';
+}
 
 setupSheetDrag();
 setupFab();

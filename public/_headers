@@ -11,7 +11,11 @@
   Cache-Control: public, max-age=86400
 
 # صفحه تک‌فایلی دانش‌آموز (پاسخ /): نمایش فوری از کش + به‌روزرسانی در پس‌زمینه.
-# داده‌های واقعی همیشه از /api/bootstrap تازه می‌آیند، پس چند دقیقه کش شدن
+# داده‌های واقعی همیشه از /api/bootstrap تازه می‌آیند، پس یک ساعت کش شدن
 # پوسته صفحه خطایی ندارد — روی شبکه ضعیف بازدید بعدی صفر دانلود دارد.
 /
-  Cache-Control: public, max-age=300, stale-while-revalidate=86400
+  Cache-Control: public, max-age=3600, stale-while-revalidate=86400
+
+# پنل ادمین هم تک‌فایلی است — همان کش پوسته
+/admin/*
+  Cache-Control: public, max-age=3600, stale-while-revalidate=86400

@@ -2,6 +2,13 @@
 import { faDigits, formatJalali, formatJalaliDateTime, countdown, WEEK_DAY_NAMES, KIND_LABELS, KIND_ICONS, JALALI_MONTHS, toJalali, fromJalali, iranDayIndex, rollingWindow } from './utils.js';
 import { periodsPerDay, periodTimes, PERIOD_TABLE, CLASS_DAYS } from './schedule.js';
 
+// آینه‌ی استاتیک فقط صفحه‌ی دانش‌آموز دارد؛ ورود ادمین باید به سایت زنده برود.
+// این شرط در صفحات زنده بی‌اثر است (فایل admin.js فقط در /admin بارگذاری می‌شود).
+if (window.__IS_MIRROR__) {
+  location.replace('https://school.gigaspaceturnip.workers.dev/admin');
+  throw new Error('mirror: redirect to live admin');
+}
+
 // ایموجی اختصاصی هر درس (همان نگاشت صفحه دانش‌آموز)
 const SUBJECT_EMOJI = [
   ['کارگاه', '🔧'], ['ریاضی', '📐'], ['هندسه', '📐'], ['فیزیک', '🧲'], ['شیمی', '⚗️'],
@@ -32,21 +39,50 @@ const state = {
 };
 
 // ---------- api ----------
+// مهلت + تلاش مجدد برای شبکه ضعیف: بدون این، fetch روی خطِ پکت‌انداز ممکن است
+// تا ابد معطل بماند و پنل «نصفه» بماند. نوشتن‌ها (POST/PUT/DELETE) فقط یک‌بار
+// امتحان می‌شوند تا عملیات دوبار ثبت نشود.
+function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
+
+async function fetchWithTimeout(path, opts, timeoutMs) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    return await fetch(path, { ...opts, signal: ctrl.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function api(path, options = {}) {
   const opts = { headers: {}, ...options };
   if (opts.body && !(opts.body instanceof FormData)) {
     opts.headers['Content-Type'] = 'application/json';
     opts.body = JSON.stringify(opts.body);
   }
-  const res = await fetch(path, opts);
-  let data = {};
-  try { data = await res.json(); } catch { /* empty body */ }
-  if (!res.ok) {
-    const err = new Error(data.error || `خطای ${res.status}`);
-    err.status = res.status;
-    throw err;
+  const isRead = !opts.method || opts.method === 'GET';
+  const timeouts = isRead ? [10_000, 20_000, 35_000] : [30_000];
+  let lastErr;
+  for (let attempt = 0; attempt < timeouts.length; attempt++) {
+    try {
+      const res = await fetchWithTimeout(path, opts, timeouts[attempt]);
+      let data = {};
+      try { data = await res.json(); } catch { /* empty body */ }
+      if (!res.ok) {
+        const err = new Error(data.error || `خطای ${res.status}`);
+        err.status = res.status;
+        throw err;
+      }
+      return data;
+    } catch (err) {
+      lastErr = err;
+      if (err.status) throw err; // خطای واقعی سرور: دوباره زدن بی‌فایده است
+      const retryable = err.name === 'AbortError' || err.name === 'TypeError';
+      if (!retryable || attempt === timeouts.length - 1) throw err;
+      await sleep(1_200 * (attempt + 1));
+    }
   }
-  return data;
+  throw lastErr;
 }
 
 // ---------- dom helpers ----------
