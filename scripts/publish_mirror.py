@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
-# ساخت و انتشار «نسخه‌ی آینه» (mirror) صفحه‌ی دانش‌آموز:
+# ساخت و انتشار «نسخه‌ی آینه» (mirror) صفحه‌ی دانش‌آموز + پنل ادمین:
 #   ۱) bootstrap زنده را از production می‌گیرد
-#   ۲) public/index.html تک‌فایلی را با window.__BOOTSTRAP__ بیک می‌کند
+#   ۲) public/index.html و public/admin/index.html تک‌فایلی را بیک می‌کند
 #      (فونت‌ها هم data-URI می‌شوند تا آینه کاملاً خودکفا باشد)
+#      ادمین آینه: __IS_MIRROR__ + __API_BASE__ تزریق می‌شود تا فراخوانی‌های
+#      API به سایت زنده بروند (لاگین با توکن Bearer چون کوکی کراس‌سایتی نیست)
 #   ۳) شاخه‌ی gh-pages را از نو می‌سازد و push می‌کند
 #   ۴) GitHub Pages را از شاخه‌ی gh-pages فعال می‌کند
-# نتیجه: دو لینک جدید روی شبکه‌های غیر-کلادفلر (Fastly):
-#   https://gigashalgham.github.io/school-s-stuff/
-#   https://cdn.jsdelivr.net/gh/GigaShalgham/school-s-stuff@gh-pages/index.html
+# نتیجه: چند لینک روی شبکه‌های غیر-کلادفلر (Fastly):
+#   https://gigashalgham.github.io/classhub/
+#   https://gigashalgham.github.io/classhub/admin/
+#   https://cdn.jsdelivr.net/gh/GigaShalgham/classhub@gh-pages/index.html
 # اجرا: python3 scripts/publish_mirror.py
 
 import base64
@@ -20,7 +23,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 PUB = ROOT / 'public'
-REPO = 'GigaShalgham/school-s-stuff'
+REPO = 'GigaShalgham/classhub'
 LIVE = 'https://school.gigaspaceturnip.workers.dev'
 GH_TOKEN = None
 
@@ -54,6 +57,18 @@ def gh_api(method, path, body=None, accept='application/vnd.github+json'):
         return e.code, json.loads(e.read().decode() or '{}')
 
 
+def inline_fonts(html):
+    """فونت‌ها → data-URI + حذف preload تا آینه به هیچ فایل خارجی وابسته نباشد."""
+    for font in ['Vazirmatn-Regular', 'Vazirmatn-SemiBold', 'Vazirmatn-ExtraBold', 'Estedad-ExtraBold']:
+        f = PUB / 'fonts' / f'{font}.woff2'
+        if not f.exists():
+            continue
+        b64 = base64.b64encode(f.read_bytes()).decode()
+        html = html.replace(f"url('/fonts/{font}.woff2')", f"url(data:font/woff2;base64,{b64})")
+    html = re.sub(r'<link rel="preload" href="/fonts/[^"]+"[^>]*>\n?', '', html)
+    return html
+
+
 # ---------- ۱) bootstrap زنده ----------
 print('۱) دریافت /api/bootstrap از production…')
 req = urllib.request.Request(f'{LIVE}/api/bootstrap', headers={'User-Agent': 'Mozilla/5.0 (compatible; classhub-mirror)'})
@@ -64,42 +79,38 @@ n_tasks = len(data.get('tasks', {}).get('active', [])) + len(data.get('tasks', {
 n_ann = len(data.get('announcements', []))
 print(f'   درس‌ها: {n_lessons}، تکالیف/کارها: {n_tasks}، اطلاعیه‌ها: {n_ann}')
 
-# ---------- ۲) بیک کردن در index.html ----------
-print('۲) بیک کردن داده‌ها در صفحه…')
+mirror_date = __import__('datetime').date.today().isoformat()
+
+# ---------- ۲) صفحه‌ی دانش‌آموز ----------
+print('۲) بیک کردن داده‌ها در صفحه‌ی دانش‌آموز…')
 html = (PUB / 'index.html').read_text()
 
-snapshot = {
-    '__BOOTSTRAP__': data,
-    '__LIVE_ORIGIN__': LIVE,
-    '__MIRROR_DATE__': __import__('datetime').date.today().isoformat(),
-}
 inject = '<script>\nwindow.__BOOTSTRAP__ = ' + json.dumps(data, ensure_ascii=False) + ';\n' \
       + 'window.__LIVE_ORIGIN__ = ' + json.dumps(LIVE) + ';\n' \
-      + "window.__MIRROR_DATE__ = '" + snapshot['__MIRROR_DATE__'] + "';\n</script>\n"
+      + "window.__MIRROR_DATE__ = '" + mirror_date + "';\n</script>\n"
 
-# تزریق قبل از اسکریپت اصلی (اولین <script> در body)
 marker = re.search(r'<script>\n', html)
 if not marker:
     sys.exit('marker اسکریپت در index.html پیدا نشد')
 html = html[:marker.start()] + inject + html[marker.start():]
+html = inline_fonts(html)
 
-# فونت‌ها → data-URI تا آینه به هیچ فایل خارجی وابسته نباشد
-for font in ['Vazirmatn-Regular', 'Vazirmatn-SemiBold', 'Vazirmatn-ExtraBold', 'Estedad-ExtraBold']:
-    f = PUB / 'fonts' / f'{font}.woff2'
-    if not f.exists():
-        continue
-    b64 = base64.b64encode(f.read_bytes()).decode()
-    html = html.replace(f"url('/fonts/{font}.woff2')", f"url(data:font/woff2;base64,{b64})")
-    html = re.sub(r'<link rel="preload" href="/fonts/' + font + r'\.woff2"[^>]*>\n?', '', html)
+# ---------- ۲ب) پنل ادمین ----------
+print('۲ب) ساخت نسخه‌ی آینه‌ی پنل ادمین…')
+admin_html = (PUB / 'admin' / 'index.html').read_text()
 
-# ابروی preload فونت باقی‌مانده را هم پاک کن (چهارمین فونت بالا نیست ولی اگر بود)
-html = re.sub(r'<link rel="preload" href="/fonts/[^"]+"[^>]*>\n?', '', html)
-
-out = ROOT / 'mirror_out' / 'index.html'
-out.parent.mkdir(exist_ok=True)
-out.write_text(html)
-kb = out.stat().st_size / 1024
-print(f'   mirror/index.html: {kb:.1f}KB (با فونت و داده)')
+admin_inject = (
+    '<script>\n'
+    'window.__IS_MIRROR__ = true;\n'
+    'window.__API_BASE__ = ' + json.dumps(LIVE) + ';\n'
+    "window.__MIRROR_DATE__ = '" + mirror_date + "';\n"
+    '</script>\n'
+)
+marker = re.search(r'<script>\n', admin_html)
+if not marker:
+    sys.exit('marker اسکریپت در admin/index.html پیدا نشد')
+admin_html = admin_html[:marker.start()] + admin_inject + admin_html[marker.start():]
+admin_html = inline_fonts(admin_html)
 
 # ---------- ۳) ساخت شاخه‌ی gh-pages و push ----------
 print('۳) ساخت شاخه‌ی gh-pages و push…')
@@ -111,12 +122,16 @@ subprocess.run(['git', 'clone', '--quiet', f'https://x-access-token:{GH_TOKEN}@g
 subprocess.run(['git', '-C', str(work), 'checkout', '--orphan', 'gh-pages'], check=True)
 subprocess.run(['git', '-C', str(work), 'rm', '-rf', '--quiet', '.'], check=True)
 (work / 'index.html').write_text(html)
+(work / 'admin').mkdir()
+(work / 'admin' / 'index.html').write_text(admin_html)
 (work / '.nojekyll').write_text('')
+for p, size in [(work / 'index.html', html), (work / 'admin' / 'index.html', admin_html)]:
+    print(f'   {p.name}: {p.stat().st_size / 1024:.1f}KB')
 subprocess.run(['git', '-C', str(work), 'add', '-A'], check=True)
 subprocess.run(['git', '-C', str(work), '-c', 'user.name=Z.ai Mirror Bot',
                 '-c', 'user.email=noreply@z.ai',
                 'commit', '--quiet', '-m',
-                f'mirror: snapshot {snapshot["__MIRROR_DATE__"]} — نسخه‌ی آینه برای دسترسی بدون-VPN'], check=True)
+                f'mirror: snapshot {mirror_date} — صفحه دانش‌آموز + پنل ادمین (آینه بدون-VPN)'], check=True)
 subprocess.run(['git', '-C', str(work), 'push', '--force', 'origin', 'gh-pages'], check=True)
 print('   push شد ✓')
 
@@ -140,5 +155,6 @@ if status == 409:
         print(f'   تغییر source به gh-pages: {"OK" if s3 == 200 else f"{s3} {b3}"}')
 
 print('\nلینک‌های آینه (چند دقیقه بعد از انتشار CDN فعال می‌شوند):')
-print(f'  A) https://gigashalgham.github.io/school-s-stuff/')
-print(f'  B) https://cdn.jsdelivr.net/gh/{REPO}@gh-pages/index.html')
+print(f'  A) دانش‌آموز: https://gigashalgham.github.io/classhub/')
+print(f'  B) ادمین:     https://gigashalgham.github.io/classhub/admin/')
+print(f'  C) CDN:       https://cdn.jsdelivr.net/gh/{REPO}@gh-pages/index.html')

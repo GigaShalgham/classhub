@@ -3190,9 +3190,10 @@ $('#showExpiredBtn').addEventListener('click', () => {
   $('#showExpiredBtn').textContent = show ? 'پنهان کردن آرشیو' : 'آرشیو موارد گذشته';
 });
 
-// روی آینه‌ی استاتیک، دکمه‌ی ادمین باید به سایت زنده برود نه /admin آینه (۴۰۴).
+// روی آینه‌ی استاتیک، دکمه‌ی ادمین به پنل ادمینِ خودِ آینه می‌رود
+// (آینه هم نسخه‌ی ادمین را دارد که به API زنده وصل می‌شود).
 if (window.__BOOTSTRAP__ && $('#adminLink')) {
-  $('#adminLink').href = 'https://school.gigaspaceturnip.workers.dev/admin';
+  $('#adminLink').href = 'admin/';
 }
 
 setupSheetDrag();

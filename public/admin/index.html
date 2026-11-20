@@ -2502,12 +2502,23 @@ function periodTimes(day, period) {
 // کلاس‌هاب — admin panel logic
 
 
-// آینه‌ی استاتیک فقط صفحه‌ی دانش‌آموز دارد؛ ورود ادمین باید به سایت زنده برود.
-// این شرط در صفحات زنده بی‌اثر است (فایل admin.js فقط در /admin بارگذاری می‌شود).
-if (window.__IS_MIRROR__) {
-  location.replace('https://school.gigaspaceturnip.workers.dev/admin');
-  throw new Error('mirror: redirect to live admin');
-}
+// آینه‌ی گیت‌هاب صفحه‌ی ادمین را هم دارد؛ فراخوانی‌های API همیشه به سایت
+// زنده می‌روند. __API_BASE__ / __IS_MIRROR__ فقط در نسخه‌ی آینه
+// (publish_mirror.py) تزریق می‌شوند.
+const API_BASE = window.__API_BASE__ || '';
+const IS_MIRROR = Boolean(window.__IS_MIRROR__);
+const LIVE_ORIGINS = [
+  'https://school.gigaspaceturnip.workers.dev',
+  'https://school.sigmababyboy.ccwu.cc',
+  'https://www.the-big-school.de5.net',
+];
+
+// توکن نشست: در نسخه‌ی زنده کوکی httpOnly کار می‌کند؛ در آینه کوکی
+// کراس‌سایتی ارسال نمی‌شود (SameSite=Lax)، پس توکن لاگین را نگه می‌داریم
+// و با هدر Authorization می‌فرستیم. سرور هر دو را می‌پذیرد.
+const TOKEN_KEY = 'classhub_admin_token';
+function storedToken() { try { return localStorage.getItem(TOKEN_KEY); } catch { return null; } }
+function storeToken(t) { try { t ? localStorage.setItem(TOKEN_KEY, t) : localStorage.removeItem(TOKEN_KEY); } catch { /* private mode */ } }
 
 // ایموجی اختصاصی هر درس (همان نگاشت صفحه دانش‌آموز)
 const SUBJECT_EMOJI = [
@@ -2560,12 +2571,16 @@ async function api(path, options = {}) {
     opts.headers['Content-Type'] = 'application/json';
     opts.body = JSON.stringify(opts.body);
   }
+  // در آینه: درخواست به سایت زنده + توکن (کوکی کراس‌سایتی ارسال نمی‌شود)
+  const url = path.startsWith('http') ? path : API_BASE + path;
+  const token = storedToken();
+  if (token && !opts.headers['Authorization']) opts.headers['Authorization'] = `Bearer ${token}`;
   const isRead = !opts.method || opts.method === 'GET';
   const timeouts = isRead ? [10_000, 20_000, 35_000] : [30_000];
   let lastErr;
   for (let attempt = 0; attempt < timeouts.length; attempt++) {
     try {
-      const res = await fetchWithTimeout(path, opts, timeouts[attempt]);
+      const res = await fetchWithTimeout(url, opts, timeouts[attempt]);
       let data = {};
       try { data = await res.json(); } catch { /* empty body */ }
       if (!res.ok) {
@@ -2653,11 +2668,47 @@ async function checkAuth() {
   }
 }
 
+// در آینه، انتخاب سرور زنده (اگر یک دامنه فیلتر/قطع بود، بقیه امتحان شوند)
+function selectedOrigin() { return localStorage.getItem('classhub_live_origin') || ''; }
+function applyOrigin(origin) {
+  try {
+    origin ? localStorage.setItem('classhub_live_origin', origin) : localStorage.removeItem('classhub_live_origin');
+  } catch { /* private mode */ }
+  window.__API_BASE__ = origin;
+}
+function initMirrorOriginPicker() {
+  if (!IS_MIRROR) return;
+  const sub = $('#loginSub');
+  if (!sub) return;
+  const wrap = document.createElement('div');
+  wrap.className = 'field';
+  wrap.style.marginTop = '0.75rem';
+  const label = document.createElement('label');
+  label.className = 'field__label';
+  label.htmlFor = 'mirrorOrigin';
+  label.textContent = 'سرور متصل (سایت زنده‌ی کلاس‌هاب)';
+  const select = document.createElement('select');
+  select.className = 'input';
+  select.id = 'mirrorOrigin';
+  for (const o of LIVE_ORIGINS) {
+    const opt = document.createElement('option');
+    opt.value = o;
+    opt.textContent = o.replace('https://', '');
+    if (o === (selectedOrigin() || LIVE_ORIGINS[0])) opt.selected = true;
+    select.appendChild(opt);
+  }
+  select.addEventListener('change', () => applyOrigin(select.value));
+  wrap.append(label, select);
+  sub.after(wrap);
+  applyOrigin(selectedOrigin() || LIVE_ORIGINS[0]);
+}
+
 async function handleLoginInner() {
   const data = await api('/api/admin/auth/login', {
     method: 'POST',
     body: { username: $('#loginUser').value.trim(), password: $('#loginPass').value },
   });
+  storeToken(data.token); // برای آینه: توکن نگه می‌داریم (کوکی کراس‌سایتی نیست)
   state.me = data.admin;
   toast('خوش آمدید! 🌸', 'success');
   showAdmin();
@@ -2665,6 +2716,7 @@ async function handleLoginInner() {
 
 async function handleLogout() {
   try { await api('/api/admin/auth/logout', { method: 'POST' }); } catch { /* ignore */ }
+  storeToken(null);
   state.me = null;
   location.reload();
 }
@@ -3538,12 +3590,13 @@ function switchTab(name) {
 // ---------- boot ----------
 async function boot() {
   $('#brandDate').textContent = formatJalali(new Date(), { withWeekday: true });
+  initMirrorOriginPicker();
   const authed = await checkAuth();
   if (authed) showAdmin();
   else {
     // check if bootstrap needed (no admin exists yet)
     try {
-      const need = await fetch('/api/admin/auth/status').then((r) => r.json());
+      const need = await api('/api/admin/auth/status');
       if (need.bootstrapRequired) {
         $('#loginSub').textContent = 'نخستین بار: حساب مدیر کلاس را بسازید';
         $('#loginSubmit').textContent = 'ساخت حساب مدیر';
