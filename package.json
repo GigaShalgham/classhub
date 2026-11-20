@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
+    "build": "node scripts/build_singlefile.mjs",
+    "deploy": "node scripts/build_singlefile.mjs && wrangler deploy",
     "typecheck": "tsc --noEmit",
     "test": "node --test 'test/*.test.mjs'",
     "db:migrate:local": "wrangler d1 migrations apply school_class_db --local",

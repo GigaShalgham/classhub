@@ -70,6 +70,76 @@ publicRoutes.get('/schedule', async (c) => {
   return c.json({ ok: true, days });
 });
 
+// Single round-trip bootstrap for the student page (weak-network optimization):
+// merges /schedule + /tasks + /announcements + /settings into one payload.
+// Read-only, additive; the individual endpoints stay untouched.
+publicRoutes.get('/bootstrap', async (c) => {
+  const [lessonRows, taskRows, annRows, settingRows] = await Promise.all([
+    c.env.DB.prepare(lessonQuery()).all<LessonRow>(),
+    c.env.DB.prepare(`
+      SELECT t.id, t.kind, t.title, t.description, t.due_at AS dueAt, t.priority, t.archived,
+             s.id AS subjectId, s.name AS subjectName, s.color_key AS colorKey,
+             (SELECT COUNT(*) FROM attachments a WHERE a.parent_type='task' AND a.parent_id = t.id) AS att
+      FROM tasks t
+      LEFT JOIN subjects s ON s.id = t.subject_id
+      ORDER BY t.archived, t.due_at
+    `).all<Record<string, unknown>>(),
+    c.env.DB.prepare(`
+      SELECT n.id, n.title, n.body, n.pinned, n.published_at AS publishedAt,
+             (SELECT COUNT(*) FROM attachments a WHERE a.parent_type='announcement' AND a.parent_id = n.id) AS att
+      FROM announcements n
+      ORDER BY n.pinned DESC, n.published_at DESC
+    `).all<Record<string, unknown>>(),
+    c.env.DB.prepare(
+      'SELECT key, value FROM settings WHERE key IN (?,?,?)',
+    ).bind('class_name', 'welcome_message', 'admin_note').all<{ key: string; value: string }>(),
+  ]);
+
+  const days: (Lesson[] | null)[] = Array.from({ length: WEEK_DAYS }, () => null);
+  for (const r of lessonRows.results ?? []) {
+    (days[r.day] ??= []).push(rowToLesson(r));
+  }
+
+  const now = Date.now();
+  const active: Task[] = [];
+  const expired: Task[] = [];
+  for (const r of taskRows.results ?? []) {
+    const t: Task = {
+      id: r.id as number,
+      kind: r.kind as Task['kind'],
+      title: r.title as string,
+      subject_id: (r.subjectId ?? null) as number | null,
+      subject_name: (r.subjectName ?? null) as string | null,
+      color_key: (r.colorKey ?? null) as Task['color_key'],
+      description: r.description as string,
+      due_at: r.dueAt as string,
+      priority: r.priority as Task['priority'],
+      archived: Boolean(r.archived),
+      created_at: '',
+      updated_at: '',
+      attachment_count: (r.att ?? 0) as number,
+    };
+    if (t.archived || new Date(t.due_at).getTime() < now) expired.push(t);
+    else active.push(t);
+  }
+  active.sort((a, b) => a.due_at.localeCompare(b.due_at));
+  expired.sort((a, b) => b.due_at.localeCompare(a.due_at));
+
+  const announcements: Announcement[] = (annRows.results ?? []).map((r) => ({
+    id: r.id as number,
+    title: r.title as string,
+    body: r.body as string,
+    pinned: Boolean(r.pinned),
+    published_at: r.publishedAt as string,
+    attachment_count: (r.att ?? 0) as number,
+  }));
+
+  const settings: Record<string, string> = {};
+  for (const r of settingRows.results ?? []) settings[r.key] = r.value;
+
+  return c.json({ ok: true, days, tasks: { active, expired }, announcements, settings });
+});
+
 publicRoutes.get('/lessons/:id', async (c) => {
   const id = Number(c.req.param('id'));
   if (!Number.isInteger(id)) return c.json({ ok: false, error: 'شناسه نامعتبر.' }, 400);

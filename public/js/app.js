@@ -55,11 +55,42 @@ const state = {
   settings: {},
 };
 
-// ---------- API ----------
+// ---------- API (مقاوم به شبکه ضعیف) ----------
+// هر درخواست: مهلت زمانی + تلاش مجدد خودکار — روی شبکه‌ای که پکت می‌اندازد،
+// یک fetch ساده ممکن است تا ابد معطل بماند و صفحه «نصفه» بماند.
+const API_TIMEOUT_MS = 12_000;
+const API_RETRIES = 2;
+
+function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
+
+async function fetchOnce(path, timeoutMs) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    return await fetch(path, { headers: { Accept: 'application/json' }, signal: ctrl.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function api(path) {
-  const res = await fetch(path, { headers: { Accept: 'application/json' } });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
+  let lastErr;
+  for (let attempt = 0; attempt <= API_RETRIES; attempt++) {
+    try {
+      const res = await fetchOnce(path, API_TIMEOUT_MS);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      lastErr = err;
+      // فقط خطای شبکه/مهلت را دوباره امتحان می‌کنیم، نه پاسخ‌های معتبر سرور را
+      if (attempt < API_RETRIES && (err.name === 'AbortError' || err.name === 'TypeError')) {
+        await sleep(700 * (attempt + 1)); // فاصله کوتاه قبل از تلاش مجدد
+        continue;
+      }
+      throw lastErr;
+    }
+  }
+  throw lastErr;
 }
 
 // ---------- ابزار DOM ----------
@@ -755,19 +786,42 @@ function setupFab() {
 }
 
 // ---------- راه‌اندازی ----------
-async function loadAll() {
-  const results = await Promise.allSettled([
-    api('/api/schedule'), api('/api/tasks'), api('/api/announcements'), api('/api/settings'),
-  ]);
-  const [sched, tasks, anns, settings] = results;
-  if (sched.status === 'fulfilled') state.days = sched.value.days;
-  if (tasks.status === 'fulfilled') state.tasks = { active: tasks.value.active, expired: tasks.value.expired };
-  if (anns.status === 'fulfilled') state.announcements = anns.value.announcements;
-  if (settings.status === 'fulfilled') state.settings = settings.value.settings;
+function setConnState(mode) {
+  // mode: 'ok' | 'loading' | 'error' — بنر کوچک وضعیت اتصال برای شبکه ضعیف
+  let banner = document.getElementById('connBanner');
+  if (mode === 'ok') { if (banner) banner.remove(); return; }
+  if (!banner) {
+    banner = el('div', { id: 'connBanner', role: 'status' });
+    banner.style.cssText = 'position:fixed;inset-inline:0;bottom:0;z-index:60;text-align:center;'
+      + 'padding:10px 16px;font-size:14px;font-weight:600;color:#fff;background:#8a6d3b;'
+      + 'box-shadow:0 -2px 12px rgba(0,0,0,.15);';
+    document.body.append(banner);
+  }
+  banner.textContent = mode === 'loading'
+    ? '🌐 شبکه کند است… در حال تلاش برای دریافت اطلاعات'
+    : '⚠️ اتصال قطع شد — دوباره تلاش می‌کنیم…';
+  banner.style.background = mode === 'loading' ? '#8a6d3b' : '#a94442';
+}
 
-  const failed = results.filter((r) => r.status === 'rejected');
-  if (failed.length === 4) toast('اتصال به سرور برقرار نشد.', 'error');
-  else if (failed.length) toast('بخشی از اطلاعات بارگذاری نشد.', 'error');
+async function loadAll() {
+  setConnState('loading');
+  let data = null;
+  try {
+    // یک درخواست واحد به‌جای ۴ درخواست جدا — نصف شدن صفحه روی شبکه ضعیف
+    // معمولاً از قطره‌شدن یکی از درخواست‌های موازی بود.
+    data = await api('/api/bootstrap');
+  } catch (err) {
+    setConnState('error');
+    // تلاش مجدد خودکار هر ۸ ثانیه تا وقتی جواب بیاید
+    setTimeout(loadAll, 8_000);
+    return;
+  }
+  setConnState('ok');
+
+  state.days = data.days ?? [];
+  state.tasks = { active: data.tasks?.active ?? [], expired: data.tasks?.expired ?? [] };
+  state.announcements = data.announcements ?? [];
+  state.settings = data.settings ?? {};
 
   renderHeader();
   renderHero();

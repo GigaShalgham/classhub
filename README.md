@@ -13,6 +13,22 @@ Deployed on **Cloudflare Workers** (single Worker serving both the static fronte
 - کش مرورگر فعال شد: فونت `max-age=31536000, immutable`، CSS/JS `max-age=86400` (قبلاً `max-age=0` — هر بازدید همه‌چیز از نو دانلود می‌شد!)
 - نتیجه: بارگذاری اول ~۱۱۶KB، بازدید بعدی فقط ~۲KB (HTML)
 
+### نسخه تک‌فایلی + API یکجا (۲۰ نوامبر ۲۰۲۶ — رفع «نصفه باز شدن»)
+علت واقعی نصفه‌ماندن صفحه روی اینترنت ضعیف نه DNS بود و نه حجم: **زنجیره‌ی ۱۰ درخواست**
+(html → css → js → دو import → ۴ درخواست API موازی) بدون هیچ retry — روی شبکه‌ای که پکت
+می‌اندازد، قطره‌شدن فقط یکی از آن‌ها یعنی بخشی از صفحه هرگز نمی‌آید.
+راه‌حل (فقط تغییر افزدونی؛ دیتابیس دست‌نخورده):
+- **صفحه دانش‌آموز تک‌فایلی شد**: CSS و JS (utils + schedule + app) داخل خود HTML اینلاین می‌شوند
+  — `npm run build` → `scripts/build_singlefile.mjs` از روی `public/index.src.html` می‌سازدش.
+  ۱۰ درخواست → **۵ درخواست** (۱ html + ۱ API + ۳ فونت)، و پوسته صفحه با کش مرورگر
+  (`max-age=300, stale-while-revalidate`) بازدید بعدی را **صفر دانلود** می‌کند.
+- **`GET /api/bootstrap`**: چهار اندپوینت عمومی در یک پاسخ یکی شد (schedule + tasks + announcements
+  + settings) — یک رفت‌وبرگشت به‌جای چهارِ موازی.
+- **fetch مقاوم**: هر درخواست ۱۲ثانیه timeout + ۲ بار retry خودکار (با فاصله‌ی صعودی) دارد؛
+  اگر داده نیامد بنر «🌐 شبکه کند است… / ⚠️ اتصال قطع شد» پایین صفحه می‌آید و هر ۸ ثانیه
+  خودش دوباره تلاش می‌کند تا صفحه بی‌صدا کامل شود.
+- نتیجه روی production: پوسته ~۲۷KB (compressed) در یک درخواست؛ داده‌ها ~۱KB در یک درخواست.
+
 ---
 
 ## ✨ Features
@@ -74,7 +90,8 @@ Deployed on **Cloudflare Workers** (single Worker serving both the static fronte
 │       ├── public.ts       # read-only student API
 │       └── admin.ts        # authenticated admin API
 ├── public/                 # static frontend (served by the Worker)
-│   ├── index.html          # student page (single page)
+│   ├── index.src.html      # student page source (edit this)
+│   ├── index.html          # GENERATED single-file build (do not edit; run npm run build)
 │   ├── admin/index.html    # admin panel
 │   ├── css/style.css       # pastel design system
 │   ├── js/utils.js         # Jalali calendar, Persian digits, countdowns
@@ -94,6 +111,7 @@ Public (read-only):
 | Method | Path | Description |
 | --- | --- | --- |
 | GET | `/api/health` | liveness probe |
+| GET | `/api/bootstrap` | **all of the below in one payload** (weak-network fast path) |
 | GET | `/api/schedule` | weekly timetable (7 day arrays) |
 | GET | `/api/lessons/:id` | lesson detail incl. full homework + attachments |
 | GET | `/api/tasks` | active + expired tasks |
@@ -126,7 +144,10 @@ npm install
 npm run db:migrate:local
 npm run db:seed:local
 
-# 2. run the Worker + assets locally
+# 2. build the single-file student page (required after editing src.html / js / css)
+npm run build
+
+# 3. run the Worker + assets locally
 npm run dev          # → http://127.0.0.1:8787
 ```
 

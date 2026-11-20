@@ -18,6 +18,7 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
+      - run: npm run build   # صفحه دانش‌آموز را تک‌فایلی می‌کند (بهینه‌سازی شبکه ضعیف)
       - name: Apply D1 migrations
         run: npx wrangler d1 migrations apply school_class_db --remote
         env:
