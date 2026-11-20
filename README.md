@@ -4,9 +4,9 @@ A cute, pastel-themed single-page class hub for a school class: the weekly timet
 
 Deployed on **Cloudflare Workers** (single Worker serving both the static frontend and the JSON API) with **Cloudflare D1** for persistence.
 
-**Production (ایران):** https://school.sigmababyboy.ccwu.cc
-**دامنه اختصاصی:** https://www.the-big-school.de5.net — نکته: خودِ `the-big-school.de5.net` روی بلاک‌لیست DNS فیلترینگ است (شکن/الکترو)، ولی `www` فعلاً از همان DNSها رکورد سالم می‌گیرد
-**Fallback:** https://school.gigaspaceturnip.workers.dev
+**Production (تست‌شده از ۸ شبکه داخل ایران):** https://school.sigmababyboy.ccwu.cc — روی ۷/۸ شبکه ایرانی ۲۰۰ (یک شبکه timeout)
+**دامنه اختصاصی:** https://www.the-big-school.de5.net (و آپکس) — روی ۶-۷/۸ شبکه ایرانی ۲۰۰؛ ⚠️ دو مشکل: (۱) آپکس در DNS شکن/الکترو روی بلاک‌لیست است، (۲) برخی شبکه‌ها کل پسوند `de5.net` را بلاک می‌کنند. برای مخاطب عمومی ایران تضمین‌ناپذیر است.
+**Fallback (پایدارترین):** https://school.gigaspaceturnip.workers.dev — روی ۸/۸ شبکه ایرانی ۲۰۰
 
 ---
 
