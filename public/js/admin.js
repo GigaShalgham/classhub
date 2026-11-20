@@ -1091,6 +1091,11 @@ function switchTab(name) {
 async function boot() {
   $('#brandDate').textContent = formatJalali(new Date(), { withWeekday: true });
   initMirrorOriginPicker();
+  // روی آینه، دکمه‌ی 🏠 باید به صفحه‌ی دانش‌آموزِ خودِ آینه برگردد نه /
+  // (روی github.io ریشه‌ی / مال نام کاربری است و ۴۰۴ می‌شود).
+  if (IS_MIRROR && $('#homeLink')) {
+    $('#homeLink').href = '../';
+  }
   const authed = await checkAuth();
   if (authed) showAdmin();
   else {
