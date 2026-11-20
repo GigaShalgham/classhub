@@ -7,12 +7,10 @@
   <meta name="description" content="کلاس‌هاب — برنامه هفتگی، تکالیف، مهلت‌ها و اطلاعیه‌های کلاس">
   <title>کلاس‌هاب | برنامه هفتگی کلاس</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
-  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
-  <link rel="manifest" href="/manifest.webmanifest">
-  <link rel="modulepreload" href="/js/utils.js">
-  <link rel="modulepreload" href="/js/schedule.js">
+  <link rel="preload" href="/fonts/Vazirmatn-Regular.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/Vazirmatn-SemiBold.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/Estedad-Bold.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/css/style.css">
-  <!--__BOOT__-->
 </head>
 <body>
   <header class="site-header">
@@ -55,8 +53,11 @@
       </div>
       <div class="tt-wrap" id="ttWrap">
         <button class="tt-arrow tt-arrow--prev" id="ttPrev" type="button" aria-label="روزهای قبلی">‹</button>
-        <!--TT--><!--/TT-->
+        <div class="tt-scroll" id="ttScroll" tabindex="0" role="region" aria-label="جدول هفتگی — برای مرور روزها به چپ و راست بکشید">
+          <div class="tt-grid" id="ttGrid"></div>
+        </div>
         <button class="tt-arrow tt-arrow--next" id="ttNext" type="button" aria-label="روزهای بعدی">›</button>
+        <div class="tt-dots" id="ttDots" role="tablist" aria-label="پیمایش روزها"></div>
       </div>
     </section>
 
@@ -65,7 +66,7 @@
         <h2 class="section__title"><span class="emoji" aria-hidden="true">⏳</span> مهلت‌ها و تکالیف زمان‌دار</h2>
         <span class="section__note">مرتب‌شده بر اساس نزدیک‌ترین مهلت</span>
       </div>
-      <!--TASKS--><!--/TASKS-->
+      <div class="tasks-grid" id="tasksGrid"></div>
       <div class="btn-row" style="margin-top: 14px;">
         <button class="btn btn--ghost btn--sm" id="showExpiredBtn" type="button">آرشیو موارد گذشته</button>
       </div>
@@ -76,7 +77,7 @@
       <div class="section__head">
         <h2 class="section__title"><span class="emoji" aria-hidden="true">📣</span> اطلاعیه‌ها</h2>
       </div>
-      <!--ANN--><!--/ANN-->
+      <div class="ann-list" id="annList"></div>
     </section>
   </main>
 
