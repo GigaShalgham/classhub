@@ -72,7 +72,9 @@ async function api(path, { timeoutMs = 15_000 } = {}) {
   }
 }
 
-/** رفرش پس‌زمینه: اگر داده از سرور تازه شد، صفحه بی‌سروصدا به‌روز می‌شود (بدون اسکرول/پرش) */
+/** رفرش پس‌زمینه: اگر داده واقعاً عوض شده باشد صفحه بی‌سروصدا به‌روز می‌شود.
+ *  نکته مهم: اگر داده تغییر نکرده باشد هیچ رندری انجام نمی‌شود تا اسکرول کاربر
+ *  و وضعیت باز/بسته‌ی پنل‌ها (مثل آرشیو موارد گذشته) دست نخورد. */
 let bgRefreshInFlight = false;
 async function backgroundRefresh() {
   if (bgRefreshInFlight || document.hidden) return;
@@ -80,13 +82,31 @@ async function backgroundRefresh() {
   try {
     const d = await api('/api/bootstrap', { timeoutMs: 20_000 });
     if (!d || !d.ok) return;
-    state.days = d.days;
-    state.tasks = { active: d.tasks.active, expired: d.tasks.expired };
-    state.announcements = d.announcements;
-    state.settings = d.settings;
-    renderAll();
+    if (dataChanged(d)) {
+      state.days = d.days;
+      state.tasks = { active: d.tasks.active, expired: d.tasks.expired };
+      state.announcements = d.announcements;
+      state.settings = d.settings;
+      const showExpiredOpen = $('#expiredGrid') && $('#expiredGrid').style.display !== 'none';
+      const scrollY = window.scrollY;
+      renderAll();
+      // برگرداندن وضعیت آرشیو و محل اسکرول — پرش نداشته باشیم
+      if (showExpiredOpen && $('#expiredGrid')) {
+        $('#expiredGrid').style.display = '';
+        const btn = $('#showExpiredBtn');
+        if (btn) btn.textContent = 'پنهان کردن آرشیو';
+      }
+      window.scrollTo({ top: scrollY });
+    }
   } catch { /* پس‌زمینه: خطا عمداً نادیده گرفته می‌شود؛ داده قبلی می‌ماند */ }
   finally { bgRefreshInFlight = false; }
+}
+
+/** آیا داده‌ی جدید با داده‌ی فعلی فرق دارد؟ (رندر بی‌دلیل → پرش اسکرول) */
+function dataChanged(d) {
+  const a = JSON.stringify({ d: state.days, t: state.tasks, a: state.announcements, s: state.settings });
+  const b = JSON.stringify({ d: d.days, t: d.tasks, a: d.announcements, s: d.settings });
+  return a !== b;
 }
 
 // ---------- ابزار DOM ----------
@@ -795,13 +815,70 @@ function readBootData() {
 }
 
 /**
+ * نگهبان «اینترنت کند»: اگر داده بعد از ۸ ثانیه هنوز نرسیده باشد، به‌جای
+ * صبرِ بی‌پایان در صفحه‌ی خالی، یک بنر ظاهر می‌شود که توضیح می‌دهد شبکه کند است
+ * و امکان تلاش مجدد/بازکردن آخرین نسخه ذخیره‌شده را می‌دهد.
+ */
+function armSlowNetworkWatchdog() {
+  const SLOW_MS = 8_000;
+  const timer = setTimeout(() => {
+    if (document.querySelector('.day-col')) return; // صفحه ساخته شده — نیازی نیست
+    if (document.querySelector('.boot-error')) return; // خطای راه‌اندازی خودش پیام دارد
+    showSlowBanner();
+  }, SLOW_MS);
+  // اگر وسط راه داده رسید، تایمر را خنثی کن
+  window.addEventListener('klas-hub-booted', () => clearTimeout(timer), { once: true });
+}
+
+function disarmSlowWatchdog() {
+  window.dispatchEvent(new CustomEvent('klas-hub-booted'));
+  hideSlowBanner();
+}
+
+function showSlowBanner() {
+  if (document.querySelector('.slow-banner')) return;
+  const banner = el('div', { class: 'slow-banner fade-up' },
+    el('span', { class: 'slow-banner__icon', text: '🐢', 'aria-hidden': 'true' }),
+    el('div', { class: 'slow-banner__text' },
+      el('b', { text: 'اینترنت کند است؛ ' }),
+      'در حال تلاش برای دریافت برنامه…'),
+    el('button', {
+      class: 'btn btn--ghost btn--sm', type: 'button', text: 'آخرین نسخه ذخیره‌شده',
+      onclick: () => {
+        // سرویس‌ورکر نسخه کش‌شده را دارد؛ اگر نبود، رفرش معمولی می‌شود
+        location.reload();
+      },
+    }));
+  document.body.append(banner);
+}
+
+function hideSlowBanner() {
+  document.querySelector('.slow-banner')?.remove();
+}
+
+/**
  * بارگذاری داده‌ها:
  * ۱) اگر سرور داده را داخل خود HTML تزریق کرده باشد (SSR)، همان‌جا استفاده می‌شود
  *    و هیچ درخواست شبکه‌ای لازم نیست — صفحه یک‌مرحله‌ای می‌شود.
- * ۲) در غیر این صورت (مثلاً HTML کش‌شده یا مسیر پشتیبان) همان یک درخواست
+ *    (HTML استریم می‌شود؛ ممکن است app.js قبل از رسیدن تگ __BOOT__ اجرا شود —
+ *    بنابراین تا ۱۰ ثانیه منتظر می‌مانیم تا تگ در DOM ظاهر شود.)
+ * ۲) در غیر این صورت (مثلاً تایم‌اوت سرور یا مسیر پشتیبان) همان یک درخواست
  *    `/api/bootstrap` زده می‌شود که جای ۴ درخواست قبلی را گرفته است.
  */
+function waitForBootTag(timeoutMs = 10_000) {
+  return new Promise((resolve) => {
+    if (document.getElementById('__BOOT__')) return resolve();
+    const observer = new MutationObserver((muts, obs) => {
+      if (document.getElementById('__BOOT__')) { obs.disconnect(); resolve(); }
+    });
+    observer.observe(document.documentElement, { childList: true, subtree: true });
+    setTimeout(() => { observer.disconnect(); resolve(); }, timeoutMs);
+  });
+}
+
 async function loadAll() {
+  armSlowNetworkWatchdog();
+  await waitForBootTag();
   const boot = readBootData();
   if (boot) {
     state.days = boot.days;
@@ -827,6 +904,7 @@ async function loadAll() {
   }
 
   renderAll();
+  disarmSlowWatchdog();
 }
 
 /** رندر همه بخش‌ها (پس از موفقیت بارگذاری یا تلاش مجدد) */

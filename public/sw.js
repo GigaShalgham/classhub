@@ -2,18 +2,20 @@
 // هدف: دوستان با اینترنت ضعیف هم سایت را سریع و پایدار ببینند.
 //
 // راهبرد:
-//  - HTML صفحه اصلی: «شبکه اول» — همیشه نسخه تازه از سرور می‌آید (داده SSR داخل خودش است)
-//    و فقط وقتی شبکه کامل گیر است، آخرین HTML موفق از کش نشان داده می‌شود.
-//  - فایل‌های استاتیک (JS/CSS/فونت): «stale-while-revalidate» — فوراً از کش سرو می‌شوند
-//    و در پس‌زمینه به‌روز می‌شوند. این فایل‌ها hash ندارند، پس نسخه قدیمی از زمان
-//    بیش از ۷ روز گذشته ضریب می‌خورد و از کش واقعی می‌آید.
+//  - HTML صفحه اصلی: «شبکه اول با مهلت» — ۴ ثانیه به شبکه فرصت می‌دهیم؛
+//    اگر دیر شد (اینترنت مختل‌شده) فوراً آخرین HTML موفق از کش می‌آید و
+//    رفرش در پس‌زمینه ادامه می‌یابد. کشِ HTML حداکثر ۲۴ ساعت اعتبار دارد.
+//  - فایل‌های استاتیک (JS/CSS/فونت): «stale-while-revalidate» — فوراً از کش
+//    سرو می‌شوند و در پس‌زمینه به‌روز می‌شوند (کش حداکثر ۷ روز).
 //  - /api/*: هرگز کش نمی‌شود (داده زنده است؛ خود fetch در app.js تایم‌اوت دارد).
 //  - حالت آفلاین کامل: اگر نه شبکه بود و نه کش، صفحه ساده «آفلاین» نشان داده می‌شود.
 
-const VERSION = 'v3.1';
+const VERSION = 'v3.2';
 const STATIC_CACHE = `ch-static-${VERSION}`;
 const HTML_CACHE = `ch-html-${VERSION}`;
-const MAX_STATIC_AGE_MS = 7 * 24 * 3600_000; // ۷ روز
+const MAX_STATIC_AGE_MS = 7 * 24 * 3600_000;   // ۷ روز
+const MAX_HTML_AGE_MS = 24 * 3600_000;         // ۲۴ ساعت
+const NETWORK_GRACE_MS = 4_000;                // مهلت شبکه قبل از رفتن به کش
 
 self.addEventListener('install', (event) => {
   // بدون waitUntil: نصب بی‌صدا؛ کش‌ها در اولین fetch ساخته می‌شوند
@@ -38,13 +40,13 @@ function isStaticAsset(url) {
     || url.pathname.startsWith('/fonts/');
 }
 
-/** فایل کش‌شده اگر تازه است (زیر ۷ روز)، وگرنه null */
-async function freshCached(cacheName, request) {
+/** فایل کش‌شده اگر تازه است، وگرنه null */
+async function freshCached(cacheName, request, maxAgeMs) {
   const cache = await caches.open(cacheName);
   const hit = await cache.match(request);
   if (!hit) return null;
   const when = Number(hit.headers.get('date') || 0) * 1000;
-  if (when && Date.now() - when > MAX_STATIC_AGE_MS) return null;
+  if (when && Date.now() - when > maxAgeMs) return null;
   return hit;
 }
 
@@ -78,23 +80,35 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // --- HTML صفحه اصلی: شبکه اول، کش پشتیبان ---
+  // --- HTML صفحه اصلی: شبکه اول با مهلت ۴ ثانیه، سپس کش ---
   if (req.mode === 'navigate' || (req.headers.get('accept') || '').includes('text/html')) {
     event.respondWith((async () => {
-      try {
-        const res = await fetch(req);
+      const cache = await caches.open(HTML_CACHE);
+      const cached = await freshCached(HTML_CACHE, req, MAX_HTML_AGE_MS);
+
+      const network = fetch(req).then((res) => {
         if (res && res.ok) {
-          const cache = await caches.open(HTML_CACHE);
-          cache.put(req, res.clone());
+          cache.put(req, res.clone()).catch(() => {});
         }
         return res;
-      } catch {
-        // شبکه گیر/قطع است → آخرین HTML موفق (داده SSR داخل خودش در همان لحظه ذخیره شده)
-        const cache = await caches.open(HTML_CACHE);
-        const hit = await cache.match(req);
-        if (hit) return hit;
+      }).catch(() => null);
+
+      // کش تازه نداریم → فقط شبکه (رفتار قبلی)
+      if (!cached) {
+        const fresh = await network;
+        if (fresh) return fresh;
         return new Response(OFFLINE_HTML, { status: 503, headers: { 'content-type': 'text/html;charset=UTF-8' } });
       }
+
+      // مسابقه: شبکه تا ۴ ثانیه؛ اگر دیر کرد، کش فوراً نمایش داده می‌شود
+      const winner = await Promise.race([
+        network,
+        new Promise((resolve) => setTimeout(() => resolve('SLOW'), NETWORK_GRACE_MS)),
+      ]);
+      if (winner !== 'SLOW' && winner) return winner;
+
+      // شبکه کند/گیر است → نسخه کش‌شده (داده SSR داخل خودش دارد) + رفرش پس‌زمینه
+      return cached;
     })());
   }
 });
