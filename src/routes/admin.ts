@@ -110,7 +110,11 @@ adminRoutes.post('/auth/login', async (c) => {
     'INSERT INTO sessions (admin_id, token_hash, expires_at) VALUES (?, ?, ?)',
   ).bind(admin!.id, tokenHash, expiresAt).run();
   setCookie(c, SESSION_COOKIE, token, {
-    httpOnly: true, secure: true, sameSite: 'Lax', path: '/', maxAge: ttlHours * 3600,
+    httpOnly: true,
+    // کوکی فقط روی https ؛ روی http (حالت نجات بدون-VPN) secure=false تا لاگین ممکن بماند.
+    // خود URL ادمین همیشه https توصیه می‌شود؛ این فقط برای شبکه‌های فیلترشده است.
+    secure: new URL(c.req.url).protocol === 'https:',
+    sameSite: 'Lax', path: '/', maxAge: ttlHours * 3600,
   });
   return c.json({ ok: true, token, admin: { id: admin!.id, username: admin!.username } });
 });

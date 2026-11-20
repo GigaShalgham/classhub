@@ -55,21 +55,39 @@ const state = {
   settings: {},
 };
 
-// ---------- API (مقاوم به شبکه ضعیف) ----------
+// ---------- API (مقاوم به شبکه ضعیف و فیلترینگ) ----------
 // هر درخواست: مهلت زمانی + تلاش مجدد خودکار — روی شبکه‌ای که پکت می‌اندازد،
 // یک fetch ساده ممکن است تا ابد معطل بماند و صفحه «نصفه» بماند.
-// مهلت و فاصله‌ی تلاش‌ها پیش‌رونده است: شبکه‌ی خیلی کند فرصت بیشتری می‌گیرد
-// (تایم‌اوت کوتاه ثابت روی خطِ شش-کیلوبیت-بر-ثانیه خودش عامل شکست می‌شود).
-const API_TIMEOUT_SCHEDULE = [10_000, 20_000, 35_000, 60_000];
+// استراتژی: مبدأها را با پنجره‌ی کوتاه پشت‌سرهم امتحان می‌کنیم (مسیر بسته
+// سریع کنار می‌رود)، بعد اگر همه فقط کند بودند، یک دور با مهلت بلند.
 const RETRY_BACKOFF_MS = [800, 1_600, 3_200];
+
+// زنجیره‌ی مبداهای جایگزین برای وقتی فیلترینگ ISP مسیر اصلی را می‌بندد:
+// ۱) همین مبدأ (نرمال) ۲) دو دامنه‌ی دیگر کلادفلر روی ۴۴۳
+// ۳) پورت جایگزین TLS (فیلترینگ پورت-محور را دور می‌زند) ۴) HTTP ساده (بدون SNI).
+// فقط برای خواندن داده‌ها؛ نوشتن/ادمین همیشه روی مبدأ خود سایت انجام می‌شود.
+const API_ORIGINS = (() => {
+  const self = ''; // مبدأ جاری
+  const alts = [
+    'https://school.gigaspaceturnip.workers.dev',
+    'https://school.sigmababyboy.ccwu.cc',
+    'https://www.the-big-school.de5.net',
+  ].filter((o) => o !== location.origin);
+  // پورت جایگزین و http فقط وقتی معنا دارد که خودم روی کلادفلر باشم
+  if (location.protocol === 'https:') {
+    alts.push(`${location.origin}:8443`);
+    alts.push(location.origin.replace('https://', 'http://'));
+  }
+  return [self, ...alts];
+})();
 
 function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
 
-async function fetchOnce(path, timeoutMs) {
+async function fetchOnce(url, timeoutMs) {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
-    return await fetch(path, { headers: { Accept: 'application/json' }, signal: ctrl.signal });
+    return await fetch(url, { headers: { Accept: 'application/json' }, signal: ctrl.signal });
   } finally {
     clearTimeout(timer);
   }
@@ -77,21 +95,33 @@ async function fetchOnce(path, timeoutMs) {
 
 async function api(path) {
   let lastErr;
-  const attempts = API_TIMEOUT_SCHEDULE.length;
-  for (let attempt = 0; attempt < attempts; attempt++) {
+  // برای هر مبدأ: یک مهلت کوتاه «کشف» (۱۰ثانیه) — اگر مبدأ فقط کند است، مهلت‌های
+  // بلندتر بعد از یک پاسخ موفق فعال می‌شوند؛ اگر مبدأ بسته است، سریع مبدأ بعدی می‌رویم.
+  for (const origin of API_ORIGINS) {
+    let deadline = Date.now() + 10_000; // پنجره‌ی کل برای یک مبدأ
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const remaining = deadline - Date.now();
+      if (remaining <= 0) break;
+      try {
+        const res = await fetchOnce(origin + path, remaining);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return await res.json();
+      } catch (err) {
+        lastErr = err;
+        // فقط خطای شبکه/مهلت را دوباره امتحان می‌کنیم، نه پاسخ‌های معتبر سرور را
+        const retryable = err.name === 'AbortError' || err.name === 'TypeError';
+        if (!retryable) break;               // خطای HTTP واقعی: مبدأ بعدی
+        await sleep(RETRY_BACKOFF_MS[attempt] ?? 3_200);
+      }
+    }
+  }
+  // دور دوم: شاید همه‌ی مسیرها فقط «کند» بودند نه بسته — با مهلت بلند، دوباره
+  for (const origin of API_ORIGINS) {
     try {
-      const res = await fetchOnce(path, API_TIMEOUT_SCHEDULE[attempt]);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return await res.json();
+      const res = await fetchOnce(origin + path, 35_000);
+      if (res.ok) return await res.json();
     } catch (err) {
       lastErr = err;
-      // فقط خطای شبکه/مهلت را دوباره امتحان می‌کنیم، نه پاسخ‌های معتبر سرور را
-      const retryable = err.name === 'AbortError' || err.name === 'TypeError';
-      if (attempt < attempts - 1 && retryable) {
-        await sleep(RETRY_BACKOFF_MS[attempt] ?? 3_200);
-        continue;
-      }
-      throw lastErr;
     }
   }
   throw lastErr;
@@ -509,9 +539,11 @@ function renderLessonDetail(lesson) {
 
 function attachmentList(files) {
   const list = el('div', { class: 'attachment-list' });
+  // روی آینه‌ی استاتیک، دانلود پیوست فقط از مبدأ اصلی ممکن است
+  const origin = window.__BOOTSTRAP__ ? (window.__LIVE_ORIGIN__ || '') : '';
   for (const a of files) {
     list.append(el('a', {
-      class: 'attachment-item', href: `/api/attachments/${a.id}`, download: a.filename,
+      class: 'attachment-item', href: `${origin}/api/attachments/${a.id}`, download: a.filename, // روی mirror این لینک‌ها به مبدأ اصلی نیاز دارند
     },
     el('span', { class: 'attachment-item__icon', text: '📎' }),
     el('span', { class: 'attachment-item__name', text: a.filename }),
@@ -801,24 +833,41 @@ function setConnState(mode) {
       + 'box-shadow:0 -2px 12px rgba(0,0,0,.15);';
     document.body.append(banner);
   }
-  banner.textContent = mode === 'loading'
-    ? '🌐 شبکه کند است… در حال تلاش برای دریافت اطلاعات'
-    : '⚠️ اتصال قطع شد — دوباره تلاش می‌کنیم…';
-  banner.style.background = mode === 'loading' ? '#8a6d3b' : '#a94442';
+  if (mode === 'loading') {
+    banner.textContent = '🌐 شبکه کند است… در حال تلاش برای دریافت اطلاعات';
+    banner.style.background = '#8a6d3b';
+  } else {
+    banner.textContent = '';
+    banner.style.background = '#a94442';
+    banner.append('⚠️ اتصال قطع شد — دوباره تلاش می‌کنیم…');
+    // لینک نجات: نسخه‌ی آینه روی GitHub Pages (شبکه‌ی غیر-کلادفلر، از ایران باز است)
+    const alt = el('a', {
+      href: 'https://gigashalgham.github.io/school-s-stuff/',
+      text: 'نسخه‌ی جایگزین را باز کنید',
+    });
+    alt.style.cssText = 'color:#fff;text-decoration:underline;margin-inline-start:8px;';
+    banner.append(alt);
+  }
 }
 
 async function loadAll() {
   setConnState('loading');
   let data = null;
-  try {
-    // یک درخواست واحد به‌جای ۴ درخواست جدا — نصف شدن صفحه روی شبکه ضعیف
-    // معمولاً از قطره‌شدن یکی از درخواست‌های موازی بود.
-    data = await api('/api/bootstrap');
-  } catch (err) {
-    setConnState('error');
-    // تلاش مجدد خودکار هر ۸ ثانیه تا وقتی جواب بیاید
-    setTimeout(loadAll, 8_000);
-    return;
+  // mirror استاتیک (gh-pages/jsdelivr): داده‌ها داخل خود صفحه بیک‌شده‌اند؛
+  // همان را فوری نمایش می‌دهیم و در پس‌زمینه تازه می‌کنیم.
+  if (window.__BOOTSTRAP__) {
+    data = window.__BOOTSTRAP__;
+  } else {
+    try {
+      // یک درخواست واحد به‌جای ۴ درخواست جدا — نصف شدن صفحه روی شبکه ضعیف
+      // معمولاً از قطره‌شدن یکی از درخواست‌های موازی بود.
+      data = await api('/api/bootstrap');
+    } catch (err) {
+      setConnState('error');
+      // تلاش مجدد خودکار هر ۸ ثانیه تا وقتی جواب بیاید
+      setTimeout(loadAll, 8_000);
+      return;
+    }
   }
   setConnState('ok');
 
@@ -836,6 +885,28 @@ async function loadAll() {
   // اسکرول به امروز بعد از آنکه layout ستون‌ها کامل شد
   if (window.innerWidth < 1360) {
     requestAnimationFrame(() => requestAnimationFrame(() => scrollToToday(false)));
+  }
+
+  // اگر داده‌ی bake‌شده‌ی mirror را نشان دادیم، در پس‌زمینه تازه‌اش کنیم
+  // (اگر مسیر زنده باز باشد). و اگر باز نبود، بگوییم داده تا کی تازه است.
+  if (window.__BOOTSTRAP__) {
+    api('/api/bootstrap').then((fresh) => {
+      window.__BOOTSTRAP__ = null;
+      if (!fresh || !Array.isArray(fresh.days)) return;
+      state.days = fresh.days ?? state.days;
+      state.tasks = { active: fresh.tasks?.active ?? state.tasks.active, expired: fresh.tasks?.expired ?? state.tasks.expired };
+      state.announcements = fresh.announcements ?? state.announcements;
+      state.settings = fresh.settings ?? state.settings;
+      renderHeader(); renderHero(); renderTimetable(); renderTasks(); renderAnnouncements(); renderNotifications();
+    }).catch(() => {
+      // مسیر زنده بسته بود — فقط یادداشت کوچک «نسخه‌ی آفلاین» می‌ماند
+      if (!document.querySelector('.mirror-note')) {
+        const note = el('div', { class: 'mirror-note' });
+        note.style.cssText = 'text-align:center;font-size:12px;color:#6b7280;padding:6px 12px;';
+        note.textContent = `📦 نسخه‌ی آینه‌ی ${faDigits(String(window.__MIRROR_DATE__ || ''))} — برای اطلاعات لحظه‌ای VPN لازم است`;
+        document.querySelector('footer')?.prepend(note);
+      }
+    });
   }
 }
 
