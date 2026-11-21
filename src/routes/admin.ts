@@ -418,4 +418,50 @@ adminRoutes.put('/settings', requireAdmin(), async (c) => {
   return c.json({ ok: true });
 });
 
+/**
+ * تنظیم مبنا یا جابه‌جایی گردش زنگ‌های گردشی.
+ * flip: مبنا را یک هفته جابه‌جا می‌کند (هفته‌ی جاری درس دیگر نشان داده شود).
+ * set: مبنا را به شنبه‌ی هفته‌ی تاریخ داده‌شده (YYYY-MM-DD) تنظیم می‌کند؛
+ * تاریخ‌های غیرشنبه به شنبه‌ی همان هفته نرمال می‌شوند.
+ */
+adminRoutes.put('/rotation', requireAdmin(), async (c) => {
+  const body = await readJson(c.req.raw);
+  const mode = body.mode === 'set' ? 'set' : 'flip';
+  const TEHRAN_OFFSET_MS = 3.5 * 3600_000;
+
+  const setAnchor = (dayNum: number) =>
+    new Date(dayNum * 86_400_000).toISOString().slice(0, 10);
+
+  const readAnchor = async (): Promise<string | null> => {
+    const r = await c.env.DB.prepare(
+      'SELECT value FROM settings WHERE key = ?',
+    ).bind('rotation_anchor').first<{ value: string }>();
+    return r?.value ?? null;
+  };
+  const writeAnchor = async (v: string) =>
+    c.env.DB.prepare(
+      'INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value',
+    ).bind('rotation_anchor', v).run();
+
+  if (mode === 'set') {
+    const m = /^\d{4}-\d{2}-\d{2}$/.exec(String(body.anchor ?? ''));
+    if (!m) bad('تاریخ مبنا باید به شکل YYYY-MM-DD باشد.');
+    const [y, mo, d] = String(body.anchor).split('-').map(Number);
+    const dayNum = Math.floor(Date.UTC(y, mo - 1, d) / 86_400_000);
+    const anchor = setAnchor(dayNum - ((dayNum + 5) % 7)); // نرمال به شنبه (شنبه ⇔ %7===2)
+    await writeAnchor(anchor);
+    return c.json({ ok: true, anchor });
+  }
+
+  // flip: هفته‌ی جاری باید درس دیگر را نشان دهد → مبنا = شنبه‌ی همین هفته یا هفته‌ی قبل
+  const nowDayNum = Math.floor((Date.now() + TEHRAN_OFFSET_MS) / 86_400_000);
+  const thisSaturday = nowDayNum - ((nowDayNum + 5) % 7); // شنبه ⇔ dayNum % 7 === 2
+  const cur = await readAnchor();
+  const curNum = cur ? Math.floor(Date.UTC(+cur.slice(0, 4), +cur.slice(5, 7) - 1, +cur.slice(8, 10)) / 86_400_000) : null;
+  // اگر هفته‌ی جاری «اصلی» است، مبنا = همین شنبه؛ اگر «دوم» است، مبنا = شنبه‌ی قبل
+  const anchor = setAnchor(curNum === thisSaturday ? thisSaturday - 7 : thisSaturday);
+  await writeAnchor(anchor);
+  return c.json({ ok: true, anchor });
+});
+
 export default adminRoutes;

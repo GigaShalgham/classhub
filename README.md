@@ -217,6 +217,7 @@ Plain vars are set in `wrangler.jsonc`:
 | Var | Default | Description |
 | --- | --- | --- |
 | `APP_NAME` | `درس من` | display name |
+| `rotation_anchor` | `2026-11-21` | مبنا زنگ‌های گردشی: شنبه‌ی هفته‌ای که درسِ اصلی بوده |
 | `SESSION_TTL_HOURS` | `12` | admin session lifetime |
 
 No secrets are required for the app itself: admin credentials live in D1 (created via the bootstrap flow). **Never** put Cloudflare API tokens in `wrangler.jsonc` or source files — they belong in CI secrets (`CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`).
@@ -273,3 +274,13 @@ Required repository secrets (Settings → Secrets and variables → Actions):
 
 - Application code: MIT.
 - Vazirmatn font: SIL OFL 1.1 (see `public/fonts/Vazirmatn-OFL.txt`).
+
+
+## 🔄 زنگ‌های گردشی
+
+زنگ‌هایی که هفته‌به‌هفته بین دو درس می‌چرخند (مثل هندسه ↔ دفاعی). در تب «برنامه»‌ی پنل ادمین، درس دوم را از فهرست «🔄 گردشی» همان خانه انتخاب کنید.
+
+- **پاریتی هفته** از تنظیم `rotation_anchor` محاسبه می‌شود: شنبه‌ی هفته‌ای که درسِ *اصلی* بوده؛ هفته‌های بعد یک‌درمیان درس دوم نشان داده می‌شود.
+- **جابه‌جایی هفته:** اگر برنامه‌ی واقعی مدرسه با سایت نمی‌خواند (تعطیلی، جابه‌جایی معلم و…)، در تب «تنظیمات» دکمه‌ی «🔄 هفته‌ی فعلی را جابه‌جا کن» وضعیت هفته‌ی جاری را برعکس می‌کند؛ چرخشِ آینده از همان‌جا به‌درستی ادامه می‌یابد.
+- دانش‌آموزها فقط درسِ واقعی همان هفته را می‌بینند — نه دو نام و نه مفهوم «گردشی» را.
+- API: `PUT /api/admin/rotation` با `{"mode":"flip"}` یا `{"mode":"set","anchor":"YYYY-MM-DD"}` (تاریخ غیرشنبه به شنبه‌ی همان هفته نرمال می‌شود).

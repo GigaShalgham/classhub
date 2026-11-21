@@ -91,8 +91,8 @@ publicRoutes.get('/bootstrap', async (c) => {
       ORDER BY n.pinned DESC, n.published_at DESC
     `).all<Record<string, unknown>>(),
     c.env.DB.prepare(
-      'SELECT key, value FROM settings WHERE key IN (?,?,?)',
-    ).bind('class_name', 'welcome_message', 'admin_note').all<{ key: string; value: string }>(),
+      'SELECT key, value FROM settings WHERE key IN (?,?,?,?)',
+    ).bind('class_name', 'welcome_message', 'admin_note', 'rotation_anchor').all<{ key: string; value: string }>(),
   ]);
 
   const days: (Lesson[] | null)[] = Array.from({ length: WEEK_DAYS }, () => null);
@@ -294,8 +294,8 @@ publicRoutes.get('/subjects', async (c) => {
 
 publicRoutes.get('/settings', async (c) => {
   const { results } = await c.env.DB.prepare(
-    'SELECT key, value FROM settings WHERE key IN (?,?,?)',
-  ).bind('class_name', 'welcome_message', 'admin_note').all<{ key: string; value: string }>();
+    'SELECT key, value FROM settings WHERE key IN (?,?,?,?)',
+  ).bind('class_name', 'welcome_message', 'admin_note', 'rotation_anchor').all<{ key: string; value: string }>();
   const out: Record<string, string> = {};
   for (const r of results ?? []) out[r.key] = r.value;
   return c.json({ ok: true, settings: out });

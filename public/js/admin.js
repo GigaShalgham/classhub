@@ -1,5 +1,5 @@
 // درس من — admin panel logic
-import { faDigits, formatJalali, formatJalaliDateTime, countdown, WEEK_DAY_NAMES, KIND_LABELS, KIND_ICONS, JALALI_MONTHS, toJalali, fromJalali, iranDayIndex, rollingWindow } from './utils.js';
+import { faDigits, formatJalali, formatJalaliDateTime, countdown, WEEK_DAY_NAMES, KIND_LABELS, KIND_ICONS, JALALI_MONTHS, toJalali, fromJalali, iranDayIndex, rollingWindow, weekParity } from './utils.js';
 import { periodsPerDay, periodTimes, PERIOD_TABLE, CLASS_DAYS } from './schedule.js';
 
 // آینه‌ی گیت‌هاب صفحه‌ی ادمین را هم دارد؛ فراخوانی‌های API همیشه به سایت
@@ -243,6 +243,7 @@ async function refreshAll() {
   renderSubjectsTab();
   renderCalendar();
   fillSettingsForm();
+  renderRotationCard();
 }
 
 // ---------- lessons tab: weekly grid editor ----------
@@ -819,7 +820,53 @@ function renderSubjectsTab() {
   }
 }
 
-// ---------- settings tab ----------
+// ---------- settings tab: زنگ‌های گردشی ----------
+// فهرست زنگ‌های گردشی + درسِ واقعی همین هفته + دکمه‌ی جابه‌جایی هفته
+function renderRotationCard() {
+  const box = $('#rotationList');
+  if (!box) return;
+  const anchor = state.settings.rotation_anchor || null;
+  const parity = weekParity(Date.now(), anchor); // 'main' | 'alt' | null
+  const slots = [];
+  for (let d = 0; d < 7; d++) {
+    for (const l of state.scheduleDays[d] || []) {
+      if (l.alt_subject_name) slots.push(l);
+    }
+  }
+  box.textContent = '';
+  if (!slots.length) {
+    box.append(el('p', { class: 'admin-note', text: 'هنوز زنگ گردشی‌ای ثبت نشده است. در تب «برنامه»، درس دوم هر خانه را از فهرست «🔄 گردشی» انتخاب کنید.' }));
+    return;
+  }
+  const list = el('div', { class: 'cal-day-lessons' });
+  for (const l of slots) {
+    const useAlt = parity === 'alt';
+    const now = useAlt ? l.alt_subject_name : l.subject_name;
+    const next = useAlt ? l.subject_name : l.alt_subject_name;
+    list.append(el('div', { class: 'cal-day-lesson' },
+      el('span', { class: 'cal-day-lesson__p', text: faDigits(l.period) }),
+      el('span', { class: 'cal-day-lesson__name', text: `${WEEK_DAY_NAMES[l.day]}: ${l.subject_name} ↔ ${l.alt_subject_name}` }),
+      el('span', { class: 'cal-day-lesson__time', style: 'font-weight:700;', text: `این هفته: ${now} → هفته‌ی بعد: ${next}` }),
+    ));
+  }
+  box.append(list);
+  if (!anchor) {
+    box.append(el('p', { class: 'admin-note', style: 'margin-top:8px;', text: '⚠️ مبنا هنوز تنظیم نشده؛ فعلاً درس اصلی همه‌ی هفته‌ها نشان داده می‌شود. یک بار جابه‌جایی یا ذخیره‌ی تنظیمات، مبنا را می‌سازد.' }));
+  }
+}
+
+async function flipRotation() {
+  const btn = $('#rotationFlip');
+  btn.disabled = true;
+  try {
+    const res = await api('/api/admin/rotation', { method: 'PUT', body: { mode: 'flip' } });
+    state.settings.rotation_anchor = res.anchor;
+    toast('چرخش هفته‌ی جاری جابه‌جا شد ✅', 'success');
+    renderRotationCard();
+  } catch (err) { toast(err.message, 'error'); }
+  btn.disabled = false;
+}
+
 function fillSettingsForm() {
   $('#setClassName').value = state.settings.class_name || '';
   $('#setWelcome').value = state.settings.welcome_message || '';
@@ -838,6 +885,7 @@ async function submitSettings(e) {
       },
     });
     toast('تنظیمات ذخیره شد ✅', 'success');
+    renderRotationCard();
   } catch (err) { toast(err.message, 'error'); }
 }
 
@@ -980,9 +1028,13 @@ function openCalDay(jy, jm, jd) {
   } else {
     const lList = el('div', { class: 'cal-day-lessons' });
     for (const l of lessons) {
-      const name = l.alt_subject_name
-        ? `${l.subject_name} / ${l.alt_subject_name} (گردشی)`
-        : l.subject_name;
+      // برای زنگ گردشی، درسِ واقعی همین هفته مشخص شود
+      let name = l.subject_name;
+      if (l.alt_subject_name) {
+        const useAlt = weekParity(Date.now(), state.settings.rotation_anchor) === 'alt';
+        name = useAlt ? l.alt_subject_name : l.subject_name;
+        name = `${name} (گردشی — این هفته)`;
+      }
       lList.append(el('div', { class: 'cal-day-lesson' },
         el('span', { class: 'cal-day-lesson__p', text: faDigits(l.period) }),
         el('span', { class: 'cal-day-lesson__name', text: name }),
@@ -1164,6 +1216,8 @@ $('#hwFile').addEventListener('change', () => {
 for (const btn of document.querySelectorAll('.admin-tab')) {
   btn.addEventListener('click', () => switchTab(btn.dataset.tab));
 }
+
+$('#rotationFlip').addEventListener('click', flipRotation);
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {

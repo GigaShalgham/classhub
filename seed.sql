@@ -26,7 +26,9 @@ INSERT OR IGNORE INTO subjects (id, name, color_key) VALUES
 INSERT OR IGNORE INTO settings (key, value) VALUES
   ('class_name', 'کلاس ۱۰/۲ — دبیرستان شهید بهشتی'),
   ('welcome_message', 'امروز هم روز خوبی داشته باشیم! ☕'),
-  ('admin_note', 'با علاقه، توسط سرِ کلاس نگهداری می‌شود.');
+  ('admin_note', 'با علاقه، توسط سرِ کلاس نگهداری می‌شود.'),
+  -- مبنا زنگ‌های گردشی: شنبه‌ی هفته‌ای که درسِ «اصلی» بوده (هفته‌ی بعدِ‌هم درس دوم)
+  ('rotation_anchor', '2026-11-21');
 
 -- Weekly timetable (day: 0=شنبه ... 4=چهارشنبه؛ پنجشنبه و جمعه تعطیل)
 INSERT OR IGNORE INTO lessons (id, day, period, subject_id, alt_subject_id, start_time, end_time) VALUES

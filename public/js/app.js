@@ -2,7 +2,7 @@
 import {
   faDigits, formatJalali, formatJalaliDateTime, faTime, countdown,
   WEEK_DAY_NAMES, iranDayIndex, KIND_LABELS, KIND_ICONS, PRIORITY_LABELS,
-  tehranHHMM, rollingWindow,
+  tehranHHMM, rollingWindow, weekParity,
 } from './utils.js';
 import { periodsPerDay } from './schedule.js';
 
@@ -26,10 +26,10 @@ function subjectEmoji(name) {
 
 /**
  * درس مؤثرِ یک زنگ در تاریخ مشخص.
- * زنگ‌های گردشی (alt_subject_id) بر اساس تعداد هفته‌های گذشته از نقطه مبنا
- * هفته‌به‌هفته بین درس اصلی و درس دوم عوض می‌شوند.
+ * زنگ‌های گردشی (alt_subject_id) هفته‌به‌هفته بین درس اصلی و درس دوم می‌چرخند.
+ * مبنای چرخش (rotation_anchor) از تنظیمات سرور می‌آید: شنبه‌ی هفته‌ای که درسِ اصلی بوده.
+ * مدیر می‌تواند مبنای هفته را از پنل جابه‌جا کند تا برنامه با واقعیت مدرسه بخواند.
  */
-const ROTATION_EPOCH_MS = Date.UTC(2026, 10, 21); // مبنا: شنبه ۱۴۰۵/۰۹/۰۱ — زنگ اولِ هفته
 function resolveSubject(lesson, dateMs) {
   if (!lesson.alt_subject_id || !lesson.alt_subject_name) {
     return {
@@ -38,8 +38,7 @@ function resolveSubject(lesson, dateMs) {
       rotating: false,
     };
   }
-  const week = Math.floor((dateMs - ROTATION_EPOCH_MS) / (7 * 86_400_000));
-  const useAlt = week % 2 === 1;
+  const useAlt = weekParity(dateMs, state.settings.rotation_anchor) === 'alt';
   return {
     subject_name: useAlt ? lesson.alt_subject_name : lesson.subject_name,
     color_key: useAlt ? lesson.alt_color_key : lesson.color_key,
@@ -245,7 +244,7 @@ function lessonCard(lesson, dateMs) {
   const card = el('button', {
     class: `lesson-card sub-${subj.color_key}`,
     type: 'button',
-    onclick: () => openLesson(lesson.id),
+    onclick: () => openLesson(lesson.id, dateMs),
     'aria-label': `${subj.subject_name}، زنگ ${faDigits(lesson.period)}، ${faTime(lesson.start_time)} تا ${faTime(lesson.end_time)}${hw ? `، تکلیف: ${hw.title}` : ''}`,
   });
 
@@ -450,7 +449,7 @@ function overlayKeydown(e) {
   }
 }
 
-async function openLesson(id) {
+async function openLesson(id, dateMs = Date.now()) {
   const overlay = $('#detailOverlay');
   $('#detailBody').textContent = '';
   $('#detailTitle').textContent = 'جزئیات درس';
@@ -458,14 +457,14 @@ async function openLesson(id) {
   $('#detailClose').focus();
   try {
     const data = await api(`/api/lessons/${id}`);
-    renderLessonDetail(data.lesson);
+    renderLessonDetail(data.lesson, dateMs);
   } catch (err) {
     $('#detailBody').append(el('div', { class: 'error-state', text: `خطا در دریافت جزئیات: ${err.message}` }));
   }
 }
 
-function renderLessonDetail(lesson) {
-  const subj = resolveSubject(lesson, Date.now());
+function renderLessonDetail(lesson, dateMs) {
+  const subj = resolveSubject(lesson, dateMs);
   $('#detailTitle').textContent = `${subjectEmoji(subj.subject_name)} ${subj.subject_name} — ${WEEK_DAY_NAMES[lesson.day]}`;
   const body = $('#detailBody');
   body.textContent = '';
@@ -479,13 +478,6 @@ function renderLessonDetail(lesson) {
       el('div', { class: 'detail-hero__meta', text: `${WEEK_DAY_NAMES[lesson.day]} · ${faTime(lesson.start_time)} تا ${faTime(lesson.end_time)}` }),
     ),
   ));
-
-  if (subj.rotating) {
-    wrap.append(el('div', { class: 'detail-block detail-block--rotate', style: 'border-style:dashed;' },
-      el('p', { class: 'detail-block__title', text: '🔄 زنگ گردشی' }),
-      el('p', { class: 'detail-block__text', text: `این زنگ هفته‌به‌هفته بین «${lesson.subject_name}» و «${lesson.alt_subject_name}» می‌چرخد؛ این هفته: ${subj.subject_name}.` }),
-    ));
-  }
 
   const hw = lesson.homework;
   if (!hw) {

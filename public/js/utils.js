@@ -93,6 +93,35 @@ export function iranDayIndex(date) {
   return (date.getDay() + 1) % 7;
 }
 
+/* ---------- زنگ‌های گردشی (هفته‌به‌هفته بین دو درس) ---------- */
+
+/** شماره‌ی روز ISO از رشته‌ی «YYYY-MM-DD» (بدون وابستگی به منطقه‌ی زمانی) */
+export function isoDayNum(s) {
+  const [y, m, d] = String(s).split('-').map(Number);
+  return Math.floor(Date.UTC(y, m - 1, d) / 86_400_000);
+}
+
+/** شماره‌ی شنبه‌ی همان هفته‌ی تقویمی Tehran-time «امروز» (ایران: هفته از شنبه) */
+export function saturdayDayNumOf(ms = Date.now()) {
+  const t = tehranDayNumber(ms);
+  // نگاشت ثابت تقویمی: شنبه ⇔ dayNum % 7 === 2 (روز صفر یونیکس پنجشنبه است)
+  return t - ((t + 5) % 7);
+}
+
+/**
+ * پاریتی هفته نسبت به مبنای گردش.
+ * خروجی: 'alt' = این هفته درس دوم، 'main' = درس اصلی، null = بدون مبنا (درس اصلی).
+ * مبنا (anchor) = تاریخ شنبه‌ی هفته‌ای که درس «اصلی» بوده؛ هفته‌های بعد یک‌درمیان.
+ */
+export function weekParity(dateMs, anchorStr) {
+  if (!anchorStr) return null;
+  let anchor = isoDayNum(anchorStr);
+  anchor -= (anchor + 5) % 7; // نرمال به شنبه‌ی همان هفته (شنبه ⇔ %7===2)
+  const saturday = saturdayDayNumOf(dateMs);
+  if (!Number.isFinite(anchor) || saturday < anchor) return null;
+  return ((saturday - anchor) / 7) % 2 === 1 ? 'alt' : 'main';
+}
+
 /* ---------- زمان تهران (UTC+3:30، بدون ساعت تابستانی از ۲۰۲۲) ---------- */
 
 /** y/m/d در تقویم تهران برای یک لحظه‌ی زمانی */

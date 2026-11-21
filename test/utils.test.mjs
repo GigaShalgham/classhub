@@ -5,6 +5,7 @@ import {
   toJalali, fromJalali, formatJalali, countdown, faDigits,
   iranDayIndex, formatJalaliDateTime, tehranYMD, tehranDayNumber,
   rollingWindow, jalaliDateOnly, toJalaliParts,
+  weekParity, isoDayNum, saturdayDayNumOf,
 } from '../public/js/utils.js';
 
 // Known Jalali anchors:
@@ -125,4 +126,52 @@ test('rollingWindow: نیمه‌شب تهران درست شروع می‌شود'
 test('jalaliDateOnly', () => {
   assert.equal(jalaliDateOnly('2026-11-23T12:00:00Z'), '۲ آذر');
   assert.equal(jalaliDateOnly(null), '—');
+});
+
+// ---------- زنگ‌های گردشی: پاریتی هفته نسبت به مبنا ----------
+// شنبه ۱۴۰۵/۰۹/۰۱ = 2026-11-21 (میلادی) — همان مبنا که قبلاً در کد هاردکد بود
+const NOON = (y, m, d) => new Date(y, m - 1, d, 12, 0, 0).getTime();
+
+test('isoDayNum: بدون وابستگی زمانی', () => {
+  assert.equal(isoDayNum('2026-11-21'), isoDayNum('2026-11-22') - 1);
+  assert.equal(isoDayNum('2026-11-21') % 7, isoDayNum('2026-11-28') % 7);
+});
+
+test('saturdayDayNumOf: شنبه‌ی هفته‌ی جاری', () => {
+  // 2026-11-25 چهارشنبه است؛ شنبه‌ی همان هفته 2026-11-21
+  const sat = saturdayDayNumOf(NOON(2026, 11, 25));
+  assert.equal(sat, isoDayNum('2026-11-21'));
+  // خود شنبه و جمعه‌ی همان هفته → همان شنبه
+  assert.equal(saturdayDayNumOf(NOON(2026, 11, 21)), sat);
+  assert.equal(saturdayDayNumOf(NOON(2026, 11, 27)), sat);
+});
+
+test('weekParity: مبنا = هفته‌ی اصلی', () => {
+  const anchor = '2026-11-21';
+  assert.equal(weekParity(NOON(2026, 11, 21), anchor), 'main'); // هفته‌ی مبنا → اصلی
+  assert.equal(weekParity(NOON(2026, 11, 27), anchor), 'main'); // جمعه‌ی همان هفته
+  assert.equal(weekParity(NOON(2026, 11, 28), anchor), 'alt');  // شنبه‌ی بعد → دوم
+  assert.equal(weekParity(NOON(2026, 12, 4), anchor), 'alt');   // جمعه‌ی هفته‌ی دوم
+  assert.equal(weekParity(NOON(2026, 12, 5), anchor), 'main');  // دو هفته بعد → اصلی
+});
+
+test('weekParity: بدون مبنا → null (درس اصلی)', () => {
+  assert.equal(weekParity(NOON(2026, 11, 21), null), null);
+  assert.equal(weekParity(NOON(2026, 11, 21), ''), null);
+  assert.equal(weekParity(NOON(2026, 11, 21), undefined), null);
+});
+
+test('weekParity: تاریخ قبل از مبنا → null (درس اصلی)', () => {
+  assert.equal(weekParity(NOON(2026, 11, 14), '2026-11-21'), null);
+});
+
+test('weekParity: مبنا غیرشنبه هم به شنبه‌ی همان هفته نرمال می‌شود', () => {
+  // دوشنبه 2026-11-23 همان هفته‌ی شنبه 2026-11-21 است
+  assert.equal(weekParity(NOON(2026, 11, 28), '2026-11-23'), 'alt');
+  assert.equal(weekParity(NOON(2026, 11, 21), '2026-11-23'), 'main');
+});
+
+test('weekParity: مبنا جمعه‌ی همان هفته هم شنبه‌ی همان هفته است', () => {
+  assert.equal(weekParity(NOON(2026, 11, 28), '2026-11-27'), 'alt');
+  assert.equal(weekParity(NOON(2026, 11, 21), '2026-11-27'), 'main');
 });
