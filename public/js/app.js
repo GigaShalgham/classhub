@@ -70,7 +70,6 @@ const API_ORIGINS = (() => {
   const self = ''; // مبدأ جاری
   const alts = [
     'https://school.gigaspaceturnip.workers.dev',
-    'https://school.sigmababyboy.ccwu.cc',
     'https://www.the-big-school.de5.net',
   ].filter((o) => o !== location.origin);
   // پورت جایگزین و http فقط وقتی معنا دارد که خودم روی کلادفلر باشم

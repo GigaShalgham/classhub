@@ -9,7 +9,6 @@ const API_BASE = window.__API_BASE__ || '';
 const IS_MIRROR = Boolean(window.__IS_MIRROR__);
 const LIVE_ORIGINS = [
   'https://school.gigaspaceturnip.workers.dev',
-  'https://school.sigmababyboy.ccwu.cc',
   'https://www.the-big-school.de5.net',
 ];
 

@@ -5,8 +5,7 @@ A cute, pastel-themed single-page class hub for a school class: the weekly timet
 Deployed on **Cloudflare Workers** (single Worker serving both the static frontend and the JSON API) with **Cloudflare D1** for persistence.
 
 **Production (لینک اصلی — تأییدشده توسط خود کاربر در ایران):** https://school.gigaspaceturnip.workers.dev — ۸/۸ شبکه ایرانی ۲۰۰؛ بهینه برای اینترنت ضعیف (بارگذاری اول ~۱۱۶KB، بازدیدهای بعدی ~۲KB)
-**جایگزین:** https://school.sigmababyboy.ccwu.cc — ۷/۸ شبکه ایرانی ۲۰۰
-**دامنه اختصاصی:** https://www.the-big-school.de5.net (و آپکس) — ۷/۸ شبکه ایرانی ۲۰۰؛ ⚠️ برخی شبکه‌های ایران کل پسوند `de5.net` را بلاک می‌کنند — برای مخاطب عمومی ایران تضمین‌ناپذیر است، لینک اصلی نیست.
+**جایگزین:** https://www.the-big-school.de5.net — ۷/۸ شبکه ایرانی ۲۰۰؛ ⚠️ برخی شبکه‌های ایران کل پسوند `de5.net` را بلاک می‌کنند — برای مخاطب عمومی ایران تضمین‌ناپذیر است، لینک اصلی نیست.
 
 ### بهینه‌سازی اینترنت ضعیف (آبان ۱۴۰۵ / Nov 2026)
 - فونت‌ها زیرمجموعه‌سازی شدند: ۹ فایل ۳۲۸KB → ۴ فایل ۱۲۹KB خام (~۸۸KB compressed)
@@ -56,10 +55,11 @@ Browser Check (`scripts/fix_security_level.sh`).
 
 **ماتریس تست برای دوستان (به‌ترتیب امتحان کنند):**
 ۱. https://school.gigaspaceturnip.workers.dev
-۲. https://school.sigmababyboy.ccwu.cc
-۳. https://www.the-big-school.de5.net
-۴. https://gigashalgham.github.io/school-s-stuff/ ← تقریباً همیشه باز است
+۲. https://www.the-big-school.de5.net
+۳. https://gigashalgham.github.io/classhub/ ← تقریباً همیشه باز است
+۴. https://cdn.jsdelivr.net/gh/GigaShalgham/classhub@gh-pages/index.html
 اگر هیچ‌کدام باز نشد، مشکل شبکه/دستگاه خودشان است (نه سایت).
+⚠️ دامنه‌ی `school.sigmababyboy.ccwu.cc` در آبان ۱۴۰۵ بازنشسته شد (Worker Domain آن حذف شد) — لینک زنده نیست.
 نکته DNS: Private DNS = `1.1.1.1` در اندروید (Settings → Network → Private DNS)
 خیلی از بلاک‌های DNS سطح ISP را دور می‌زند؛ رایگان و بدون نصب.
 

@@ -653,6 +653,9 @@ h1, h2, h3, h4 { line-height: 1.5; }
   align-items: center;
   gap: 8px;
   margin-bottom: 5px;
+  /* زمان زنگ (نقطه‌شکن) حق دارد جا بگیرد؛ نام درس ellipsis می‌شود.
+     بدون این، در ستون‌های فشرده (لپ‌تاپ ۱۳۶۶+) زمان قیچی می‌شد. */
+  flex-wrap: wrap;
 }
 
 .lesson-card__emoji {
@@ -694,6 +697,13 @@ h1, h2, h3, h4 { line-height: 1.5; }
   color: var(--sub);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+  /* در ستون‌های فشرده (لپ‌تاپ ۱۳۶۶+) زمان از قاب کارت بیرون نزند:
+     اول فشرده شود، بعد کوچک شود و در بدترین حالت خط بشکند. */
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .lesson-card__hw {
@@ -2509,7 +2519,6 @@ const API_BASE = window.__API_BASE__ || '';
 const IS_MIRROR = Boolean(window.__IS_MIRROR__);
 const LIVE_ORIGINS = [
   'https://school.gigaspaceturnip.workers.dev',
-  'https://school.sigmababyboy.ccwu.cc',
   'https://www.the-big-school.de5.net',
 ];
 
