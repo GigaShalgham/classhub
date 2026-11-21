@@ -1,4 +1,4 @@
-// Shared types for کلاس‌هاب (class hub)
+// Shared types for درس من (class hub)
 
 export type ColorKey =
   | 'lavender' | 'blue' | 'mint' | 'pink' | 'cream' | 'green';

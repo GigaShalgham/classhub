@@ -21,7 +21,7 @@
     "enabled": true
   },
   "vars": {
-    "APP_NAME": "کلاس‌هاب",
+    "APP_NAME": "درس من",
     "SESSION_TTL_HOURS": "12"
   }
 }

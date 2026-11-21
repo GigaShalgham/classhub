@@ -1,4 +1,4 @@
-// کلاس‌هاب — admin panel logic
+// درس من — admin panel logic
 import { faDigits, formatJalali, formatJalaliDateTime, countdown, WEEK_DAY_NAMES, KIND_LABELS, KIND_ICONS, JALALI_MONTHS, toJalali, fromJalali, iranDayIndex, rollingWindow } from './utils.js';
 import { periodsPerDay, periodTimes, PERIOD_TABLE, CLASS_DAYS } from './schedule.js';
 
@@ -185,7 +185,7 @@ function initMirrorOriginPicker() {
   const label = document.createElement('label');
   label.className = 'field__label';
   label.htmlFor = 'mirrorOrigin';
-  label.textContent = 'سرور متصل (سایت زنده‌ی کلاس‌هاب)';
+  label.textContent = 'سرور متصل (سایت زنده‌ی درس من)';
   const select = document.createElement('select');
   select.className = 'input';
   select.id = 'mirrorOrigin';

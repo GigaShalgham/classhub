@@ -1,4 +1,4 @@
-// Admin authentication for کلاس‌هاب
+// Admin authentication for درس من
 // - PBKDF2-SHA256 password hashing (WebCrypto, Workers-compatible)
 // - Session tokens: 32 random bytes, only the SHA-256 hash is stored in D1
 // - Constant-time comparisons

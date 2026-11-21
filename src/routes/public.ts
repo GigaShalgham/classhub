@@ -1,4 +1,4 @@
-// Public read-only API (students) — کلاس‌هاب
+// Public read-only API (students) — درس من
 
 import { Hono } from 'hono';
 import type { Env } from '../index';

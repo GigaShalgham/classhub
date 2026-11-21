@@ -112,8 +112,8 @@ HTML = r'''<!DOCTYPE html>
 </head>
 <body>
 <div id="root">
-  <div class="arch-title">معماری کامل پروژه‌ی کلاس‌هاب</div>
-  <div class="arch-subtitle">سایت زنده روی Cloudflare Workers + آینه‌ی استاتیک روی GitHub Pages — به‌روزرسانی آبان ۱۴۰۵</div>
+  <div class="arch-title">معماری کامل پروژه‌ی درس من</div>
+  <div class="arch-subtitle">سایت زنده روی Cloudflare Workers + آینه‌ی استاتیک روی GitHub Pages — به‌روزرسانی آبان ۱۴۰۵ (نام جدید: درس من)</div>
 
   <!-- ═══ لایه ۱: کاربران ═══ -->
   <div class="layer layer-1">

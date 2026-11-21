@@ -1,4 +1,4 @@
-// کلاس‌هاب — اپلیکیشن دانش‌آموزی (نسخه ۳)
+// درس من — اپلیکیشن دانش‌آموزی (نسخه ۳)
 import {
   faDigits, formatJalali, formatJalaliDateTime, faTime, countdown,
   WEEK_DAY_NAMES, iranDayIndex, KIND_LABELS, KIND_ICONS, PRIORITY_LABELS,
@@ -177,7 +177,7 @@ let clockTimer = null;
 function renderHeader() {
   const now = new Date();
   $('#brandDate').textContent = formatJalali(now, { withWeekday: true });
-  const name = state.settings.class_name || 'کلاس‌هاب';
+  const name = state.settings.class_name || 'درس من';
   $('#brandName').textContent = name;
   $('#footerName').textContent = name;
   document.title = `${name} | برنامه هفتگی کلاس`;

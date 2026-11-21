@@ -1,4 +1,4 @@
-// کلاس‌هاب — Worker entrypoint
+// درس من — Worker entrypoint
 // Single Worker: serves the SPA from static assets and exposes the JSON API
 // under /api/*. Backend runs on Hono, data in D1, attachments as validated
 // BLOBs in D1 (R2 unavailable on this account).

@@ -1,4 +1,4 @@
-# 📚 کلاس‌هاب — School Class Hub
+# 📚 درس من — School Class Hub
 
 A cute, pastel-themed single-page class hub for a school class: the weekly timetable is the centerpiece, with homework details, time-sensitive deadlines, and announcements around it. The student-facing interface is entirely in **Persian (فارسی)** with full RTL layout and Jalali dates.
 
@@ -216,7 +216,7 @@ Plain vars are set in `wrangler.jsonc`:
 
 | Var | Default | Description |
 | --- | --- | --- |
-| `APP_NAME` | `کلاس‌هاب` | display name |
+| `APP_NAME` | `درس من` | display name |
 | `SESSION_TTL_HOURS` | `12` | admin session lifetime |
 
 No secrets are required for the app itself: admin credentials live in D1 (created via the bootstrap flow). **Never** put Cloudflare API tokens in `wrangler.jsonc` or source files — they belong in CI secrets (`CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`).

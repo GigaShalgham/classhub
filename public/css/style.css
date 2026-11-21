@@ -673,7 +673,7 @@ h1, h2, h3, h4 { line-height: 1.5; }
 .lesson-card__subject {
   font-weight: 700;
   font-size: clamp(13.5px, 0.8vw, 14.5px);
-  flex: 1;
+  flex: 1 1 9em; /* نه basis صفر: اول فشرده می‌شود تا ۹em، بعد به خط بعد می‌رود */
   min-width: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -685,13 +685,8 @@ h1, h2, h3, h4 { line-height: 1.5; }
   color: var(--sub);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
-  /* در ستون‌های فشرده (لپ‌تاپ ۱۳۶۶+) زمان از قاب کارت بیرون نزند:
-     اول فشرده شود، بعد کوچک شود و در بدترین حالت خط بشکند. */
-  flex-shrink: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
+  /* زمان زنگ هرگز قیچی یا «…» نمی‌شود؛ در ستون فشرده به خط خودش می‌رود. */
+  flex-shrink: 0;
 }
 
 .lesson-card__hw {
@@ -710,6 +705,13 @@ h1, h2, h3, h4 { line-height: 1.5; }
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  /* عنوان تکلیف بلند: تا ۲ خط کامل جا می‌شود، بعد از آن ellipsis */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  white-space: normal;
+  overflow: hidden;
+  min-width: 0;
 }
 .lesson-card__hw--none {
   color: #A9C7B4;

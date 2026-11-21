@@ -1,4 +1,4 @@
-// Admin API (class representative) — کلاس‌هاب
+// Admin API (class representative) — درس من
 // All routes require a valid session except /auth/login and /auth/bootstrap.
 
 import { Hono, type Context } from 'hono';
