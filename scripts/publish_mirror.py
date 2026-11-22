@@ -87,6 +87,7 @@ print('۲) بیک کردن داده‌ها در صفحه‌ی دانش‌آمو�
 html = (PUB / 'index.html').read_text()
 
 inject = '<script>\nwindow.__BOOTSTRAP__ = ' + json.dumps(data, ensure_ascii=False) + ';\n' \
+      + 'window.__IS_MIRROR__ = true;\n' \
       + 'window.__LIVE_ORIGIN__ = ' + json.dumps(LIVE) + ';\n' \
       + "window.__MIRROR_DATE__ = '" + mirror_date + "';\n</script>\n"
 

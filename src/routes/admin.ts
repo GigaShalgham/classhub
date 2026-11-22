@@ -410,32 +410,8 @@ adminRoutes.post('/attachments', requireAdmin(), async (c) => {
   return c.json({ ok: true, id: r.meta.last_row_id, filename, size: file.size, storage: 'db' });
 });
 
-/**
- * پیوست «لینک»: فایل روی سرویس بیرونی (گوگل‌درایو، آپارات، هر URL) می‌ماند
- * و فقط لینکش ذخیره می‌شود — عملاً فضای نامحدود برای فایل‌های حجیم.
- * (R2 روی این اکانت فعال نیست و درایوِ مستقیم هم نیاز به OAuth دارد؛
- * لینک اشتراکی همان کار را بدون هیچ راه‌اندازی می‌کند.)
- */
-adminRoutes.post('/attachments/link', requireAdmin(), async (c) => {
-  const body = await readJson(c.req.raw);
-  const parentType = oneOf(body.parentType ?? body.parent_type, 'نوع والد', ['homework', 'task', 'announcement'] as const);
-  const parentId = int(body.parentId ?? body.parent_id, 'شناسه والد', 1, 10_000_000);
-  const url = str(body.url, 'لینک', { min: 10, max: 500 }).trim();
-  if (!/^https?:\/\/.+\.[^\s]+$/i.test(url)) bad('لینک باید http(s) معتبر باشد.');
-  const title = str(body.title ?? url, 'عنوان', { min: 1, max: 150 }).trim();
-  if (!(await parentExists(c.env.DB, parentType, parentId))) bad('مورد والد پیدا نشد.');
-  try {
-    const r = await c.env.DB.prepare(
-      'INSERT INTO attachments (parent_type, parent_id, filename, mime, size, data, url) VALUES (?, ?, ?, ?, 0, ?, ?)',
-    ).bind(parentType, parentId, title, 'link', new ArrayBuffer(0), url).run();
-    return c.json({ ok: true, id: r.meta.last_row_id, filename: title, url });
-  } catch (e) {
-    if (String(e).includes('no such column')) {
-      return c.json({ ok: false, error: 'ستون url هنوز مهاجرت نشده — مهاجرت 0004 را اجرا کنید.' }, 500);
-    }
-    throw e;
-  }
-});
+// «پیوست لینک» حذف شد: انبار تلگرام جایگزین آن شد (ورودی‌ها هم از فرم‌ها رفتند).
+// ردیف‌های لینکِ قدیمی (در صورت وجود) همچنان در خروجی دانش‌آموز نمایش داده می‌شوند.
 
 adminRoutes.delete('/attachments/:id', requireAdmin(), async (c) => {
   const id = Number(c.req.param('id'));

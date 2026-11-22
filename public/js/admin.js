@@ -48,9 +48,6 @@ const state = {
   hwLessonId: null,   // lesson whose homework is being edited
   tg: { configured: false }, // انبار فایل تلگرام
   pendingUploads: [], // newly picked File objects for homework
-  hwLinks: [],        // پیوست‌های لینکیِ در انتظار (تکلیف)
-  taskLinks: [],      // پیوست‌های لینکیِ در انتظار (مهلت)
-  annLinks: [],       // پیوست‌های لینکیِ در انتظار (اطلاعیه)
 };
 
 // ---------- api ----------
@@ -234,9 +231,11 @@ function showAdmin() {
 
 // ---------- data refresh ----------
 async function refreshAll() {
-  const [sched, tasks, anns, subjects, settings] = await Promise.allSettled([
-    api('/api/schedule'), api('/api/tasks'), api('/api/announcements'), api('/api/subjects'), api('/api/settings'),
+  const [sched, tasks, anns, subjects, settings, tg] = await Promise.allSettled([
+    api('/api/schedule'), api('/api/tasks'), api('/api/announcements'), api('/api/subjects'), api('/api/settings'), api('/api/admin/telegram'),
   ]);
+  // وضعیت انبار تلگرام از ابتدای بوت لازم است: سقف فایل و برچسب‌ها به آن وابسته‌اند
+  if (tg.status === 'fulfilled') { state.tg = tg.value; updateTgUi(); }
   if (sched.status === 'fulfilled') state.scheduleDays = sched.value.days;
   if (tasks.status === 'fulfilled') state.tasks = { active: tasks.value.active, expired: tasks.value.expired };
   if (anns.status === 'fulfilled') state.announcements = anns.value.announcements;
@@ -492,8 +491,6 @@ async function openHwEditor(lesson) {
   $('#hwInstructions').value = '';
   $('#hwNotes').value = '';
   hwDueField.setISO(null);
-  state.hwLinks.splice(0);
-  $('#hwLinkUrl').value = ''; $('#hwLinkTitle').value = '';
   renderPendingUploads();
   $('#hwExistingFiles').textContent = '';
   $('#hwDelete').classList.toggle('hidden', !lesson.homework);
@@ -565,42 +562,8 @@ function renderPendingUploads() {
         onclick: () => { state.pendingUploads.splice(i, 1); renderPendingUploads(); },
       })));
   }
-  renderLinkChips(row, state.hwLinks, () => { state.hwLinks.splice(0); renderPendingUploads(); });
 }
 
-/** چیپ‌های لینک در انتظارِ آپلود */
-function renderLinkChips(row, links, rerender) {
-  for (const [i, lk] of links.entries()) {
-    row.append(el('span', { class: 'file-chip file-chip--link' },
-      el('span', { text: `🔗 ${lk.title}` }),
-      el('button', {
-        class: 'file-chip__x', type: 'button', text: '×', 'aria-label': `حذف ${lk.title}`,
-        onclick: () => { links.splice(i, 1); rerender(); },
-      })));
-  }
-}
-
-/** ولیدیشن و افزودن لینک به فهرست انتظار */
-function pushLink(links, urlInput, titleInput, rerender) {
-  const url = urlInput.value.trim();
-  const title = titleInput.value.trim() || (() => { try { return new URL(url).hostname; } catch { return 'لینک'; } })();
-  if (!/^https?:\/\/.+\.[^\s]+$/i.test(url)) { toast('لینک معتبر وارد کنید (با http یا https).', 'error'); return false; }
-  links.push({ url, title });
-  urlInput.value = ''; titleInput.value = '';
-  rerender();
-  return true;
-}
-
-function renderTaskLinkChips() {
-  const row = $('#taskLinkChips');
-  row.textContent = '';
-  renderLinkChips(row, state.taskLinks, renderTaskLinkChips);
-}
-function renderAnnLinkChips() {
-  const row = $('#annLinkChips');
-  row.textContent = '';
-  renderLinkChips(row, state.annLinks, renderAnnLinkChips);
-}
 
 async function submitHomework(e) {
   e.preventDefault();
@@ -629,14 +592,6 @@ async function submitHomework(e) {
       } catch (err) {
         toast(`آپلود «${file.name}» ناموفق: ${err.message}`, 'error');
       }
-    }
-    for (const lk of state.hwLinks.splice(0)) {
-      try {
-        await api('/api/admin/attachments/link', {
-          method: 'POST', body: { parentType: 'homework', parentId: res.id, url: lk.url, title: lk.title },
-        });
-        uploaded += 1;
-      } catch (err) { toast(`افزودن لینک «${lk.title}» ناموفق: ${err.message}`, 'error'); }
     }
     toast(uploaded ? `تکلیف و ${faDigits(uploaded)} پیوست ذخیره شد ✅` : 'تکلیف ذخیره شد ✅', 'success');
     closeOverlay($('#hwOverlay'));
@@ -676,11 +631,9 @@ async function submitTask(e) {
   try {
     if (id) {
       await api(`/api/admin/tasks/${id}`, { method: 'PUT', body: payload });
-      await uploadLinks('task', Number(id), state.taskLinks.splice(0));
       toast('مهلت به‌روزرسانی شد ✅', 'success');
     } else {
       const res = await api('/api/admin/tasks', { method: 'POST', body: payload });
-      await uploadLinks('task', res.id, state.taskLinks.splice(0));
       // attach pending file if any
       const file = state.taskFile;
       if (file) {
@@ -708,9 +661,6 @@ function resetTaskForm() {
   $('#taskPriority').value = 'normal';
   $('#taskSubmit').textContent = 'ذخیره';
   state.taskFile = null;
-  state.taskLinks.splice(0);
-  $('#taskLinkUrl').value = ''; $('#taskLinkTitle').value = '';
-  renderTaskLinkChips();
 }
 
 function editTask(task) {
@@ -777,11 +727,9 @@ async function submitAnn(e) {
   try {
     if (id) {
       await api(`/api/admin/announcements/${id}`, { method: 'PUT', body: payload });
-      await uploadLinks('announcement', Number(id), state.annLinks.splice(0));
       toast('اطلاعیه به‌روزرسانی شد ✅', 'success');
     } else {
       const res = await api('/api/admin/announcements', { method: 'POST', body: payload });
-      await uploadLinks('announcement', res.id, state.annLinks.splice(0));
       const file = state.annFile;
       if (file) {
         const fd = new FormData();
@@ -804,9 +752,6 @@ function resetAnnForm() {
   $('#annBody').value = '';
   $('#annPinned').checked = false;
   $('#annSubmit').textContent = 'انتشار';
-  state.annLinks.splice(0);
-  $('#annLinkUrl').value = ''; $('#annLinkTitle').value = '';
-  renderAnnLinkChips();
 }
 
 function editAnn(ann) {
@@ -933,24 +878,29 @@ function fillSettingsForm() {
   loadTgStatus();
 }
 
-/** وضعیت انبار تلگرام: فرم + برچسب سقف فایل‌ها */
+/** به‌روزرسانی UI از روی state.tg: وضعیت + برچسب سقف فایل‌ها */
+function updateTgUi() {
+  const st = state.tg || { configured: false };
+  const chatInput = $('#tgChat');
+  if (chatInput && st.chatId && !chatInput.value) chatInput.value = st.chatId;
+  const note = $('#tgStatus');
+  if (note) {
+    note.textContent = st.configured
+      ? (st.bot
+        ? `✅ فعال — بات @${st.bot} (توکن ${st.maskedToken})؛ سقف هر فایل ۲۰ مگابایت.`
+        : `⚠️ توکن ذخیره شده ولی بات پاسخ نداد — دوباره تست بگیرید.`)
+      : 'غیرفعال — فایل‌ها در دیتابیس (سقف ۱.۵ مگابایت) ذخیره می‌شوند.';
+  }
+  const limit = $('#hwLimitNote');
+  if (limit) limit.textContent = st.configured ? 'هر فایل تا ۲۰ مگابایت (انبار تلگرام)' : 'هر فایل تا ۱.۵ مگابایت (با انبار تلگرام تا ۲۰)';
+}
+
+/** وضعیت انبار تلگرام: دریافت + به‌روزرسانی UI */
 async function loadTgStatus() {
   try {
-    const st = await api('/api/admin/telegram');
-    state.tg = st;
-    const chatInput = $('#tgChat');
-    if (chatInput && st.chatId && !chatInput.value) chatInput.value = st.chatId;
-    const note = $('#tgStatus');
-    if (note) {
-      note.textContent = st.configured
-        ? (st.bot
-          ? `✅ فعال — بات @${st.bot} (توکن ${st.maskedToken})؛ سقف هر فایل ۲۰ مگابایت.`
-          : `⚠️ توکن ذخیره شده ولی بات پاسخ نداد — دوباره تست بگیرید.`)
-        : 'غیرفعال — فایل‌ها در دیتابیس (سقف ۱.۵ مگابایت) ذخیره می‌شوند.';
-    }
+    state.tg = await api('/api/admin/telegram');
   } catch { /* آفلاین/بدون نشست — بی‌صدا */ }
-  const limit = $('#hwLimitNote');
-  if (limit) limit.textContent = state.tg.configured ? 'هر فایل تا ۲۰ مگابایت (انبار تلگرام)' : 'هر فایل تا ۱.۵ مگابایت (با انبار تلگرام تا ۲۰)';
+  updateTgUi();
 }
 
 async function submitTgForm(e) {
@@ -1332,27 +1282,12 @@ $('#hwOverlay').addEventListener('mousedown', (e) => {
   if (e.target === $('#hwOverlay')) closeOverlay($('#hwOverlay'));
 });
 $('#hwAddFile').addEventListener('click', () => $('#hwFile').click());
-$('#hwLinkAdd').addEventListener('click', () => {
-  pushLink(state.hwLinks, $('#hwLinkUrl'), $('#hwLinkTitle'), renderPendingUploads);
-});
-$('#taskLinkAdd').addEventListener('click', () => {
-  pushLink(state.taskLinks, $('#taskLinkUrl'), $('#taskLinkTitle'), renderTaskLinkChips);
-});
-$('#annLinkAdd').addEventListener('click', () => {
-  pushLink(state.annLinks, $('#annLinkUrl'), $('#annLinkTitle'), renderAnnLinkChips);
-});
-
-/** آپلود پیوست‌های لینکی روی والدِ ذخیره‌شده */
-async function uploadLinks(parentType, parentId, links) {
-  for (const lk of links) {
-    try {
-      await api('/api/admin/attachments/link', { method: 'POST', body: { parentType, parentId, url: lk.url, title: lk.title } });
-    } catch (err) { toast(`افزودن لینک «${lk.title}» ناموفق: ${err.message}`, 'error'); }
-  }
-}
+// سقف فایل: با انبار تلگرام ۲۰ مگ، بدون آن ۱.۵ مگ (دیتابیس) — پویا از state.tg
 $('#hwFile').addEventListener('change', () => {
+  const maxBytes = state.tg?.configured ? 20 * 1024 * 1024 : 1_500_000;
+  const maxLabel = state.tg?.configured ? '۲۰ مگابایت' : '۱.۵ مگابایت';
   for (const f of $('#hwFile').files) {
-    if (f.size > 1_500_000) { toast(`«${f.name}» بزرگ‌تر از ۱.۵ مگابایت است.`, 'error'); continue; }
+    if (f.size > maxBytes) { toast(`«${f.name}» بزرگ‌تر از ${maxLabel} است.`, 'error'); continue; }
     state.pendingUploads.push(f);
   }
   $('#hwFile').value = '';

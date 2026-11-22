@@ -2435,6 +2435,28 @@ async function fetchOnce(url, timeoutMs) {
   }
 }
 
+// مبدأِ زنده برای دانلود پیوست‌های آینه (github.io خودش /api ندارد).
+// اول از حافظه‌ی قبلی، وگرنه از اولین فراخوانی موفق api() به‌روز می‌شود.
+const LIVE_ORIGIN_KEY = 'classhub_dl_origin';
+(function seedLiveOrigin() {
+  if (!window.__IS_MIRROR__) return;
+  if (window.__LIVE_ORIGIN__) return; // مقدار تزریق‌شده‌ی ناشر آینه معتبر است
+  let saved = '';
+  try { saved = localStorage.getItem(LIVE_ORIGIN_KEY) || ''; } catch { /* private mode */ }
+  const fallback = API_ORIGINS.find((o) => o) || '';
+  window.__LIVE_ORIGIN__ = saved || fallback;
+})();
+function noteLiveOrigin(origin) {
+  if (!window.__IS_MIRROR__ || !origin) return;
+  if (window.__LIVE_ORIGIN__ === origin) return;
+  window.__LIVE_ORIGIN__ = origin;
+  try { localStorage.setItem(LIVE_ORIGIN_KEY, origin); } catch { /* private mode */ }
+  // پیوست‌های رندرشده با مبدأ قدیمی را با مبدأ درست دوباره بکشیم
+  document.querySelectorAll(`a.attachment-item[href^="/api/attachments/"]`).forEach((a) => {
+    a.setAttribute('href', origin + a.getAttribute('href'));
+  });
+}
+
 async function api(path) {
   let lastErr;
   // برای هر مبدأ: یک مهلت کوتاه «کشف» (۱۰ثانیه) — اگر مبدأ فقط کند است، مهلت‌های
@@ -2447,6 +2469,7 @@ async function api(path) {
       try {
         const res = await fetchOnce(origin + path, remaining);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        noteLiveOrigin(origin);
         return await res.json();
       } catch (err) {
         lastErr = err;
@@ -2939,7 +2962,7 @@ function renderLessonDetail(lesson, dateMs) {
 function attachmentList(files) {
   const list = el('div', { class: 'attachment-list' });
   // روی آینه‌ی استاتیک، دانلود پیوست فقط از مبدأ اصلی ممکن است
-  const origin = window.__BOOTSTRAP__ ? (window.__LIVE_ORIGIN__ || '') : '';
+  const origin = window.__IS_MIRROR__ ? (window.__LIVE_ORIGIN__ || '') : '';
   for (const a of files) {
     // پیوست «لینک»: فایل روی سرویس بیرونی (مثل گوگل‌درایو) — مستقیم همان‌جا باز می‌شود
     if (a.url) {
