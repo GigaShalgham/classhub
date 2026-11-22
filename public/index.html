@@ -952,6 +952,35 @@ h1, h2, h3, h4 { line-height: 1.5; }
 }
 .panel[aria-hidden="true"] { display: none; }
 
+/* ---------- نوار پیشرفت بارگذاری ---------- */
+.upload-box { max-width: 380px; text-align: center; }
+.upload-box__icon { font-size: 30px; margin: 4px 0 8px; }
+.upload-box__file {
+  font-size: var(--fs-sm); font-weight: 700; color: var(--text);
+  word-break: break-word; margin-top: 6px; line-height: 1.6;
+}
+.upload-box__count { font-size: var(--fs-xs); color: var(--sub); margin-top: 2px; min-height: 16px; }
+.upload-bar {
+  height: 10px; background: #ECE9F4; border: 1px solid var(--border);
+  border-radius: 999px; overflow: hidden; margin: 14px 0 6px;
+}
+.upload-bar__fill {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, var(--lavender-deep), #6D8FC5);
+  border-radius: 999px; transition: width 0.25s ease;
+}
+.upload-bar__fill--processing {
+  width: 100% !important;
+  background-image: linear-gradient(100deg, rgba(255,255,255,.5) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.5) 50%, rgba(255,255,255,.5) 75%, transparent 75%);
+  background-size: 36px 100%;
+  animation: uploadStripe 0.8s linear infinite;
+}
+@keyframes uploadStripe { from { background-position: 0 0; } to { background-position: 36px 0; } }
+.upload-box__meta {
+  display: flex; justify-content: space-between; gap: 10px;
+  font-size: var(--fs-xs); color: var(--sub); margin-bottom: 12px; min-height: 15px;
+}
+
 /* ---------- جزوات ---------- */
 .handout-list { display: flex; flex-direction: column; gap: 11px; max-width: 900px; }
 .handout-card {
