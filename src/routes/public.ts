@@ -75,7 +75,7 @@ publicRoutes.get('/schedule', async (c) => {
 // merges /schedule + /tasks + /announcements + /settings into one payload.
 // Read-only, additive; the individual endpoints stay untouched.
 publicRoutes.get('/bootstrap', async (c) => {
-  const [lessonRows, taskRows, annRows, settingRows] = await Promise.all([
+  const [lessonRows, taskRows, annRows, settingRows, handoutRows, handoutAttRows] = await Promise.all([
     c.env.DB.prepare(lessonQuery()).all<LessonRow>(),
     c.env.DB.prepare(`
       SELECT t.id, t.kind, t.title, t.description, t.due_at AS dueAt, t.priority, t.archived,
@@ -94,12 +94,44 @@ publicRoutes.get('/bootstrap', async (c) => {
     c.env.DB.prepare(
       'SELECT key, value FROM settings WHERE key IN (?,?,?,?)',
     ).bind('class_name', 'welcome_message', 'admin_note', 'rotation_anchor').all<{ key: string; value: string }>(),
+    c.env.DB.prepare(`
+      SELECT h.id, h.title, h.description, h.created_at AS createdAt, h.updated_at AS updatedAt,
+             s.id AS subjectId, s.name AS subjectName, s.color_key AS colorKey
+      FROM handouts h
+      LEFT JOIN subjects s ON s.id = h.subject_id
+      ORDER BY h.updated_at DESC, h.id DESC
+    `).all<Record<string, unknown>>(),
+    c.env.DB.prepare(
+      `SELECT parent_id AS parentId, id, filename, mime, size FROM attachments
+       WHERE parent_type='handout' ORDER BY id`,
+    ).all<Record<string, unknown>>(),
   ]);
 
   const days: (Lesson[] | null)[] = Array.from({ length: WEEK_DAYS }, () => null);
   for (const r of lessonRows.results ?? []) {
     (days[r.day] ??= []).push(rowToLesson(r));
   }
+
+  // جزوات: هر جزوه با فایل‌هایش — دانلود مستقیم از /api/attachments/:id
+  const handoutFiles = new Map<number, { id: number; filename: string; mime: string; size: number }[]>();
+  for (const a of handoutAttRows.results ?? []) {
+    const pid = a.parentId as number;
+    if (!handoutFiles.has(pid)) handoutFiles.set(pid, []);
+    handoutFiles.get(pid)!.push({
+      id: a.id as number, filename: a.filename as string, mime: a.mime as string, size: a.size as number,
+    });
+  }
+  const handouts = (handoutRows.results ?? []).map((h) => ({
+    id: h.id as number,
+    title: h.title as string,
+    description: h.description as string,
+    subject_id: (h.subjectId ?? null) as number | null,
+    subject_name: (h.subjectName ?? null) as string | null,
+    color_key: (h.colorKey ?? null) as string | null,
+    created_at: h.createdAt as string,
+    updated_at: h.updatedAt as string,
+    attachments: handoutFiles.get(h.id as number) ?? [],
+  }));
 
   const now = Date.now();
   const active: Task[] = [];
@@ -138,7 +170,7 @@ publicRoutes.get('/bootstrap', async (c) => {
   const settings: Record<string, string> = {};
   for (const r of settingRows.results ?? []) settings[r.key] = r.value;
 
-  return c.json({ ok: true, days, tasks: { active, expired }, announcements, settings });
+  return c.json({ ok: true, days, tasks: { active, expired }, announcements, handouts, settings });
 });
 
 publicRoutes.get('/lessons/:id', async (c) => {

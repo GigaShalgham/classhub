@@ -899,6 +899,33 @@ h1, h2, h3, h4 { line-height: 1.5; }
    ================================================================ */
 .ann-list { display: flex; flex-direction: column; gap: 11px; max-width: 900px; }
 
+/* ---------- جزوات ---------- */
+.handout-list { display: flex; flex-direction: column; gap: 11px; max-width: 900px; }
+.handout-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: clamp(13px, 1.3vw, 17px) clamp(15px, 1.8vw, 20px);
+  text-align: right;
+  font-family: inherit;
+  width: 100%;
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.handout-card__head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.handout-card__title { font-size: var(--fs-md); font-weight: 700; flex: 1 1 auto; min-width: 0; }
+.handout-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--chip, #F1F3F8); color: var(--sub);
+  border-radius: 999px; padding: 3px 10px; font-size: var(--fs-xs); white-space: nowrap;
+}
+.handout-chip__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--lavender-deep); }
+.handout-card__desc { font-size: var(--fs-sm); color: var(--sub); line-height: 1.7; margin: 0; }
+.handout-card__files { display: flex; flex-direction: column; gap: 6px; }
+.handout-card__date { font-size: var(--fs-xs); color: var(--sub); }
+
 .ann-card {
   background: var(--surface);
   border: 1px solid var(--border);

@@ -68,6 +68,7 @@
         <button class="admin-tab" data-tab="calendar" role="tab" aria-selected="false" type="button">📅 تقویم ماهانه</button>
         <button class="admin-tab" data-tab="tasks" role="tab" aria-selected="false" type="button">⏳ مهلت‌ها</button>
         <button class="admin-tab" data-tab="announcements" role="tab" aria-selected="false" type="button">📣 اطلاعیه‌ها</button>
+        <button class="admin-tab" data-tab="handouts" role="tab" aria-selected="false" type="button">📚 جزوات</button>
         <button class="admin-tab" data-tab="subjects" role="tab" aria-selected="false" type="button">🎨 درس‌ها</button>
         <button class="admin-tab" data-tab="settings" role="tab" aria-selected="false" type="button">⚙️ تنظیمات</button>
       </nav>
@@ -217,6 +218,46 @@
         </div>
       </section>
 
+      <!-- ===== Handouts tab ===== -->
+      <section class="admin-panel hidden" id="tab-handouts" role="tabpanel">
+        <div class="admin-card">
+          <h2 class="admin-card__title" id="handoutFormTitle">➕ افزودن جزوه</h2>
+          <form id="handoutForm" novalidate class="form-grid">
+            <input type="hidden" id="handoutId">
+            <div class="field">
+              <label class="field__label" for="handoutTitle">عنوان جزوه <span class="field__req">*</span></label>
+              <input class="input" id="handoutTitle" required maxlength="200" placeholder="مثلاً: خلاصه‌ی فصل ۳ ریاضی">
+            </div>
+            <div class="field">
+              <label class="field__label" for="handoutSubject">درس (اختیاری)</label>
+              <select class="select" id="handoutSubject"><option value="">— بدون درس —</option></select>
+            </div>
+            <div class="field" style="grid-column: 1 / -1;">
+              <label class="field__label" for="handoutDesc">توضیحات (اختیاری)</label>
+              <textarea class="textarea" id="handoutDesc" maxlength="4000"></textarea>
+            </div>
+            <div class="field" style="grid-column: 1 / -1;">
+              <label class="field__label">فایل‌ها (PDF / آفیس / تصویر / فشرده / فیلم و صوت — <span id="handoutLimitNote">هر فایل تا ۲۰ مگابایت</span>)</label>
+              <div class="upload-row" id="handoutUploadRow"></div>
+              <input type="file" id="handoutFile" class="hidden" multiple
+                accept=".png,.jpg,.jpeg,.webp,.gif,.pdf,.txt,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.rar,.7z,.mp4,.mkv,.webm,.mov,.mp3,.wav,.m4a,.ogg,.epub">
+              <div class="btn-row" style="margin-top:8px;">
+                <button class="btn btn--ghost btn--sm" type="button" id="handoutAddFile">📎 افزودن فایل</button>
+              </div>
+              <div class="admin-list" id="handoutExistingFiles" style="margin-top:10px;"></div>
+            </div>
+            <div class="btn-row" style="grid-column: 1 / -1;">
+              <button class="btn btn--primary" type="submit" id="handoutSubmit">ذخیره جزوه</button>
+              <button class="btn btn--ghost" type="button" id="handoutReset">پاک‌کردن فرم</button>
+            </div>
+          </form>
+        </div>
+        <div class="admin-card">
+          <h2 class="admin-card__title">📚 جزوات بارگذاری‌شده</h2>
+          <div class="admin-list" id="handoutsList"></div>
+        </div>
+      </section>
+
       <!-- ===== Subjects tab ===== -->
       <section class="admin-panel hidden" id="tab-subjects" role="tabpanel">
         <div class="admin-card">
@@ -355,7 +396,7 @@
             <label class="field__label">پیوست‌ها (تصویر / PDF / آفیس — <span id="hwLimitNote">هر فایل تا ۲۰ مگابایت</span>)</label>
             <div class="upload-row" id="hwUploadRow"></div>
             <input type="file" id="hwFile" class="hidden" multiple
-              accept=".png,.jpg,.jpeg,.webp,.gif,.pdf,.txt,.doc,.docx,.ppt,.pptx,.xls,.xlsx">
+              accept=".png,.jpg,.jpeg,.webp,.gif,.pdf,.txt,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.rar,.7z,.mp4,.mkv,.webm,.mov,.mp3,.wav,.m4a,.ogg,.epub">
             <div class="btn-row" style="margin-top:8px;">
               <button class="btn btn--ghost btn--sm" type="button" id="hwAddFile">📎 افزودن فایل</button>
             </div>

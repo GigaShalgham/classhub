@@ -912,6 +912,33 @@ h1, h2, h3, h4 { line-height: 1.5; }
    ================================================================ */
 .ann-list { display: flex; flex-direction: column; gap: 11px; max-width: 900px; }
 
+/* ---------- جزوات ---------- */
+.handout-list { display: flex; flex-direction: column; gap: 11px; max-width: 900px; }
+.handout-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: clamp(13px, 1.3vw, 17px) clamp(15px, 1.8vw, 20px);
+  text-align: right;
+  font-family: inherit;
+  width: 100%;
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.handout-card__head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.handout-card__title { font-size: var(--fs-md); font-weight: 700; flex: 1 1 auto; min-width: 0; }
+.handout-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--chip, #F1F3F8); color: var(--sub);
+  border-radius: 999px; padding: 3px 10px; font-size: var(--fs-xs); white-space: nowrap;
+}
+.handout-chip__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--lavender-deep); }
+.handout-card__desc { font-size: var(--fs-sm); color: var(--sub); line-height: 1.7; margin: 0; }
+.handout-card__files { display: flex; flex-direction: column; gap: 6px; }
+.handout-card__date { font-size: var(--fs-xs); color: var(--sub); }
+
 .ann-card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -2021,6 +2048,13 @@ h1, h2, h3, h4 { line-height: 1.5; }
       <div class="tasks-grid" id="expiredGrid" style="margin-top: 14px; display: none;"></div>
     </section>
 
+    <section class="section" aria-label="جزوات">
+      <div class="section__head">
+        <h2 class="section__title"><span class="emoji" aria-hidden="true">📚</span> جزوات</h2>
+      </div>
+      <div class="handout-list" id="handoutList"></div>
+    </section>
+
     <section class="section" aria-label="اطلاعیه‌ها">
       <div class="section__head">
         <h2 class="section__title"><span class="emoji" aria-hidden="true">📣</span> اطلاعیه‌ها</h2>
@@ -2959,6 +2993,16 @@ function renderLessonDetail(lesson, dateMs) {
   body.append(wrap);
 }
 
+/** آیتم دانلود فایل — مشترک بین پیوست تکلیف/مهلت/اطلاعیه و کارت جزوه */
+function fileItemEl(a, origin) {
+  return el('a', {
+    class: 'attachment-item', href: `${origin}/api/attachments/${a.id}`, download: a.filename, // روی mirror از مبدأ اصلی
+  },
+  el('span', { class: 'attachment-item__icon', text: '📎' }),
+  el('span', { class: 'attachment-item__name', text: a.filename }),
+  el('span', { class: 'attachment-item__size', text: formatSize(a.size) }));
+}
+
 function attachmentList(files) {
   const list = el('div', { class: 'attachment-list' });
   // روی آینه‌ی استاتیک، دانلود پیوست فقط از مبدأ اصلی ممکن است
@@ -2976,12 +3020,7 @@ function attachmentList(files) {
       el('span', { class: 'attachment-item__size', text: host || 'لینک' })));
       continue;
     }
-    list.append(el('a', {
-      class: 'attachment-item', href: `${origin}/api/attachments/${a.id}`, download: a.filename, // روی mirror این لینک‌ها به مبدأ اصلی نیاز دارند
-    },
-    el('span', { class: 'attachment-item__icon', text: '📎' }),
-    el('span', { class: 'attachment-item__name', text: a.filename }),
-    el('span', { class: 'attachment-item__size', text: formatSize(a.size) })));
+    list.append(fileItemEl(a, origin));
   }
   return list;
 }
@@ -3154,6 +3193,49 @@ function renderAnnouncements() {
   for (const a of state.announcements) list.append(annCard(a));
 }
 
+// ---------- جزوات ----------
+const HANDOUT_EMOJI = { pdf: '📄', image: '🖼️', zip: '🗂️', media: '🎬', audio: '🎧', doc: '📘' };
+function handoutFileEmoji(mime) {
+  const m = (mime || '').toLowerCase();
+  if (m.startsWith('image/')) return HANDOUT_EMOJI.image;
+  if (m === 'application/pdf') return HANDOUT_EMOJI.pdf;
+  if (m.startsWith('video/')) return HANDOUT_EMOJI.media;
+  if (m.startsWith('audio/')) return HANDOUT_EMOJI.audio;
+  if (m.includes('zip') || m.includes('rar') || m.includes('7z') || m.includes('compressed')) return HANDOUT_EMOJI.zip;
+  return HANDOUT_EMOJI.doc;
+}
+
+function renderHandouts() {
+  const list = $('#handoutList');
+  list.textContent = '';
+  if (!state.handouts?.length) {
+    list.append(el('div', { class: 'empty-state' },
+      el('span', { class: 'face', text: '📚' }), el('div', { text: 'هنوز جزوه‌ای بارگذاری نشده است.' })));
+    return;
+  }
+  const origin = window.__IS_MIRROR__ ? (window.__LIVE_ORIGIN__ || '') : '';
+  for (const h of state.handouts) {
+    const card = el('article', { class: 'handout-card fade-up' },
+      el('div', { class: 'handout-card__head' },
+        el('h3', { class: 'handout-card__title', text: h.title }),
+        h.subject_name ? el('span', { class: 'handout-chip' },
+          el('span', { class: 'handout-chip__dot', style: h.color_key ? `background:var(--${h.color_key}-deep, var(--lavender-deep));` : '' }),
+          el('span', { text: h.subject_name })) : null));
+    if (h.description) card.append(el('p', { class: 'handout-card__desc', text: h.description }));
+    if (h.attachments?.length) {
+      const files = el('div', { class: 'handout-card__files' });
+      for (const f of h.attachments) {
+        const item = fileItemEl(f, origin);
+        item.querySelector('.attachment-item__icon').textContent = handoutFileEmoji(f.mime);
+        files.append(item);
+      }
+      card.append(files);
+    }
+    card.append(el('span', { class: 'handout-card__date', text: formatJalaliDateTime(h.updated_at || h.created_at) }));
+    list.append(card);
+  }
+}
+
 async function openAnnouncement(ann) {
   let detail = ann;
   try {
@@ -3309,6 +3391,7 @@ async function loadAll() {
   state.days = data.days ?? [];
   state.tasks = { active: data.tasks?.active ?? [], expired: data.tasks?.expired ?? [] };
   state.announcements = data.announcements ?? [];
+  state.handouts = data.handouts ?? [];
   state.settings = data.settings ?? {};
 
   renderHeader();
@@ -3316,6 +3399,7 @@ async function loadAll() {
   renderTimetable();
   renderTasks();
   renderAnnouncements();
+  renderHandouts();
   renderNotifications();
   // اسکرول به امروز بعد از آنکه layout ستون‌ها کامل شد
   if (window.innerWidth < 1360) {
@@ -3331,8 +3415,9 @@ async function loadAll() {
       state.days = fresh.days ?? state.days;
       state.tasks = { active: fresh.tasks?.active ?? state.tasks.active, expired: fresh.tasks?.expired ?? state.tasks.expired };
       state.announcements = fresh.announcements ?? state.announcements;
+      state.handouts = fresh.handouts ?? state.handouts;
       state.settings = fresh.settings ?? state.settings;
-      renderHeader(); renderHero(); renderTimetable(); renderTasks(); renderAnnouncements(); renderNotifications();
+      renderHeader(); renderHero(); renderTimetable(); renderTasks(); renderAnnouncements(); renderHandouts(); renderNotifications();
     }).catch(() => {
       // مسیر زنده بسته بود — فقط یادداشت کوچک «نسخه‌ی آفلاین» می‌ماند
       if (!document.querySelector('.mirror-note')) {

@@ -48,6 +48,8 @@ const state = {
   hwLessonId: null,   // lesson whose homework is being edited
   tg: { configured: false }, // انبار فایل تلگرام
   pendingUploads: [], // newly picked File objects for homework
+  handouts: [],       // جزوات
+  pendingHandoutFiles: [], // فایل‌های جدید جزوه
 };
 
 // ---------- api ----------
@@ -73,7 +75,7 @@ async function api(path, options = {}) {
     opts.body = JSON.stringify(opts.body);
   }
   // در آینه: درخواست به سایت زنده + توکن (کوکی کراس‌سایتی ارسال نمی‌شود)
-  const url = path.startsWith('http') ? path : API_BASE + path;
+  const url = path.startsWith('http') ? path : (window.__API_BASE__ ?? API_BASE) + path;
   const token = storedToken();
   if (token && !opts.headers['Authorization']) opts.headers['Authorization'] = `Bearer ${token}`;
   const isRead = !opts.method || opts.method === 'GET';
@@ -231,19 +233,21 @@ function showAdmin() {
 
 // ---------- data refresh ----------
 async function refreshAll() {
-  const [sched, tasks, anns, subjects, settings, tg] = await Promise.allSettled([
-    api('/api/schedule'), api('/api/tasks'), api('/api/announcements'), api('/api/subjects'), api('/api/settings'), api('/api/admin/telegram'),
+  const [sched, tasks, anns, subjects, settings, tg, houts] = await Promise.allSettled([
+    api('/api/schedule'), api('/api/tasks'), api('/api/announcements'), api('/api/subjects'), api('/api/settings'), api('/api/admin/telegram'), api('/api/admin/handouts'),
   ]);
   // وضعیت انبار تلگرام از ابتدای بوت لازم است: سقف فایل و برچسب‌ها به آن وابسته‌اند
   if (tg.status === 'fulfilled') { state.tg = tg.value; updateTgUi(); }
   if (sched.status === 'fulfilled') state.scheduleDays = sched.value.days;
   if (tasks.status === 'fulfilled') state.tasks = { active: tasks.value.active, expired: tasks.value.expired };
   if (anns.status === 'fulfilled') state.announcements = anns.value.announcements;
+  if (houts.status === 'fulfilled') state.handouts = houts.value.handouts ?? [];
   if (subjects.status === 'fulfilled') state.subjects = subjects.value.subjects;
   if (settings.status === 'fulfilled') state.settings = settings.value.settings;
   renderLessonsTab();
   renderTasksTab();
   renderAnnsTab();
+  renderHandoutsTab();
   renderSubjectsTab();
   renderCalendar();
   fillSettingsForm();
@@ -792,6 +796,147 @@ function renderAnnsTab() {
   }
 }
 
+// ---------- handouts tab ----------
+function renderHandoutsTab() {
+  const list = $('#handoutsList');
+  list.textContent = '';
+  if (!state.handouts.length) {
+    list.append(el('div', { class: 'empty-state', text: 'هنوز جزوه‌ای بارگذاری نشده است.' }));
+    return;
+  }
+  for (const h of state.handouts) {
+    list.append(el('div', { class: 'admin-row' },
+      el('span', { text: '📚' }),
+      el('div', { class: 'admin-row__main' },
+        el('div', { class: 'admin-row__title', text: h.subject_name ? `${h.title} — ${h.subject_name}` : h.title }),
+        el('div', { class: 'admin-row__sub', text: `${formatJalaliDateTime(h.updated_at)}${h.attachment_count ? ` · 📎 ${faDigits(h.attachment_count)} فایل` : ''}` })),
+      el('button', { class: 'btn btn--ghost btn--sm', type: 'button', onclick: () => editHandout(h), text: '✏️' }),
+      el('button', { class: 'btn btn--danger btn--sm', type: 'button', onclick: () => deleteHandout(h), text: '🗑️' })));
+  }
+  fillHandoutSubjectOptions();
+}
+
+function fillHandoutSubjectOptions() {
+  const sel = $('#handoutSubject');
+  const cur = sel.value;
+  sel.textContent = '';
+  sel.append(el('option', { value: '', text: '— بدون درس —' }));
+  for (const s of state.subjects) {
+    sel.append(el('option', { value: String(s.id), text: s.name }));
+  }
+  if ([...sel.options].some((o) => o.value === cur)) sel.value = cur;
+}
+
+function renderHandoutPending() {
+  const row = $('#handoutUploadRow');
+  row.textContent = '';
+  for (const [i, file] of state.pendingHandoutFiles.entries()) {
+    row.append(el('span', { class: 'file-chip' },
+      el('span', { text: `📎 ${file.name}` }),
+      el('button', {
+        class: 'file-chip__x', type: 'button', text: '×', 'aria-label': `حذف ${file.name}`,
+        onclick: () => { state.pendingHandoutFiles.splice(i, 1); renderHandoutPending(); },
+      })));
+  }
+}
+
+function renderHandoutExisting(files) {
+  const list = $('#handoutExistingFiles');
+  list.textContent = '';
+  for (const f of files) {
+    list.append(el('div', { class: 'admin-row' },
+      el('span', { text: '📎' }),
+      el('div', { class: 'admin-row__main' },
+        el('a', { class: 'admin-row__title', href: `${window.__API_BASE__ ?? API_BASE}/api/attachments/${f.id}`, download: f.filename, text: f.filename, style: 'color:inherit;text-decoration:none;' }),
+        el('div', { class: 'admin-row__sub', text: f.telegram_file_id ? `☁️ تلگرام · ${formatSizeFa(f.size)}` : `${formatSizeFa(f.size)} · دیتابیس` })),
+      el('button', {
+        class: 'btn btn--danger btn--sm', type: 'button', text: '🗑️',
+        onclick: async () => {
+          const ok = await confirmDialog(`حذف فایل «${f.filename}»؟`);
+          if (!ok) return;
+          try {
+            await api(`/api/admin/attachments/${f.id}`, { method: 'DELETE' });
+            toast('فایل حذف شد.', 'success');
+            renderHandoutExisting(files.filter((x) => x.id !== f.id));
+            const h = state.handouts.find((x) => x.id === Number($('#handoutId').value));
+            if (h) { h.attachments = h.attachments.filter((x) => x.id !== f.id); h.attachment_count = h.attachments.length; renderHandoutsTab(); }
+          } catch (err) { toast(err.message, 'error'); }
+        },
+      })));
+  }
+}
+
+function resetHandoutForm() {
+  $('#handoutId').value = '';
+  $('#handoutTitle').value = '';
+  $('#handoutDesc').value = '';
+  $('#handoutSubject').value = '';
+  $('#handoutFormTitle').textContent = '➕ افزودن جزوه';
+  state.pendingHandoutFiles.splice(0);
+  renderHandoutPending();
+  $('#handoutExistingFiles').textContent = '';
+}
+
+function editHandout(h) {
+  $('#handoutId').value = String(h.id);
+  $('#handoutTitle').value = h.title;
+  $('#handoutDesc').value = h.description || '';
+  $('#handoutSubject').value = h.subject_id ? String(h.subject_id) : '';
+  $('#handoutFormTitle').textContent = `✏️ ویرایش: ${h.title}`;
+  state.pendingHandoutFiles.splice(0);
+  renderHandoutPending();
+  renderHandoutExisting(h.attachments ?? []);
+  switchTab('handouts');
+  $('#handoutTitle').focus();
+}
+
+async function submitHandout(e) {
+  e.preventDefault();
+  const title = $('#handoutTitle').value.trim();
+  if (!title) { toast('عنوان جزوه الزامی است.', 'error'); return; }
+  const payload = {
+    title,
+    description: $('#handoutDesc').value.trim(),
+    subjectId: $('#handoutSubject').value || null,
+  };
+  try {
+    let id = Number($('#handoutId').value);
+    if (id) {
+      await api(`/api/admin/handouts/${id}`, { method: 'PUT', body: payload });
+    } else {
+      const res = await api('/api/admin/handouts', { method: 'POST', body: payload });
+      id = res.id;
+    }
+    let uploaded = 0;
+    for (const file of state.pendingHandoutFiles.splice(0)) {
+      const fd = new FormData();
+      fd.append('parentType', 'handout');
+      fd.append('parentId', String(id));
+      fd.append('file', file);
+      try {
+        await api('/api/admin/attachments', { method: 'POST', body: fd });
+        uploaded += 1;
+      } catch (err) { toast(`آپلود «${file.name}» ناموفق: ${err.message}`, 'error'); }
+    }
+    toast(uploaded ? `جزوه و ${faDigits(uploaded)} فایل ذخیره شد ✅` : 'جزوه ذخیره شد ✅', 'success');
+    resetHandoutForm();
+    refreshAll();
+  } catch (err) {
+    toast(err.message, 'error');
+  }
+}
+
+async function deleteHandout(h) {
+  const ok = await confirmDialog(`حذف جزوه «${h.title}» و همه‌ی فایل‌هایش؟`);
+  if (!ok) return;
+  try {
+    await api(`/api/admin/handouts/${h.id}`, { method: 'DELETE' });
+    toast('جزوه حذف شد.', 'success');
+    if (Number($('#handoutId').value) === h.id) resetHandoutForm();
+    refreshAll();
+  } catch (err) { toast(err.message, 'error'); }
+}
+
 // ---------- subjects tab ----------
 async function submitSubject(e) {
   e.preventDefault();
@@ -893,6 +1038,8 @@ function updateTgUi() {
   }
   const limit = $('#hwLimitNote');
   if (limit) limit.textContent = st.configured ? 'هر فایل تا ۲۰ مگابایت (انبار تلگرام)' : 'هر فایل تا ۱.۵ مگابایت (با انبار تلگرام تا ۲۰)';
+  const hlimit = $('#handoutLimitNote');
+  if (hlimit) hlimit.textContent = limit ? limit.textContent : '';
 }
 
 /** وضعیت انبار تلگرام: دریافت + به‌روزرسانی UI */
@@ -1292,6 +1439,21 @@ $('#hwFile').addEventListener('change', () => {
   }
   $('#hwFile').value = '';
   renderPendingUploads();
+});
+
+$('#handoutForm').addEventListener('submit', submitHandout);
+$('#handoutReset').addEventListener('click', resetHandoutForm);
+$('#handoutAddFile').addEventListener('click', () => $('#handoutFile').click());
+// سقف فایل جزوه: با انبار تلگرام ۲۰ مگ، بدون آن ۱.۵ مگ — پویا از state.tg
+$('#handoutFile').addEventListener('change', () => {
+  const maxBytes = state.tg?.configured ? 20 * 1024 * 1024 : 1_500_000;
+  const maxLabel = state.tg?.configured ? '۲۰ مگابایت' : '۱.۵ مگابایت';
+  for (const f of $('#handoutFile').files) {
+    if (f.size > maxBytes) { toast(`«${f.name}» بزرگ‌تر از ${maxLabel} است.`, 'error'); continue; }
+    state.pendingHandoutFiles.push(f);
+  }
+  $('#handoutFile').value = '';
+  renderHandoutPending();
 });
 
 for (const btn of document.querySelectorAll('.admin-tab')) {

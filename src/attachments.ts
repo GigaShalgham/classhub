@@ -21,6 +21,24 @@ export const ALLOWED_MIME = new Set([
   'application/vnd.openxmlformats-officedocument.presentationml.presentation',
   'application/vnd.ms-excel',
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  // جزوات/منابع درسی: فشرده و رسانه (دانلود با Content-Disposition است؛ اجرا نمی‌شوند)
+  'application/zip',
+  'application/x-zip-compressed',
+  'application/x-7z-compressed',
+  'application/vnd.rar',
+  'application/x-rar-compressed',
+  'application/x-compressed', // برخی مرورگرها zip را این می‌فرستند
+  'video/mp4',
+  'video/webm',
+  'video/x-matroska',
+  'video/quicktime',
+  'audio/mpeg',
+  'audio/mp4',
+  'audio/ogg',
+  'audio/wav',
+  'audio/x-wav',
+  'audio/webm',
+  'application/epub+zip',
 ]) as Set<string>;
 
 export const EXT_BY_MIME: Record<string, string> = {
@@ -52,7 +70,7 @@ export function safeFilename(name: string): string {
 export function validateMime(mime: string, filename: string): void {
   const m = (mime || '').split(';')[0].trim().toLowerCase();
   if (!ALLOWED_MIME.has(m)) {
-    throw new ValidationError('نوع فایل مجاز نیست. تصاویر، PDF و اسناد آفیس پذیرفته می‌شوند.');
+    throw new ValidationError('نوع فایل مجاز نیست. تصویر، PDF، آفیس، فشرده (zip/rar/7z)، رسانه (mp4/mp3) و epub پذیرفته می‌شوند.');
   }
   if (DANGEROUS_EXT.test(filename)) {
     throw new ValidationError('پسوند فایل مجاز نیست.');

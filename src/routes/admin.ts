@@ -346,6 +346,82 @@ adminRoutes.delete('/announcements/:id', requireAdmin(), async (c) => {
   return c.json({ ok: true });
 });
 
+// ---------- Handouts (جزوات) ----------
+
+interface HandoutRow {
+  id: number; title: string; description: string; subject_id: number | null;
+  created_at: string; updated_at: string;
+  subjectName: string | null; colorKey: string | null; att: number;
+}
+
+/** لیست جزوات برای ادمین — با فایل‌های هر جزوه (برای ویرایش/حذف تک‌تک) */
+adminRoutes.get('/handouts', requireAdmin(), async (c) => {
+  const { results } = await c.env.DB.prepare(`
+    SELECT h.id, h.title, h.description, h.subject_id AS subject_id, h.created_at, h.updated_at,
+           s.name AS subjectName, s.color_key AS colorKey,
+           (SELECT COUNT(*) FROM attachments a WHERE a.parent_type='handout' AND a.parent_id = h.id) AS att
+    FROM handouts h
+    LEFT JOIN subjects s ON s.id = h.subject_id
+    ORDER BY h.updated_at DESC, h.id DESC
+  `).all<HandoutRow>();
+  const out = [];
+  for (const h of results ?? []) {
+    const files = await c.env.DB.prepare(
+      `SELECT id, filename, mime, size, url, telegram_file_id, created_at AS createdAt FROM attachments
+       WHERE parent_type='handout' AND parent_id=? ORDER BY id`,
+    ).bind(h.id).all<Record<string, unknown>>();
+    out.push({
+      id: h.id, title: h.title, description: h.description,
+      subject_id: h.subject_id, subject_name: h.subjectName, color_key: h.colorKey,
+      created_at: h.created_at, updated_at: h.updated_at,
+      attachment_count: h.att, attachments: files.results ?? [],
+    });
+  }
+  return c.json({ ok: true, handouts: out });
+});
+
+adminRoutes.post('/handouts', requireAdmin(), async (c) => {
+  const body = await readJson(c.req.raw);
+  const title = str(body.title, 'عنوان جزوه', { min: 2, max: 200 });
+  const description = str(body.description ?? '', 'توضیحات', { required: false, max: 4000 });
+  let subjectId: number | null = null;
+  const raw = body.subjectId ?? body.subject_id;
+  if (raw !== undefined && raw !== null && raw !== '') {
+    subjectId = int(raw, 'درس', 1, 10_000);
+    if (!(await subjectExists(c.env.DB, subjectId))) bad('درس انتخاب‌شده وجود ندارد.');
+  }
+  const r = await c.env.DB.prepare(
+    'INSERT INTO handouts (title, description, subject_id) VALUES (?, ?, ?)',
+  ).bind(title, description, subjectId).run();
+  return c.json({ ok: true, id: r.meta.last_row_id });
+});
+
+adminRoutes.put('/handouts/:id', requireAdmin(), async (c) => {
+  const id = Number(c.req.param('id'));
+  const body = await readJson(c.req.raw);
+  const title = str(body.title, 'عنوان جزوه', { min: 2, max: 200 });
+  const description = str(body.description ?? '', 'توضیحات', { required: false, max: 4000 });
+  let subjectId: number | null = null;
+  const raw = body.subjectId ?? body.subject_id;
+  if (raw !== undefined && raw !== null && raw !== '') {
+    subjectId = int(raw, 'درس', 1, 10_000);
+    if (!(await subjectExists(c.env.DB, subjectId))) bad('درس انتخاب‌شده وجود ندارد.');
+  }
+  const r = await c.env.DB.prepare(
+    'UPDATE handouts SET title=?, description=?, subject_id=?, updated_at=datetime(\'now\') WHERE id=?',
+  ).bind(title, description, subjectId, id).run();
+  if (!r.meta.changes) return c.json({ ok: false, error: 'جزوه پیدا نشد.' }, 404);
+  return c.json({ ok: true, id });
+});
+
+adminRoutes.delete('/handouts/:id', requireAdmin(), async (c) => {
+  const id = Number(c.req.param('id'));
+  const r = await c.env.DB.prepare('DELETE FROM handouts WHERE id = ?').bind(id).run();
+  if (!r.meta.changes) return c.json({ ok: false, error: 'جزوه پیدا نشد.' }, 404);
+  await deleteAttachmentsOf(c.env.DB, 'handout', id);
+  return c.json({ ok: true });
+});
+
 // ---------- Attachments (uploads) ----------
 
 /** حذف پیوست‌های یک والد (فایل و لینک) — وگرنه ردیف‌های یتیم می‌مانند */
@@ -354,7 +430,7 @@ async function deleteAttachmentsOf(db: D1Database, type: string, id: number): Pr
 }
 
 function parentExists(db: D1Database, type: string, id: number): Promise<boolean> {
-  const table = type === 'homework' ? 'homework' : type === 'task' ? 'tasks' : 'announcements';
+  const table = type === 'homework' ? 'homework' : type === 'task' ? 'tasks' : type === 'handout' ? 'handouts' : 'announcements';
   return db.prepare(`SELECT 1 AS x FROM ${table} WHERE id = ?`).bind(id).first().then(Boolean);
 }
 
@@ -364,7 +440,7 @@ adminRoutes.post('/attachments', requireAdmin(), async (c) => {
 
   const form = await c.req.raw.formData();
   const file = form.get('file');
-  const parentType = oneOf(form.get('parentType'), 'نوع والد', ['homework', 'task', 'announcement'] as const);
+  const parentType = oneOf(form.get('parentType'), 'نوع والد', ['homework', 'task', 'handout', 'announcement'] as const);
   const parentId = int(form.get('parentId'), 'شناسه والد', 1, 10_000_000);
   if (!(file instanceof File)) bad('فایلی ارسال نشده است.');
   if (file.size <= 0) bad('فایل خالی است.');
