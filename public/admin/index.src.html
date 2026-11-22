@@ -160,9 +160,18 @@
                 <textarea class="textarea" id="taskDesc" maxlength="4000"></textarea>
               </div>
               <div class="field">
-                <label class="field__label" for="taskDue">مهلت (تاریخ و ساعت) <span class="field__req">*</span></label>
-                <input class="input" id="taskDue" type="datetime-local" required>
-                <span class="field__hint">به وقت تهران ذخیره می‌شود.</span>
+                <label class="field__label" for="taskDueField">مهلت (تاریخ و ساعت شمسی) <span class="field__req">*</span></label>
+                <div id="taskDueField"></div>
+                <span class="field__hint">تقویم شمسی؛ ساعت به وقت تهران ذخیره می‌شود.</span>
+              </div>
+              <div class="field">
+                <label class="field__label" for="taskLinkUrl">لینک پیوست (اختیاری — گوگل‌درایو و…)</label>
+                <div class="link-add">
+                  <input class="input" id="taskLinkUrl" placeholder="https://…" dir="ltr" style="flex:2 1 220px;">
+                  <input class="input" id="taskLinkTitle" placeholder="عنوان (اختیاری)" style="flex:1 1 130px;">
+                  <button class="btn btn--ghost btn--sm" type="button" id="taskLinkAdd">🔗 افزودن</button>
+                </div>
+                <div class="upload-row" id="taskLinkChips" style="margin-top:6px;"></div>
               </div>
               <div class="field">
                 <label class="field__label" for="taskPriority">اولویت</label>
@@ -198,6 +207,15 @@
             <div class="field">
               <label class="field__label" for="annBody">متن اطلاعیه <span class="field__req">*</span></label>
               <textarea class="textarea" id="annBody" required maxlength="4000"></textarea>
+            <div class="field" style="margin-top:8px;">
+              <label class="field__label" for="annLinkUrl">لینک پیوست (اختیاری — گوگل‌درایو و…)</label>
+              <div class="link-add">
+                <input class="input" id="annLinkUrl" placeholder="https://…" dir="ltr" style="flex:2 1 220px;">
+                <input class="input" id="annLinkTitle" placeholder="عنوان (اختیاری)" style="flex:1 1 130px;">
+                <button class="btn btn--ghost btn--sm" type="button" id="annLinkAdd">🔗 افزودن</button>
+              </div>
+              <div class="upload-row" id="annLinkChips" style="margin-top:6px;"></div>
+            </div>
             </div>
             <div class="field">
               <label class="field__label" style="display:flex;align-items:center;gap:8px;cursor:pointer;">
@@ -311,8 +329,8 @@
               <input class="input" id="hwPages" maxlength="200" placeholder="مثلاً: صفحه ۴۲ تا ۴۴">
             </div>
             <div class="field">
-              <label class="field__label" for="hwDue">مهلت تحویل (اختیاری)</label>
-              <input class="input" id="hwDue" type="datetime-local">
+              <label class="field__label" for="hwDueField">مهلت تحویل (شمسی، اختیاری)</label>
+              <div id="hwDueField"></div>
             </div>
           </div>
           <div class="field">
@@ -330,6 +348,11 @@
               accept=".png,.jpg,.jpeg,.webp,.gif,.pdf,.txt,.doc,.docx,.ppt,.pptx,.xls,.xlsx">
             <div class="btn-row" style="margin-top:8px;">
               <button class="btn btn--ghost btn--sm" type="button" id="hwAddFile">📎 افزودن فایل</button>
+            </div>
+            <div class="link-add" style="margin-top:6px;">
+              <input class="input" id="hwLinkUrl" placeholder="لینک فایل حجیم (گوگل‌درایو و…)" dir="ltr" style="flex:2 1 220px;">
+              <input class="input" id="hwLinkTitle" placeholder="عنوان (اختیاری)" style="flex:1 1 130px;">
+              <button class="btn btn--ghost btn--sm" type="button" id="hwLinkAdd">🔗 افزودن لینک</button>
             </div>
             <div class="admin-list" id="hwExistingFiles" style="margin-top:10px;"></div>
           </div>

@@ -73,6 +73,7 @@ export interface AttachmentMeta {
   filename: string;
   mime: string;
   size: number;
+  url?: string | null; // پیوست «لینک» (درایو/هر URL) — فایل روی سرویس بیرونی است
   created_at: string;
 }
 

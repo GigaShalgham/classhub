@@ -6,6 +6,7 @@ import {
   iranDayIndex, formatJalaliDateTime, tehranYMD, tehranDayNumber,
   rollingWindow, jalaliDateOnly, toJalaliParts,
   weekParity, isoDayNum, saturdayDayNumOf,
+  tehranLocalDate, tehranDayIndex, todayJalali,
 } from '../public/js/utils.js';
 
 // Known Jalali anchors:
@@ -174,4 +175,25 @@ test('weekParity: مبنا غیرشنبه هم به شنبه‌ی همان هف�
 test('weekParity: مبنا جمعه‌ی همان هفته هم شنبه‌ی همان هفته است', () => {
   assert.equal(weekParity(NOON(2026, 11, 28), '2026-11-27'), 'alt');
   assert.equal(weekParity(NOON(2026, 11, 21), '2026-11-27'), 'main');
+});
+
+
+// ---------- امروزِ تهران (مقاوم در برابر منطقه‌ی زمانی مرورگر) ----------
+test('tehranDayIndex: شنبه و یکشنبه', () => {
+  assert.equal(tehranDayIndex(NOON(2026, 11, 21)), 0); // شنبه
+  assert.equal(tehranDayIndex(NOON(2026, 11, 22)), 1); // یکشنبه
+  assert.equal(tehranDayIndex(NOON(2026, 11, 27)), 6); // جمعه
+});
+
+test('tehranLocalDate: نیمه‌شب تهران بعد از UTC، تاریخ فردا', () => {
+  // 2026-11-22T22:00Z = 2026-11-23 01:30 تهران → باید ۲۳ نوامبر باشد
+  const d = tehranLocalDate(Date.UTC(2026, 10, 22, 22, 0));
+  assert.equal(d.getFullYear(), 2026);
+  assert.equal(d.getMonth(), 10);
+  assert.equal(d.getDate(), 23);
+});
+
+test('todayJalali: ۱ آذر ۱۴۰۵ روی ۲۲ نوامبر', () => {
+  const j = todayJalali(NOON(2026, 11, 22));
+  assert.deepEqual([j.jy, j.jm, j.jd], [1405, 9, 1]);
 });

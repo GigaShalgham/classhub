@@ -233,8 +233,10 @@ adminRoutes.put('/lessons/:id/homework', requireAdmin(), async (c) => {
 
 adminRoutes.delete('/lessons/:id/homework', requireAdmin(), async (c) => {
   const id = Number(c.req.param('id'));
+  const hw = await c.env.DB.prepare('SELECT id FROM homework WHERE lesson_id = ?').bind(id).first<{ id: number }>();
   const r = await c.env.DB.prepare('DELETE FROM homework WHERE lesson_id = ?').bind(id).run();
   if (!r.meta.changes) return c.json({ ok: false, error: 'تکلیفی برای حذف نبود.' }, 404);
+  if (hw) await deleteAttachmentsOf(c.env.DB, 'homework', hw.id);
   return c.json({ ok: true });
 });
 
@@ -286,6 +288,7 @@ adminRoutes.delete('/tasks/:id', requireAdmin(), async (c) => {
   const id = Number(c.req.param('id'));
   const r = await c.env.DB.prepare('DELETE FROM tasks WHERE id = ?').bind(id).run();
   if (!r.meta.changes) return c.json({ ok: false, error: 'مورد پیدا نشد.' }, 404);
+  await deleteAttachmentsOf(c.env.DB, 'task', id);
   return c.json({ ok: true });
 });
 
@@ -335,10 +338,16 @@ adminRoutes.delete('/announcements/:id', requireAdmin(), async (c) => {
   const id = Number(c.req.param('id'));
   const r = await c.env.DB.prepare('DELETE FROM announcements WHERE id = ?').bind(id).run();
   if (!r.meta.changes) return c.json({ ok: false, error: 'اطلاعیه پیدا نشد.' }, 404);
+  await deleteAttachmentsOf(c.env.DB, 'announcement', id);
   return c.json({ ok: true });
 });
 
 // ---------- Attachments (uploads) ----------
+
+/** حذف پیوست‌های یک والد (فایل و لینک) — وگرنه ردیف‌های یتیم می‌مانند */
+async function deleteAttachmentsOf(db: D1Database, type: string, id: number): Promise<void> {
+  await db.prepare('DELETE FROM attachments WHERE parent_type = ? AND parent_id = ?').bind(type, id).run();
+}
 
 function parentExists(db: D1Database, type: string, id: number): Promise<boolean> {
   const table = type === 'homework' ? 'homework' : type === 'task' ? 'tasks' : 'announcements';
@@ -370,6 +379,33 @@ adminRoutes.post('/attachments', requireAdmin(), async (c) => {
     'INSERT INTO attachments (parent_type, parent_id, filename, mime, size, data) VALUES (?, ?, ?, ?, ?, ?)',
   ).bind(parentType, parentId, filename, file.type, file.size, data).run();
   return c.json({ ok: true, id: r.meta.last_row_id, filename, size: file.size });
+});
+
+/**
+ * پیوست «لینک»: فایل روی سرویس بیرونی (گوگل‌درایو، آپارات، هر URL) می‌ماند
+ * و فقط لینکش ذخیره می‌شود — عملاً فضای نامحدود برای فایل‌های حجیم.
+ * (R2 روی این اکانت فعال نیست و درایوِ مستقیم هم نیاز به OAuth دارد؛
+ * لینک اشتراکی همان کار را بدون هیچ راه‌اندازی می‌کند.)
+ */
+adminRoutes.post('/attachments/link', requireAdmin(), async (c) => {
+  const body = await readJson(c.req.raw);
+  const parentType = oneOf(body.parentType ?? body.parent_type, 'نوع والد', ['homework', 'task', 'announcement'] as const);
+  const parentId = int(body.parentId ?? body.parent_id, 'شناسه والد', 1, 10_000_000);
+  const url = str(body.url, 'لینک', { min: 10, max: 500 }).trim();
+  if (!/^https?:\/\/.+\.[^\s]+$/i.test(url)) bad('لینک باید http(s) معتبر باشد.');
+  const title = str(body.title ?? url, 'عنوان', { min: 1, max: 150 }).trim();
+  if (!(await parentExists(c.env.DB, parentType, parentId))) bad('مورد والد پیدا نشد.');
+  try {
+    const r = await c.env.DB.prepare(
+      'INSERT INTO attachments (parent_type, parent_id, filename, mime, size, data, url) VALUES (?, ?, ?, ?, 0, ?, ?)',
+    ).bind(parentType, parentId, title, 'link', new ArrayBuffer(0), url).run();
+    return c.json({ ok: true, id: r.meta.last_row_id, filename: title, url });
+  } catch (e) {
+    if (String(e).includes('no such column')) {
+      return c.json({ ok: false, error: 'ستون url هنوز مهاجرت نشده — مهاجرت 0004 را اجرا کنید.' }, 500);
+    }
+    throw e;
+  }
 });
 
 adminRoutes.delete('/attachments/:id', requireAdmin(), async (c) => {

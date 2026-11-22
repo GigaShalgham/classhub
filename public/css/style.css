@@ -1905,3 +1905,34 @@ h1, h2, h3, h4 { line-height: 1.5; }
   .tt-scroll { overflow: visible; }
   .tt-grid { grid-template-columns: repeat(7, 1fr) !important; }
 }
+
+/* ---------- فیلد تاریخ/ساعت شمسی (پنل ادمین) ---------- */
+.jdate-field { position: relative; }
+.jdate-field__row { display: flex; gap: 8px; align-items: stretch; flex-wrap: wrap; }
+.jdate-field__input { flex: 1 1 180px; text-align: center; cursor: default; }
+.jdate-field__input--empty { color: var(--muted, #9a8f83); }
+.jdate-field__time { width: 96px; }
+.jdate-pop {
+  position: absolute; top: calc(100% + 6px); inset-inline-start: 0; z-index: 60;
+  background: var(--card, #fffdf8); border: 1px solid var(--line, #e8e0d5);
+  border-radius: 14px; box-shadow: 0 14px 34px rgba(40, 26, 12, 0.18);
+  padding: 10px; width: 262px; direction: rtl;
+}
+.jdate-pop__nav { display: flex; align-items: center; justify-content: space-between; gap: 4px; margin-bottom: 6px; }
+.jdate-pop__title { font-size: 0.95rem; }
+.jdate-pop__grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.jdate-pop__dow { text-align: center; font-size: 0.7rem; color: var(--muted, #9a8f83); padding: 3px 0; }
+.jdate-pop__pad { }
+.jdate-pop__day {
+  border: 0; background: transparent; border-radius: 8px; padding: 5px 0;
+  font: inherit; font-size: 0.85rem; cursor: pointer; text-align: center;
+}
+.jdate-pop__day:hover { background: rgba(0, 0, 0, 0.06); }
+.jdate-pop__day--sel { background: var(--accent, #2f6f4f); color: #fff; font-weight: 700; }
+.jdate-pop__day--today { border: 1.5px dashed var(--accent, #2f6f4f); }
+.jdate-pop__foot { display: flex; justify-content: center; margin-top: 6px; }
+
+/* لینک-بار افزودن پیوست (ادمین) */
+.link-add { display: flex; gap: 8px; flex-wrap: wrap; align-items: stretch; }
+.file-chip--link { border-style: dashed; }
+.attachment-item--link .attachment-item__size { direction: ltr; }

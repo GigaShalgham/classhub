@@ -1918,6 +1918,37 @@ h1, h2, h3, h4 { line-height: 1.5; }
   .tt-grid { grid-template-columns: repeat(7, 1fr) !important; }
 }
 
+/* ---------- فیلد تاریخ/ساعت شمسی (پنل ادمین) ---------- */
+.jdate-field { position: relative; }
+.jdate-field__row { display: flex; gap: 8px; align-items: stretch; flex-wrap: wrap; }
+.jdate-field__input { flex: 1 1 180px; text-align: center; cursor: default; }
+.jdate-field__input--empty { color: var(--muted, #9a8f83); }
+.jdate-field__time { width: 96px; }
+.jdate-pop {
+  position: absolute; top: calc(100% + 6px); inset-inline-start: 0; z-index: 60;
+  background: var(--card, #fffdf8); border: 1px solid var(--line, #e8e0d5);
+  border-radius: 14px; box-shadow: 0 14px 34px rgba(40, 26, 12, 0.18);
+  padding: 10px; width: 262px; direction: rtl;
+}
+.jdate-pop__nav { display: flex; align-items: center; justify-content: space-between; gap: 4px; margin-bottom: 6px; }
+.jdate-pop__title { font-size: 0.95rem; }
+.jdate-pop__grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.jdate-pop__dow { text-align: center; font-size: 0.7rem; color: var(--muted, #9a8f83); padding: 3px 0; }
+.jdate-pop__pad { }
+.jdate-pop__day {
+  border: 0; background: transparent; border-radius: 8px; padding: 5px 0;
+  font: inherit; font-size: 0.85rem; cursor: pointer; text-align: center;
+}
+.jdate-pop__day:hover { background: rgba(0, 0, 0, 0.06); }
+.jdate-pop__day--sel { background: var(--accent, #2f6f4f); color: #fff; font-weight: 700; }
+.jdate-pop__day--today { border: 1.5px dashed var(--accent, #2f6f4f); }
+.jdate-pop__foot { display: flex; justify-content: center; margin-top: 6px; }
+
+/* لینک-بار افزودن پیوست (ادمین) */
+.link-add { display: flex; gap: 8px; flex-wrap: wrap; align-items: stretch; }
+.file-chip--link { border-style: dashed; }
+.attachment-item--link .attachment-item__size { direction: ltr; }
+
 </style>
 </head>
 <body>
@@ -2069,9 +2100,18 @@ h1, h2, h3, h4 { line-height: 1.5; }
                 <textarea class="textarea" id="taskDesc" maxlength="4000"></textarea>
               </div>
               <div class="field">
-                <label class="field__label" for="taskDue">مهلت (تاریخ و ساعت) <span class="field__req">*</span></label>
-                <input class="input" id="taskDue" type="datetime-local" required>
-                <span class="field__hint">به وقت تهران ذخیره می‌شود.</span>
+                <label class="field__label" for="taskDueField">مهلت (تاریخ و ساعت شمسی) <span class="field__req">*</span></label>
+                <div id="taskDueField"></div>
+                <span class="field__hint">تقویم شمسی؛ ساعت به وقت تهران ذخیره می‌شود.</span>
+              </div>
+              <div class="field">
+                <label class="field__label" for="taskLinkUrl">لینک پیوست (اختیاری — گوگل‌درایو و…)</label>
+                <div class="link-add">
+                  <input class="input" id="taskLinkUrl" placeholder="https://…" dir="ltr" style="flex:2 1 220px;">
+                  <input class="input" id="taskLinkTitle" placeholder="عنوان (اختیاری)" style="flex:1 1 130px;">
+                  <button class="btn btn--ghost btn--sm" type="button" id="taskLinkAdd">🔗 افزودن</button>
+                </div>
+                <div class="upload-row" id="taskLinkChips" style="margin-top:6px;"></div>
               </div>
               <div class="field">
                 <label class="field__label" for="taskPriority">اولویت</label>
@@ -2107,6 +2147,15 @@ h1, h2, h3, h4 { line-height: 1.5; }
             <div class="field">
               <label class="field__label" for="annBody">متن اطلاعیه <span class="field__req">*</span></label>
               <textarea class="textarea" id="annBody" required maxlength="4000"></textarea>
+            <div class="field" style="margin-top:8px;">
+              <label class="field__label" for="annLinkUrl">لینک پیوست (اختیاری — گوگل‌درایو و…)</label>
+              <div class="link-add">
+                <input class="input" id="annLinkUrl" placeholder="https://…" dir="ltr" style="flex:2 1 220px;">
+                <input class="input" id="annLinkTitle" placeholder="عنوان (اختیاری)" style="flex:1 1 130px;">
+                <button class="btn btn--ghost btn--sm" type="button" id="annLinkAdd">🔗 افزودن</button>
+              </div>
+              <div class="upload-row" id="annLinkChips" style="margin-top:6px;"></div>
+            </div>
             </div>
             <div class="field">
               <label class="field__label" style="display:flex;align-items:center;gap:8px;cursor:pointer;">
@@ -2220,8 +2269,8 @@ h1, h2, h3, h4 { line-height: 1.5; }
               <input class="input" id="hwPages" maxlength="200" placeholder="مثلاً: صفحه ۴۲ تا ۴۴">
             </div>
             <div class="field">
-              <label class="field__label" for="hwDue">مهلت تحویل (اختیاری)</label>
-              <input class="input" id="hwDue" type="datetime-local">
+              <label class="field__label" for="hwDueField">مهلت تحویل (شمسی، اختیاری)</label>
+              <div id="hwDueField"></div>
             </div>
           </div>
           <div class="field">
@@ -2239,6 +2288,11 @@ h1, h2, h3, h4 { line-height: 1.5; }
               accept=".png,.jpg,.jpeg,.webp,.gif,.pdf,.txt,.doc,.docx,.ppt,.pptx,.xls,.xlsx">
             <div class="btn-row" style="margin-top:8px;">
               <button class="btn btn--ghost btn--sm" type="button" id="hwAddFile">📎 افزودن فایل</button>
+            </div>
+            <div class="link-add" style="margin-top:6px;">
+              <input class="input" id="hwLinkUrl" placeholder="لینک فایل حجیم (گوگل‌درایو و…)" dir="ltr" style="flex:2 1 220px;">
+              <input class="input" id="hwLinkTitle" placeholder="عنوان (اختیاری)" style="flex:1 1 130px;">
+              <button class="btn btn--ghost btn--sm" type="button" id="hwLinkAdd">🔗 افزودن لینک</button>
             </div>
             <div class="admin-list" id="hwExistingFiles" style="margin-top:10px;"></div>
           </div>
@@ -2427,6 +2481,27 @@ function tehranHHMM(ms) {
 }
 
 /**
+ * «امروزِ تهران» به‌شکل Date نونِ محلی.
+ * اجزای تقویمی این Date (سال/ماه/روز) دقیقاً تاریخِ تهران است — مستقل از
+ * منطقه‌ی زمانی مرورگر (کاربر پشت VPN هم تاریخ درست می‌بیند).
+ */
+function tehranLocalDate(ms = Date.now()) {
+  const { y, m, d } = tehranYMD(ms);
+  return new Date(y, m - 1, d, 12, 0, 0);
+}
+
+/** شاخص روزِ جاری تهران (شنبه=۰)، مستقل از منطقه‌ی زمانی مرورگر */
+function tehranDayIndex(ms = Date.now()) {
+  return (tehranDayNumber(ms) + 5) % 7; // شنبه ⇔ dayNum % 7 === 2
+}
+
+/** امروزِ تهران به تاریخ جلالی */
+function todayJalali(ms = Date.now()) {
+  const { y, m, d } = tehranYMD(ms);
+  return toJalaliParts(y, m, d);
+}
+
+/**
  * پنجره‌ی غلتان n روزه از «امروزِ تهران».
  * همیشه از امروز شروع می‌شود و هرگز روز گذشته نشان نمی‌دهد.
  * خروجی: آرایه‌ای از { date, dayIdx } — date نونِ روز محلی است.
@@ -2520,6 +2595,210 @@ const PRIORITY_LABELS = {
 };
 
 ;
+// انتخاب تاریخ/ساعت شمسی برای پنل ادمین.
+// جایگزین <input type="datetime-local"> میلادی: فیلد جلالی فقط‌خواندنی + پاپ‌آور تقویم ماهانه + ورودی ساعت.
+// مقدار داخلی {jy, jm, jd, hh, mm} است؛ API بیرونی همان ISO UTC (به وقت تهران) باقی می‌ماند
+// تا toLocalInput/fromLocalInput و بقیه‌ی منطق تغییر نکنند.
+
+
+function monthLength(jy, jm) {
+  if (jm <= 6) return 31;
+  if (jm <= 11) return 30;
+  const remainders = [1, 5, 9, 13, 17, 22, 26, 30];
+  return remainders.includes(jy % 33) ? 30 : 29;
+}
+
+function el(tag, attrs = {}, ...children) {
+  const node = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === 'class') node.className = v;
+    else if (k === 'text') node.textContent = v;
+    else if (k.startsWith('on')) node.addEventListener(k.slice(2), v);
+    else if (v !== null && v !== undefined) node.setAttribute(k, String(v));
+  }
+  for (const c of children) if (c !== null && c !== undefined) node.append(c);
+  return node;
+}
+
+/**
+ * یک فیلد تاریخ/ساعت جلالی می‌سازد و درون container می‌گذارد.
+ * API:
+ *   field.getISO()        → 'YYYY-MM-DDTHH:MM:SSZ' (به وقت تهران) یا null
+ *   field.setISO(iso)     → مقدار اولیه از رشته‌ی ISO
+ *   field.setDefault()    → فردا ساعت ۰۸:۰۰ (پیش‌فرض منطقی مهلت)
+ */
+function createJalaliField(container) {
+  const state = { jy: 0, jm: 0, jd: 0, hh: '08', mm: '00' };
+  const api = { getISO, setISO, setDefault };
+
+  const input = el('input', {
+    class: 'input jdate-field__input',
+    type: 'text', readonly: '', tabindex: '-1',
+    'aria-label': 'تاریخ (شمسی)',
+  });
+  const timeInput = el('input', {
+    class: 'input jdate-field__time', type: 'time', value: '08:00',
+    'aria-label': 'ساعت',
+  });
+  const clearBtn = el('button', {
+    class: 'btn btn--ghost btn--sm', type: 'button', text: '✕',
+    'aria-label': 'پاک‌کردن تاریخ', title: 'پاک‌کردن تاریخ',
+    onclick: () => { setISO(null); },
+  });
+
+  // ---------- پاپ‌آور تقویم ----------
+  const pop = el('div', { class: 'jdate-pop', hidden: '' });
+  const nav = { jy: 0, jm: 0 };
+  const title = el('strong', { class: 'jdate-pop__title', text: '' });
+  const grid = el('div', { class: 'jdate-pop__grid' });
+
+  const renderPop = () => {
+    title.textContent = `${JALALI_MONTHS[nav.jm - 1]} ${faDigits(nav.jy)}`;
+    grid.textContent = '';
+    for (const name of WEEK_DAY_NAMES.slice(0, 7)) {
+      grid.append(el('span', { class: 'jdate-pop__dow', text: name.slice(0, 3) }));
+    }
+    const first = fromJalali(nav.jy, nav.jm, 1);
+    const firstDow = iranDayIndex(first);
+    for (let i = 0; i < firstDow; i++) grid.append(el('span', { class: 'jdate-pop__pad' }));
+    const len = monthLength(nav.jy, nav.jm);
+    const today = todayJalali();
+    for (let jd = 1; jd <= len; jd++) {
+      const selected = state.jy === nav.jy && state.jm === nav.jm && state.jd === jd;
+      const isToday = today.jy === nav.jy && today.jm === nav.jm && today.jd === jd;
+      grid.append(el('button', {
+        class: `jdate-pop__day${selected ? ' jdate-pop__day--sel' : ''}${isToday ? ' jdate-pop__day--today' : ''}`,
+        type: 'button', text: faDigits(jd),
+        onclick: () => {
+          state.jy = nav.jy; state.jm = nav.jm; state.jd = jd;
+          closePop(); sync();
+        },
+      }));
+    }
+  };
+
+  const openPop = () => {
+    if (state.jy) { nav.jy = state.jy; nav.jm = state.jm; }
+    else { const t = todayJalali(); nav.jy = t.jy; nav.jm = t.jm; }
+    renderPop();
+    pop.hidden = false;
+  };
+  const closePop = () => { pop.hidden = true; };
+
+  const calBtn = el('button', {
+    class: 'btn btn--ghost btn--sm', type: 'button', text: '📅',
+    'aria-label': 'انتخاب تاریخ', title: 'انتخاب تاریخ',
+    onclick: () => (pop.hidden ? openPop() : closePop()),
+  });
+  const prevBtn = el('button', {
+    class: 'btn btn--ghost btn--sm', type: 'button', text: '‹', 'aria-label': 'ماه قبل',
+    onclick: () => { nav.jm -= 1; if (nav.jm < 1) { nav.jm = 12; nav.jy -= 1; } renderPop(); },
+  });
+  const nextBtn = el('button', {
+    class: 'btn btn--ghost btn--sm', type: 'button', text: '›', 'aria-label': 'ماه بعد',
+    onclick: () => { nav.jm += 1; if (nav.jm > 12) { nav.jm = 1; nav.jy += 1; } renderPop(); },
+  });
+  const todayBtn = el('button', {
+    class: 'btn btn--ghost btn--sm', type: 'button', text: 'امروز',
+    onclick: () => { const t = todayJalali(); nav.jy = t.jy; nav.jm = t.jm; renderPop(); },
+  });
+  pop.append(
+    el('div', { class: 'jdate-pop__nav' }, prevBtn, title, nextBtn),
+    grid,
+    el('div', { class: 'jdate-pop__foot' }, todayBtn),
+  );
+
+  // کلیک بیرون: بستن پاپ‌آور
+  document.addEventListener('mousedown', (e) => {
+    if (!pop.hidden && !pop.contains(e.target) && e.target !== calBtn && !calBtn.contains(e.target)) closePop();
+  });
+
+  // ---------- مقدار ----------
+  function sync() {
+    if (state.jy) {
+      const date = fromJalali(state.jy, state.jm, state.jd);
+      const dayIdx = iranDayIndex(date);
+      input.value = `${faDigits(state.jy)}/${faDigits(String(state.jm).padStart(2, '0'))}/${faDigits(String(state.jd).padStart(2, '0'))} (${WEEK_DAY_NAMES[dayIdx]})`;
+      timeInput.value = `${state.hh}:${state.mm}`;
+      input.classList.remove('jdate-field__input--empty');
+    } else {
+      input.value = '— تاریخ انتخاب نشده —';
+      input.classList.add('jdate-field__input--empty');
+    }
+  }
+
+  timeInput.addEventListener('change', () => {
+    const v = toLatinDigits(timeInput.value || '');
+    const m = /^(\d{1,2}):(\d{2})$/.exec(v);
+    if (m) {
+      state.hh = String(Math.min(23, Number(m[1]))).padStart(2, '0');
+      state.mm = String(Math.min(59, Number(m[2]))).padStart(2, '0');
+    }
+    sync();
+  });
+  input.addEventListener('focus', () => calBtn.focus());
+
+  function getISO() {
+    if (!state.jy) return null;
+    // ساعت به وقت تهران → UTC (تهران UTC+3:30 بدون DST)
+    const date = fromJalali(state.jy, state.jm, state.jd);
+    const local = new Date(date.getFullYear(), date.getMonth(), date.getDate(),
+      Number(state.hh), Number(state.mm), 0);
+    const utc = new Date(local.getTime() - 3.5 * 3600_000);
+    return `${utc.toISOString().slice(0, 19)}Z`;
+  }
+
+  function setISO(iso) {
+    if (!iso) { state.jy = state.jm = state.jd = 0; sync(); return; }
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) { state.jy = state.jm = state.jd = 0; sync(); return; }
+    const t = new Date(d.getTime() + 3.5 * 3600_000); // به وقت تهران
+    const j = jFromGregorian(t.getUTCFullYear(), t.getUTCMonth() + 1, t.getUTCDate());
+    state.jy = j.jy; state.jm = j.jm; state.jd = j.jd;
+    state.hh = String(t.getUTCHours()).padStart(2, '0');
+    state.mm = String(t.getUTCMinutes()).padStart(2, '0');
+    sync();
+  }
+
+  function setDefault() {
+    // فردا ساعت ۰۸:۰۰ تهران — پیش‌فرض منطقی برای مهلت/تکلیف
+    const now = Date.now() + 86_400_000;
+    const t = new Date(now + 3.5 * 3600_000);
+    const j = jFromGregorian(t.getUTCFullYear(), t.getUTCMonth() + 1, t.getUTCDate());
+    state.jy = j.jy; state.jm = j.jm; state.jd = j.jd;
+    state.hh = '08'; state.mm = '00';
+    sync();
+  }
+
+  // تبدیل میلادی→جلالی (بدون وابستگی به منطقه‌ی زمانی) — همان الگوریتم utils
+  function jFromGregorian(gy, gm, gd) {
+    const g_d_m = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+    let jy = gy <= 1600 ? 0 : 979;
+    const gy2 = gy <= 1600 ? gy - 621 : gy - 1600;
+    let days = 365 * gy2 + Math.floor((gy2 + 3) / 4) - Math.floor((gy2 + 99) / 100)
+      + Math.floor((gy2 + 399) / 400) - 80 + gd + g_d_m[gm - 1];
+    days += (((gy2 % 4 === 0 && gy2 % 100 !== 0) || gy2 % 400 === 0) && gm > 2) ? 1 : 0;
+    let jy2 = jy + 33 * Math.floor(days / 12053);
+    days %= 12053;
+    jy2 += 4 * Math.floor(days / 1461);
+    days %= 1461;
+    if (days > 365) { jy2 += Math.floor((days - 1) / 365); days = (days - 1) % 365; }
+    const jm = days < 186 ? 1 + Math.floor(days / 31) : 7 + Math.floor((days - 186) / 30);
+    const jd = 1 + (days < 186 ? days % 31 : (days - 186) % 30);
+    return { jy: jy2, jm, jd };
+  }
+
+  const wrap = el('div', { class: 'jdate-field' },
+    el('div', { class: 'jdate-field__row' }, input, calBtn, timeInput, clearBtn),
+    pop,
+  );
+  container.textContent = '';
+  container.append(wrap);
+  sync();
+  return api;
+}
+
+;
 // درس من — ساختور زنگ‌های کلاس (مشترک بین دانش‌آموز و مدیر)
 // شنبه تا چهارشنبه: ۴ زنگ (۰۷:۴۵ تا ۱۳:۴۵)
 // دوشنبه: ۳ زنگ (پایان ۱۲:۱۵)
@@ -2554,6 +2833,7 @@ function periodTimes(day, period) {
 
 ;
 // درس من — admin panel logic
+
 
 
 // آینه‌ی گیت‌هاب صفحه‌ی ادمین را هم دارد؛ فراخوانی‌های API همیشه به سایت
@@ -2600,6 +2880,9 @@ const state = {
   me: null,
   hwLessonId: null,   // lesson whose homework is being edited
   pendingUploads: [], // newly picked File objects for homework
+  hwLinks: [],        // پیوست‌های لینکیِ در انتظار (تکلیف)
+  taskLinks: [],      // پیوست‌های لینکیِ در انتظار (مهلت)
+  annLinks: [],       // پیوست‌های لینکیِ در انتظار (اطلاعیه)
 };
 
 // ---------- api ----------
@@ -3040,7 +3323,9 @@ async function openHwEditor(lesson) {
   $('#hwPages').value = '';
   $('#hwInstructions').value = '';
   $('#hwNotes').value = '';
-  $('#hwDue').value = '';
+  hwDueField.setISO(null);
+  state.hwLinks.splice(0);
+  $('#hwLinkUrl').value = ''; $('#hwLinkTitle').value = '';
   renderPendingUploads();
   $('#hwExistingFiles').textContent = '';
   $('#hwDelete').classList.toggle('hidden', !lesson.homework);
@@ -3056,7 +3341,7 @@ async function openHwEditor(lesson) {
         $('#hwPages').value = hw.textbook_pages || '';
         $('#hwInstructions').value = hw.instructions || '';
         $('#hwNotes').value = hw.notes || '';
-        $('#hwDue').value = hw.due_at ? toLocalInput(hw.due_at) : '';
+        hwDueField.setISO(hw.due_at || null);
       }
       const files = data.lesson.attachments || [];
       renderExistingFiles(files);
@@ -3067,30 +3352,23 @@ async function openHwEditor(lesson) {
   openOverlay($('#hwOverlay'));
 }
 
-function toLocalInput(iso) {
-  // convert ISO (UTC) to Tehran local datetime-local value
-  const d = new Date(iso);
-  const t = new Date(d.getTime() + 3.5 * 3600_000);
-  return `${t.toISOString().slice(0, 10)}T${t.toISOString().slice(11, 16)}`;
-}
-
-function fromLocalInput(value) {
-  // datetime-local interpreted as Tehran time -> ISO UTC
-  if (!value) return null;
-  const d = new Date(value + ':00Z'); // treat as UTC first
-  const utc = new Date(d.getTime() - 3.5 * 3600_000);
-  return utc.toISOString().slice(0, 19) + 'Z';
-}
+// فیلدهای تاریخ/ساعت شمسی (جایگزین datetime-local میلادی)
+const hwDueField = createJalaliField($('#hwDueField'));
+const taskDueField = createJalaliField($('#taskDueField'));
+taskDueField.setDefault(); // فرم خالی: پیش‌فرضِ مفید (فردا ۰۸:۰۰)
 
 function renderExistingFiles(files) {
   const list = $('#hwExistingFiles');
   list.textContent = '';
   for (const f of files) {
+    const isLink = !!f.url;
     list.append(el('div', { class: 'admin-row' },
-      el('span', { text: '📎' }),
+      el('span', { text: isLink ? '🔗' : '📎' }),
       el('div', { class: 'admin-row__main' },
-        el('div', { class: 'admin-row__title', text: f.filename }),
-        el('div', { class: 'admin-row__sub', text: `${faDigits(f.size)} بایت` })),
+        isLink
+          ? el('div', { class: 'admin-row__title' }, el('a', { href: f.url, target: '_blank', rel: 'noopener', text: f.filename, dir: 'ltr' }))
+          : el('div', { class: 'admin-row__title', text: f.filename }),
+        el('div', { class: 'admin-row__sub', text: isLink ? 'لینک بیرونی' : `${faDigits(f.size)} بایت` })),
       el('button', {
         class: 'btn btn--danger btn--sm', type: 'button', text: '🗑️',
         onclick: async () => {
@@ -3119,6 +3397,41 @@ function renderPendingUploads() {
         onclick: () => { state.pendingUploads.splice(i, 1); renderPendingUploads(); },
       })));
   }
+  renderLinkChips(row, state.hwLinks, () => { state.hwLinks.splice(0); renderPendingUploads(); });
+}
+
+/** چیپ‌های لینک در انتظارِ آپلود */
+function renderLinkChips(row, links, rerender) {
+  for (const [i, lk] of links.entries()) {
+    row.append(el('span', { class: 'file-chip file-chip--link' },
+      el('span', { text: `🔗 ${lk.title}` }),
+      el('button', {
+        class: 'file-chip__x', type: 'button', text: '×', 'aria-label': `حذف ${lk.title}`,
+        onclick: () => { links.splice(i, 1); rerender(); },
+      })));
+  }
+}
+
+/** ولیدیشن و افزودن لینک به فهرست انتظار */
+function pushLink(links, urlInput, titleInput, rerender) {
+  const url = urlInput.value.trim();
+  const title = titleInput.value.trim() || (() => { try { return new URL(url).hostname; } catch { return 'لینک'; } })();
+  if (!/^https?:\/\/.+\.[^\s]+$/i.test(url)) { toast('لینک معتبر وارد کنید (با http یا https).', 'error'); return false; }
+  links.push({ url, title });
+  urlInput.value = ''; titleInput.value = '';
+  rerender();
+  return true;
+}
+
+function renderTaskLinkChips() {
+  const row = $('#taskLinkChips');
+  row.textContent = '';
+  renderLinkChips(row, state.taskLinks, renderTaskLinkChips);
+}
+function renderAnnLinkChips() {
+  const row = $('#annLinkChips');
+  row.textContent = '';
+  renderLinkChips(row, state.annLinks, renderAnnLinkChips);
 }
 
 async function submitHomework(e) {
@@ -3131,7 +3444,7 @@ async function submitHomework(e) {
     textbookPages: $('#hwPages').value.trim(),
     instructions: $('#hwInstructions').value.trim(),
     notes: $('#hwNotes').value.trim(),
-    dueAt: fromLocalInput($('#hwDue').value),
+    dueAt: hwDueField.getISO(),
   };
   try {
     const res = await api(`/api/admin/lessons/${state.hwLessonId}/homework`, { method: 'PUT', body: payload });
@@ -3148,6 +3461,14 @@ async function submitHomework(e) {
       } catch (err) {
         toast(`آپلود «${file.name}» ناموفق: ${err.message}`, 'error');
       }
+    }
+    for (const lk of state.hwLinks.splice(0)) {
+      try {
+        await api('/api/admin/attachments/link', {
+          method: 'POST', body: { parentType: 'homework', parentId: res.id, url: lk.url, title: lk.title },
+        });
+        uploaded += 1;
+      } catch (err) { toast(`افزودن لینک «${lk.title}» ناموفق: ${err.message}`, 'error'); }
     }
     toast(uploaded ? `تکلیف و ${faDigits(uploaded)} پیوست ذخیره شد ✅` : 'تکلیف ذخیره شد ✅', 'success');
     closeOverlay($('#hwOverlay'));
@@ -3180,16 +3501,18 @@ async function submitTask(e) {
     title: $('#taskTitle').value.trim(),
     subjectId: subjectId ? Number(subjectId) : null,
     description: $('#taskDesc').value.trim(),
-    dueAt: fromLocalInput($('#taskDue').value),
+    dueAt: taskDueField.getISO(),
     priority: $('#taskPriority').value,
   };
   if (!payload.dueAt) { toast('مهلت الزامی است.', 'error'); return; }
   try {
     if (id) {
       await api(`/api/admin/tasks/${id}`, { method: 'PUT', body: payload });
+      await uploadLinks('task', Number(id), state.taskLinks.splice(0));
       toast('مهلت به‌روزرسانی شد ✅', 'success');
     } else {
       const res = await api('/api/admin/tasks', { method: 'POST', body: payload });
+      await uploadLinks('task', res.id, state.taskLinks.splice(0));
       // attach pending file if any
       const file = state.taskFile;
       if (file) {
@@ -3213,10 +3536,13 @@ function resetTaskForm() {
   $('#taskId').value = '';
   $('#taskTitle').value = '';
   $('#taskDesc').value = '';
-  $('#taskDue').value = '';
+  taskDueField.setDefault(); // پیش‌فرض: فردا ساعت ۰۸:۰۰
   $('#taskPriority').value = 'normal';
   $('#taskSubmit').textContent = 'ذخیره';
   state.taskFile = null;
+  state.taskLinks.splice(0);
+  $('#taskLinkUrl').value = ''; $('#taskLinkTitle').value = '';
+  renderTaskLinkChips();
 }
 
 function editTask(task) {
@@ -3225,7 +3551,7 @@ function editTask(task) {
   $('#taskTitle').value = task.title;
   $('#taskDesc').value = task.description;
   $('#taskSubject').value = task.subject_id ?? '';
-  $('#taskDue').value = toLocalInput(task.due_at);
+  taskDueField.setISO(task.due_at);
   $('#taskPriority').value = task.priority;
   $('#taskSubmit').textContent = 'به‌روزرسانی';
   $('#taskForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -3283,9 +3609,11 @@ async function submitAnn(e) {
   try {
     if (id) {
       await api(`/api/admin/announcements/${id}`, { method: 'PUT', body: payload });
+      await uploadLinks('announcement', Number(id), state.annLinks.splice(0));
       toast('اطلاعیه به‌روزرسانی شد ✅', 'success');
     } else {
       const res = await api('/api/admin/announcements', { method: 'POST', body: payload });
+      await uploadLinks('announcement', res.id, state.annLinks.splice(0));
       const file = state.annFile;
       if (file) {
         const fd = new FormData();
@@ -3308,6 +3636,9 @@ function resetAnnForm() {
   $('#annBody').value = '';
   $('#annPinned').checked = false;
   $('#annSubmit').textContent = 'انتشار';
+  state.annLinks.splice(0);
+  $('#annLinkUrl').value = ''; $('#annLinkTitle').value = '';
+  renderAnnLinkChips();
 }
 
 function editAnn(ann) {
@@ -3458,7 +3789,7 @@ function jalaliMonthLength(jy, jm) {
 }
 
 function initCalendar() {
-  const { jy, jm } = toJalali(new Date());
+  const { jy, jm } = todayJalali(); // امروزِ تهران — مستقل از منطقه‌ی زمانی مرورگر
   cal.jy = jy; cal.jm = jm;
   $('#calPrev').addEventListener('click', () => {
     cal.jm -= 1;
@@ -3471,7 +3802,7 @@ function initCalendar() {
     renderCalendar();
   });
   $('#calToday').addEventListener('click', () => {
-    const t = toJalali(new Date());
+    const t = todayJalali();
     cal.jy = t.jy; cal.jm = t.jm;
     renderCalendar();
   });
@@ -3495,7 +3826,7 @@ function renderCalendar() {
   const cells = $('#calGrid');
   cells.textContent = '';
 
-  const today = toJalali(new Date());
+  const today = todayJalali();
   const monthLen = jalaliMonthLength(cal.jy, cal.jm);
   // روز هفته‌ی روز اول ماه: از fromJalali
   const first = fromJalali(cal.jy, cal.jm, 1);
@@ -3694,7 +4025,7 @@ function switchTab(name) {
 
 // ---------- boot ----------
 async function boot() {
-  $('#brandDate').textContent = formatJalali(new Date(), { withWeekday: true });
+  $('#brandDate').textContent = formatJalali(tehranLocalDate(), { withWeekday: true });
   initMirrorOriginPicker();
   // روی آینه، دکمه‌ی 🏠 باید به صفحه‌ی دانش‌آموزِ خودِ آینه برگردد نه /
   // (روی github.io ریشه‌ی / مال نام کاربری است و ۴۰۴ می‌شود).
@@ -3758,6 +4089,24 @@ $('#hwOverlay').addEventListener('mousedown', (e) => {
   if (e.target === $('#hwOverlay')) closeOverlay($('#hwOverlay'));
 });
 $('#hwAddFile').addEventListener('click', () => $('#hwFile').click());
+$('#hwLinkAdd').addEventListener('click', () => {
+  pushLink(state.hwLinks, $('#hwLinkUrl'), $('#hwLinkTitle'), renderPendingUploads);
+});
+$('#taskLinkAdd').addEventListener('click', () => {
+  pushLink(state.taskLinks, $('#taskLinkUrl'), $('#taskLinkTitle'), renderTaskLinkChips);
+});
+$('#annLinkAdd').addEventListener('click', () => {
+  pushLink(state.annLinks, $('#annLinkUrl'), $('#annLinkTitle'), renderAnnLinkChips);
+});
+
+/** آپلود پیوست‌های لینکی روی والدِ ذخیره‌شده */
+async function uploadLinks(parentType, parentId, links) {
+  for (const lk of links) {
+    try {
+      await api('/api/admin/attachments/link', { method: 'POST', body: { parentType, parentId, url: lk.url, title: lk.title } });
+    } catch (err) { toast(`افزودن لینک «${lk.title}» ناموفق: ${err.message}`, 'error'); }
+  }
+}
 $('#hwFile').addEventListener('change', () => {
   for (const f of $('#hwFile').files) {
     if (f.size > 1_500_000) { toast(`«${f.name}» بزرگ‌تر از ۱.۵ مگابایت است.`, 'error'); continue; }

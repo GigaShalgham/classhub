@@ -159,7 +159,7 @@ publicRoutes.get('/lessons/:id', async (c) => {
   const hwId = row.hwId as number | null;
   const attachments = hwId
     ? await c.env.DB.prepare(
-        `SELECT id, filename, mime, size, created_at AS createdAt FROM attachments
+        `SELECT id, filename, mime, size, url, created_at AS createdAt FROM attachments
          WHERE parent_type='homework' AND parent_id=? ORDER BY id`,
       ).bind(hwId).all<AttachmentMeta>()
     : { results: [] };
@@ -239,7 +239,7 @@ publicRoutes.get('/tasks/:id', async (c) => {
   `).bind(id).first<Record<string, unknown>>();
   if (!r) return c.json({ ok: false, error: 'مورد پیدا نشد.' }, 404);
   const att = await c.env.DB.prepare(
-    `SELECT id, filename, mime, size, created_at AS createdAt FROM attachments
+    `SELECT id, filename, mime, size, url, created_at AS createdAt FROM attachments
      WHERE parent_type='task' AND parent_id=? ORDER BY id`,
   ).bind(id).all<AttachmentMeta>();
   return c.json({
@@ -279,7 +279,7 @@ publicRoutes.get('/announcements/:id', async (c) => {
   ).bind(id).first<Record<string, unknown>>();
   if (!r) return c.json({ ok: false, error: 'اطلاعیه پیدا نشد.' }, 404);
   const att = await c.env.DB.prepare(
-    `SELECT id, filename, mime, size, created_at AS createdAt FROM attachments
+    `SELECT id, filename, mime, size, url, created_at AS createdAt FROM attachments
      WHERE parent_type='announcement' AND parent_id=? ORDER BY id`,
   ).bind(id).all<AttachmentMeta>();
   return c.json({ ok: true, announcement: { ...r, attachments: att.results } });
@@ -307,9 +307,11 @@ publicRoutes.get('/attachments/:id', async (c) => {
   const id = Number(c.req.param('id'));
   if (!Number.isInteger(id)) return c.json({ ok: false, error: 'شناسه نامعتبر.' }, 400);
   const row = await c.env.DB.prepare(
-    'SELECT id, filename, mime, size, data FROM attachments WHERE id = ?',
-  ).bind(id).first<{ id: number; filename: string; mime: string; size: number; data: unknown }>();
+    'SELECT id, filename, mime, size, url, data FROM attachments WHERE id = ?',
+  ).bind(id).first<{ id: number; filename: string; mime: string; size: number; url: string | null; data: unknown }>();
   if (!row) return c.json({ ok: false, error: 'فایل پیدا نشد.' }, 404);
+  // پیوستِ لینکی: هدایت مستقیم به سرویس بیرونی
+  if (row.url) return c.redirect(row.url, 302);
   // D1 returns BLOB columns as byte arrays (or ArrayBuffer depending on driver path)
   let bytes: ArrayBuffer;
   if (row.data instanceof ArrayBuffer) {

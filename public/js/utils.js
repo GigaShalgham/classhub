@@ -143,6 +143,27 @@ export function tehranHHMM(ms) {
 }
 
 /**
+ * «امروزِ تهران» به‌شکل Date نونِ محلی.
+ * اجزای تقویمی این Date (سال/ماه/روز) دقیقاً تاریخِ تهران است — مستقل از
+ * منطقه‌ی زمانی مرورگر (کاربر پشت VPN هم تاریخ درست می‌بیند).
+ */
+export function tehranLocalDate(ms = Date.now()) {
+  const { y, m, d } = tehranYMD(ms);
+  return new Date(y, m - 1, d, 12, 0, 0);
+}
+
+/** شاخص روزِ جاری تهران (شنبه=۰)، مستقل از منطقه‌ی زمانی مرورگر */
+export function tehranDayIndex(ms = Date.now()) {
+  return (tehranDayNumber(ms) + 5) % 7; // شنبه ⇔ dayNum % 7 === 2
+}
+
+/** امروزِ تهران به تاریخ جلالی */
+export function todayJalali(ms = Date.now()) {
+  const { y, m, d } = tehranYMD(ms);
+  return toJalaliParts(y, m, d);
+}
+
+/**
  * پنجره‌ی غلتان n روزه از «امروزِ تهران».
  * همیشه از امروز شروع می‌شود و هرگز روز گذشته نشان نمی‌دهد.
  * خروجی: آرایه‌ای از { date, dayIdx } — date نونِ روز محلی است.

@@ -63,7 +63,7 @@ const kb = (s) => (Buffer.byteLength(s, 'utf8') / 1024).toFixed(1);
   const { out, js, css } = bundle(
     join(pub, 'admin', 'index.src.html'), join(pub, 'admin', 'index.html'),
     /<script type="module" src="\/js\/admin\.js"><\/script>/,
-    ['utils.js', 'schedule.js', 'admin.js'],
+    ['utils.js', 'jdate.js', 'schedule.js', 'admin.js'],
   );
   console.log(`admin/index.html ساخته شد: ${kb(out)}KB (css inline: ${kb(css)}KB، js inline: ${kb(js)}KB)`);
 }

@@ -2,7 +2,7 @@
 import {
   faDigits, formatJalali, formatJalaliDateTime, faTime, countdown,
   WEEK_DAY_NAMES, iranDayIndex, KIND_LABELS, KIND_ICONS, PRIORITY_LABELS,
-  tehranHHMM, rollingWindow, weekParity,
+  tehranHHMM, rollingWindow, weekParity, tehranDayIndex, tehranDayNumber, tehranLocalDate,
 } from './utils.js';
 import { periodsPerDay } from './schedule.js';
 
@@ -160,7 +160,7 @@ function formatSize(bytes) {
 
 /** درس بعدیِ امروز را پیدا می‌کند (بر اساس ساعت فعلی تهران) */
 function nextLessonToday() {
-  const todayIdx = iranDayIndex(new Date());
+  const todayIdx = tehranDayIndex();
   const lessons = (state.days[todayIdx] || [])
     .filter((l) => l.period <= (periodsPerDay(todayIdx) || 12));
   if (!lessons.length) return null;
@@ -170,12 +170,35 @@ function nextLessonToday() {
   return next ? { ...next.lesson, subject_name: next.subj.subject_name } : null;
 }
 
+/**
+ * روزِ تمرکز: امروز تا وقتی زنگی باقی مانده؛ بعد از آخرین زنگِ امروز
+ * (یا روزهای بی‌کلاس مثل جمعه)، تمرکز می‌رود روی اولین روزِ درسیِ بعد.
+ * دانش‌آموزِ عصرِ بعدازمدرسه دنبال «فردا» است، نه امروزِ گذشته.
+ */
+function focusDay() {
+  const now = Date.now();
+  const todayIdx = tehranDayIndex(now);
+  const maxP = (d) => periodsPerDay(d) || 12;
+  const lessonsOf = (d) => (state.days[d] || []).filter((l) => l.period <= maxP(d));
+  const todayLessons = lessonsOf(todayIdx);
+  if (todayLessons.length) {
+    const hhmm = tehranHHMM(now);
+    const lastEnd = todayLessons.reduce((mx, l) => (l.end_time > mx ? l.end_time : mx), '');
+    if (hhmm < lastEnd) return { offset: 0, dayIdx: todayIdx, lessons: todayLessons };
+  }
+  for (let k = 1; k <= 6; k++) {
+    const idx = (todayIdx + k) % 7;
+    const ls = lessonsOf(idx);
+    if (ls.length) return { offset: k, dayIdx: idx, lessons: ls };
+  }
+  return { offset: 0, dayIdx: todayIdx, lessons: todayLessons };
+}
+
 // ---------- هدر ----------
 let clockTimer = null;
 
 function renderHeader() {
-  const now = new Date();
-  $('#brandDate').textContent = formatJalali(now, { withWeekday: true });
+  $('#brandDate').textContent = formatJalali(tehranLocalDate(), { withWeekday: true });
   const name = state.settings.class_name || 'درس من';
   $('#brandName').textContent = name;
   $('#footerName').textContent = name;
@@ -196,8 +219,10 @@ function tickClock() {
 function renderHero() {
   const maxPeriods = (d) => periodsPerDay(d) || 12;
   const dayLessons = (d) => (state.days[d] ?? []).filter((l) => l.period <= maxPeriods(d));
-  // آمار روی پنجره غلتان (۷ روز از امروز)، نه هفته تقویمی
-  const win = rollingWindow(7);
+  const focus = focusDay();
+
+  // آمار روی پنجره غلتان (۷ روز از روزِ تمرکز)، نه هفته تقویمی
+  const win = rollingWindow(7, Date.now() + focus.offset * 86_400_000);
   const seen = new Set();
   let totalLessons = 0;
   let totalHw = 0;
@@ -207,16 +232,16 @@ function renderHero() {
     totalLessons += dayLessons(dayIdx).length;
     totalHw += dayLessons(dayIdx).filter((l) => l.homework).length;
   }
-  const next = nextLessonToday();
   const stats = $('#heroStats');
   stats.textContent = '';
 
-  const todayIdx = iranDayIndex(new Date());
-  const todayName = WEEK_DAY_NAMES[todayIdx];
+  // ترکیز روی روزِ به‌دست‌آمده: امروز (هنوز کلاس داریم)، فردا، یا روز درسی بعد
+  const dayName = WEEK_DAY_NAMES[focus.dayIdx];
+  const focusLabel = focus.offset === 0 ? `امروز (${dayName})` : focus.offset === 1 ? `فردا (${dayName})` : `${dayName} (${faDigits(focus.offset)} روز دیگر)`;
   stats.append(el('div', { class: 'stat-chip' },
-    el('span', { text: '🗓️' }),
-    `${todayName}، `,
-    el('b', { text: faDigits(dayLessons(todayIdx).length) }),
+    el('span', { text: focus.offset === 0 ? '🗓️' : '🌙' }),
+    `${focusLabel}، `,
+    el('b', { text: faDigits(focus.lessons.length) }),
     ' زنگ'));
   stats.append(el('div', { class: 'stat-chip' },
     el('span', { text: '📚' }),
@@ -226,14 +251,22 @@ function renderHero() {
     el('span', { text: '📝' }),
     el('b', { text: faDigits(totalHw) }),
     ' تکلیف ثبت‌شده'));
+
+  // درس بعدی: امروزِ در جریان؛ وگرنه اولین زنگِ روزِ تمرکز
+  let next = nextLessonToday();
+  let nextPrefix = 'درس بعدی';
+  if (!next && focus.lessons.length) {
+    const first = [...focus.lessons].sort((a, b) => a.period - b.period)[0];
+    const subj = resolveSubject(first, Date.now() + focus.offset * 86_400_000);
+    next = { ...first, subject_name: subj.subject_name };
+    nextPrefix = focus.offset === 0 ? 'اولین زنگ' : 'اولین زنگ فردا';
+  }
   if (next) {
     stats.append(el('div', { class: 'stat-chip' },
       el('span', { text: '⏰' }),
-      'درس بعدی: ',
+      `${nextPrefix}: `,
       el('b', { text: `${subjectEmoji(next.subject_name)} ${next.subject_name}` }),
       ` (${faTime(next.start_time)})`));
-  } else if (dayLessons(todayIdx).length) {
-    stats.append(el('div', { class: 'stat-chip' }, el('span', { text: '🌙' }), 'کلاس‌های امروز تمام شد'));
   }
 }
 
@@ -283,19 +316,22 @@ function lessonCard(lesson, dateMs) {
   return card;
 }
 
-// پنجره نمایش: تعداد روزهای نشان‌داده‌شده (از امروز به بعد)
+// پنجره نمایش: تعداد روزهای نشان‌داده‌شده (از روزِ تمرکز به بعد)
 const WINDOW_DAYS = 7;
 
 function renderTimetable() {
   const grid = $('#ttGrid');
   grid.textContent = '';
-  const windowDays = rollingWindow(WINDOW_DAYS);
-  const todayKey = new Date().toDateString();
+  // پنجره از روزِ تمرکز شروع می‌شود: عصرِ بعدازمدرسه، اولین ستون «فردا» است نه امروزِ گذشته
+  const focus = focusDay();
+  const windowDays = rollingWindow(WINDOW_DAYS, Date.now() + focus.offset * 86_400_000);
+  const todayDayNum = tehranDayNumber();
   let anyLessons = false;
 
   for (const { date, dayIdx } of windowDays) {
     const dateMs = date.getTime();
-    const isToday = date.toDateString() === todayKey;
+    // مقایسه با شماره‌ی روزِ تهران — مستقل از منطقه‌ی زمانی مرورگر (VPN)
+    const isToday = focus.offset === 0 && tehranDayNumber(dateMs) === todayDayNum;
     const lessons = state.days[dayIdx] || [];
     anyLessons = anyLessons || lessons.length > 0;
     const col = el('div', {
@@ -328,17 +364,18 @@ function renderTimetable() {
   if (!anyLessons) {
     $('#heroSub').textContent = 'هنوز برنامه‌ای ثبت نشده است؛ به‌زودی توسط سرِ کلاس تکمیل می‌شود.';
   }
-  $('#updatedAt').textContent = faDigits(new Date().toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' }));
-  renderDots(windowDays, todayKey);
+  $('#updatedAt').textContent = faDigits(tehranHHMM(Date.now()));
+  renderDots(windowDays, focus.offset === 0 ? todayDayNum : null);
   updateScrollState();
 }
 
 // ---------- نقطه‌های راهنما و فلش‌ها ----------
-function renderDots(windowDays, todayKey) {
+function renderDots(windowDays, todayDayNum) {
   const dots = $('#ttDots');
   dots.textContent = '';
   for (const { date, dayIdx } of windowDays) {
-    const isToday = date.toDateString() === todayKey;
+    // همان مقایسه‌ی تهران‌محور ستون‌ها (null = روز تمرکز فرداست و «امروز» نداریم)
+    const isToday = todayDayNum !== null && tehranDayNumber(date.getTime()) === todayDayNum;
     dots.append(el('button', {
       class: `tt-dot${isToday ? ' tt-dot--today' : ''}`,
       type: 'button',
@@ -533,6 +570,18 @@ function attachmentList(files) {
   // روی آینه‌ی استاتیک، دانلود پیوست فقط از مبدأ اصلی ممکن است
   const origin = window.__BOOTSTRAP__ ? (window.__LIVE_ORIGIN__ || '') : '';
   for (const a of files) {
+    // پیوست «لینک»: فایل روی سرویس بیرونی (مثل گوگل‌درایو) — مستقیم همان‌جا باز می‌شود
+    if (a.url) {
+      let host = '';
+      try { host = new URL(a.url).hostname.replace(/^www\./, ''); } catch { /* لینک معیوب */ }
+      list.append(el('a', {
+        class: 'attachment-item attachment-item--link', href: a.url, target: '_blank', rel: 'noopener noreferrer',
+      },
+      el('span', { class: 'attachment-item__icon', text: '🔗' }),
+      el('span', { class: 'attachment-item__name', text: a.filename }),
+      el('span', { class: 'attachment-item__size', text: host || 'لینک' })));
+      continue;
+    }
     list.append(el('a', {
       class: 'attachment-item', href: `${origin}/api/attachments/${a.id}`, download: a.filename, // روی mirror این لینک‌ها به مبدأ اصلی نیاز دارند
     },

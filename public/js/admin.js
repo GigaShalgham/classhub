@@ -1,5 +1,6 @@
 // درس من — admin panel logic
-import { faDigits, formatJalali, formatJalaliDateTime, countdown, WEEK_DAY_NAMES, KIND_LABELS, KIND_ICONS, JALALI_MONTHS, toJalali, fromJalali, iranDayIndex, rollingWindow, weekParity } from './utils.js';
+import { faDigits, formatJalali, formatJalaliDateTime, countdown, WEEK_DAY_NAMES, KIND_LABELS, KIND_ICONS, JALALI_MONTHS, toJalali, fromJalali, iranDayIndex, rollingWindow, weekParity, tehranLocalDate, todayJalali } from './utils.js'
+import { createJalaliField } from './jdate.js';
 import { periodsPerDay, periodTimes, PERIOD_TABLE, CLASS_DAYS } from './schedule.js';
 
 // آینه‌ی گیت‌هاب صفحه‌ی ادمین را هم دارد؛ فراخوانی‌های API همیشه به سایت
@@ -46,6 +47,9 @@ const state = {
   me: null,
   hwLessonId: null,   // lesson whose homework is being edited
   pendingUploads: [], // newly picked File objects for homework
+  hwLinks: [],        // پیوست‌های لینکیِ در انتظار (تکلیف)
+  taskLinks: [],      // پیوست‌های لینکیِ در انتظار (مهلت)
+  annLinks: [],       // پیوست‌های لینکیِ در انتظار (اطلاعیه)
 };
 
 // ---------- api ----------
@@ -486,7 +490,9 @@ async function openHwEditor(lesson) {
   $('#hwPages').value = '';
   $('#hwInstructions').value = '';
   $('#hwNotes').value = '';
-  $('#hwDue').value = '';
+  hwDueField.setISO(null);
+  state.hwLinks.splice(0);
+  $('#hwLinkUrl').value = ''; $('#hwLinkTitle').value = '';
   renderPendingUploads();
   $('#hwExistingFiles').textContent = '';
   $('#hwDelete').classList.toggle('hidden', !lesson.homework);
@@ -502,7 +508,7 @@ async function openHwEditor(lesson) {
         $('#hwPages').value = hw.textbook_pages || '';
         $('#hwInstructions').value = hw.instructions || '';
         $('#hwNotes').value = hw.notes || '';
-        $('#hwDue').value = hw.due_at ? toLocalInput(hw.due_at) : '';
+        hwDueField.setISO(hw.due_at || null);
       }
       const files = data.lesson.attachments || [];
       renderExistingFiles(files);
@@ -513,30 +519,23 @@ async function openHwEditor(lesson) {
   openOverlay($('#hwOverlay'));
 }
 
-function toLocalInput(iso) {
-  // convert ISO (UTC) to Tehran local datetime-local value
-  const d = new Date(iso);
-  const t = new Date(d.getTime() + 3.5 * 3600_000);
-  return `${t.toISOString().slice(0, 10)}T${t.toISOString().slice(11, 16)}`;
-}
-
-function fromLocalInput(value) {
-  // datetime-local interpreted as Tehran time -> ISO UTC
-  if (!value) return null;
-  const d = new Date(value + ':00Z'); // treat as UTC first
-  const utc = new Date(d.getTime() - 3.5 * 3600_000);
-  return utc.toISOString().slice(0, 19) + 'Z';
-}
+// فیلدهای تاریخ/ساعت شمسی (جایگزین datetime-local میلادی)
+const hwDueField = createJalaliField($('#hwDueField'));
+const taskDueField = createJalaliField($('#taskDueField'));
+taskDueField.setDefault(); // فرم خالی: پیش‌فرضِ مفید (فردا ۰۸:۰۰)
 
 function renderExistingFiles(files) {
   const list = $('#hwExistingFiles');
   list.textContent = '';
   for (const f of files) {
+    const isLink = !!f.url;
     list.append(el('div', { class: 'admin-row' },
-      el('span', { text: '📎' }),
+      el('span', { text: isLink ? '🔗' : '📎' }),
       el('div', { class: 'admin-row__main' },
-        el('div', { class: 'admin-row__title', text: f.filename }),
-        el('div', { class: 'admin-row__sub', text: `${faDigits(f.size)} بایت` })),
+        isLink
+          ? el('div', { class: 'admin-row__title' }, el('a', { href: f.url, target: '_blank', rel: 'noopener', text: f.filename, dir: 'ltr' }))
+          : el('div', { class: 'admin-row__title', text: f.filename }),
+        el('div', { class: 'admin-row__sub', text: isLink ? 'لینک بیرونی' : `${faDigits(f.size)} بایت` })),
       el('button', {
         class: 'btn btn--danger btn--sm', type: 'button', text: '🗑️',
         onclick: async () => {
@@ -565,6 +564,41 @@ function renderPendingUploads() {
         onclick: () => { state.pendingUploads.splice(i, 1); renderPendingUploads(); },
       })));
   }
+  renderLinkChips(row, state.hwLinks, () => { state.hwLinks.splice(0); renderPendingUploads(); });
+}
+
+/** چیپ‌های لینک در انتظارِ آپلود */
+function renderLinkChips(row, links, rerender) {
+  for (const [i, lk] of links.entries()) {
+    row.append(el('span', { class: 'file-chip file-chip--link' },
+      el('span', { text: `🔗 ${lk.title}` }),
+      el('button', {
+        class: 'file-chip__x', type: 'button', text: '×', 'aria-label': `حذف ${lk.title}`,
+        onclick: () => { links.splice(i, 1); rerender(); },
+      })));
+  }
+}
+
+/** ولیدیشن و افزودن لینک به فهرست انتظار */
+function pushLink(links, urlInput, titleInput, rerender) {
+  const url = urlInput.value.trim();
+  const title = titleInput.value.trim() || (() => { try { return new URL(url).hostname; } catch { return 'لینک'; } })();
+  if (!/^https?:\/\/.+\.[^\s]+$/i.test(url)) { toast('لینک معتبر وارد کنید (با http یا https).', 'error'); return false; }
+  links.push({ url, title });
+  urlInput.value = ''; titleInput.value = '';
+  rerender();
+  return true;
+}
+
+function renderTaskLinkChips() {
+  const row = $('#taskLinkChips');
+  row.textContent = '';
+  renderLinkChips(row, state.taskLinks, renderTaskLinkChips);
+}
+function renderAnnLinkChips() {
+  const row = $('#annLinkChips');
+  row.textContent = '';
+  renderLinkChips(row, state.annLinks, renderAnnLinkChips);
 }
 
 async function submitHomework(e) {
@@ -577,7 +611,7 @@ async function submitHomework(e) {
     textbookPages: $('#hwPages').value.trim(),
     instructions: $('#hwInstructions').value.trim(),
     notes: $('#hwNotes').value.trim(),
-    dueAt: fromLocalInput($('#hwDue').value),
+    dueAt: hwDueField.getISO(),
   };
   try {
     const res = await api(`/api/admin/lessons/${state.hwLessonId}/homework`, { method: 'PUT', body: payload });
@@ -594,6 +628,14 @@ async function submitHomework(e) {
       } catch (err) {
         toast(`آپلود «${file.name}» ناموفق: ${err.message}`, 'error');
       }
+    }
+    for (const lk of state.hwLinks.splice(0)) {
+      try {
+        await api('/api/admin/attachments/link', {
+          method: 'POST', body: { parentType: 'homework', parentId: res.id, url: lk.url, title: lk.title },
+        });
+        uploaded += 1;
+      } catch (err) { toast(`افزودن لینک «${lk.title}» ناموفق: ${err.message}`, 'error'); }
     }
     toast(uploaded ? `تکلیف و ${faDigits(uploaded)} پیوست ذخیره شد ✅` : 'تکلیف ذخیره شد ✅', 'success');
     closeOverlay($('#hwOverlay'));
@@ -626,16 +668,18 @@ async function submitTask(e) {
     title: $('#taskTitle').value.trim(),
     subjectId: subjectId ? Number(subjectId) : null,
     description: $('#taskDesc').value.trim(),
-    dueAt: fromLocalInput($('#taskDue').value),
+    dueAt: taskDueField.getISO(),
     priority: $('#taskPriority').value,
   };
   if (!payload.dueAt) { toast('مهلت الزامی است.', 'error'); return; }
   try {
     if (id) {
       await api(`/api/admin/tasks/${id}`, { method: 'PUT', body: payload });
+      await uploadLinks('task', Number(id), state.taskLinks.splice(0));
       toast('مهلت به‌روزرسانی شد ✅', 'success');
     } else {
       const res = await api('/api/admin/tasks', { method: 'POST', body: payload });
+      await uploadLinks('task', res.id, state.taskLinks.splice(0));
       // attach pending file if any
       const file = state.taskFile;
       if (file) {
@@ -659,10 +703,13 @@ function resetTaskForm() {
   $('#taskId').value = '';
   $('#taskTitle').value = '';
   $('#taskDesc').value = '';
-  $('#taskDue').value = '';
+  taskDueField.setDefault(); // پیش‌فرض: فردا ساعت ۰۸:۰۰
   $('#taskPriority').value = 'normal';
   $('#taskSubmit').textContent = 'ذخیره';
   state.taskFile = null;
+  state.taskLinks.splice(0);
+  $('#taskLinkUrl').value = ''; $('#taskLinkTitle').value = '';
+  renderTaskLinkChips();
 }
 
 function editTask(task) {
@@ -671,7 +718,7 @@ function editTask(task) {
   $('#taskTitle').value = task.title;
   $('#taskDesc').value = task.description;
   $('#taskSubject').value = task.subject_id ?? '';
-  $('#taskDue').value = toLocalInput(task.due_at);
+  taskDueField.setISO(task.due_at);
   $('#taskPriority').value = task.priority;
   $('#taskSubmit').textContent = 'به‌روزرسانی';
   $('#taskForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -729,9 +776,11 @@ async function submitAnn(e) {
   try {
     if (id) {
       await api(`/api/admin/announcements/${id}`, { method: 'PUT', body: payload });
+      await uploadLinks('announcement', Number(id), state.annLinks.splice(0));
       toast('اطلاعیه به‌روزرسانی شد ✅', 'success');
     } else {
       const res = await api('/api/admin/announcements', { method: 'POST', body: payload });
+      await uploadLinks('announcement', res.id, state.annLinks.splice(0));
       const file = state.annFile;
       if (file) {
         const fd = new FormData();
@@ -754,6 +803,9 @@ function resetAnnForm() {
   $('#annBody').value = '';
   $('#annPinned').checked = false;
   $('#annSubmit').textContent = 'انتشار';
+  state.annLinks.splice(0);
+  $('#annLinkUrl').value = ''; $('#annLinkTitle').value = '';
+  renderAnnLinkChips();
 }
 
 function editAnn(ann) {
@@ -904,7 +956,7 @@ function jalaliMonthLength(jy, jm) {
 }
 
 function initCalendar() {
-  const { jy, jm } = toJalali(new Date());
+  const { jy, jm } = todayJalali(); // امروزِ تهران — مستقل از منطقه‌ی زمانی مرورگر
   cal.jy = jy; cal.jm = jm;
   $('#calPrev').addEventListener('click', () => {
     cal.jm -= 1;
@@ -917,7 +969,7 @@ function initCalendar() {
     renderCalendar();
   });
   $('#calToday').addEventListener('click', () => {
-    const t = toJalali(new Date());
+    const t = todayJalali();
     cal.jy = t.jy; cal.jm = t.jm;
     renderCalendar();
   });
@@ -941,7 +993,7 @@ function renderCalendar() {
   const cells = $('#calGrid');
   cells.textContent = '';
 
-  const today = toJalali(new Date());
+  const today = todayJalali();
   const monthLen = jalaliMonthLength(cal.jy, cal.jm);
   // روز هفته‌ی روز اول ماه: از fromJalali
   const first = fromJalali(cal.jy, cal.jm, 1);
@@ -1140,7 +1192,7 @@ function switchTab(name) {
 
 // ---------- boot ----------
 async function boot() {
-  $('#brandDate').textContent = formatJalali(new Date(), { withWeekday: true });
+  $('#brandDate').textContent = formatJalali(tehranLocalDate(), { withWeekday: true });
   initMirrorOriginPicker();
   // روی آینه، دکمه‌ی 🏠 باید به صفحه‌ی دانش‌آموزِ خودِ آینه برگردد نه /
   // (روی github.io ریشه‌ی / مال نام کاربری است و ۴۰۴ می‌شود).
@@ -1204,6 +1256,24 @@ $('#hwOverlay').addEventListener('mousedown', (e) => {
   if (e.target === $('#hwOverlay')) closeOverlay($('#hwOverlay'));
 });
 $('#hwAddFile').addEventListener('click', () => $('#hwFile').click());
+$('#hwLinkAdd').addEventListener('click', () => {
+  pushLink(state.hwLinks, $('#hwLinkUrl'), $('#hwLinkTitle'), renderPendingUploads);
+});
+$('#taskLinkAdd').addEventListener('click', () => {
+  pushLink(state.taskLinks, $('#taskLinkUrl'), $('#taskLinkTitle'), renderTaskLinkChips);
+});
+$('#annLinkAdd').addEventListener('click', () => {
+  pushLink(state.annLinks, $('#annLinkUrl'), $('#annLinkTitle'), renderAnnLinkChips);
+});
+
+/** آپلود پیوست‌های لینکی روی والدِ ذخیره‌شده */
+async function uploadLinks(parentType, parentId, links) {
+  for (const lk of links) {
+    try {
+      await api('/api/admin/attachments/link', { method: 'POST', body: { parentType, parentId, url: lk.url, title: lk.title } });
+    } catch (err) { toast(`افزودن لینک «${lk.title}» ناموفق: ${err.message}`, 'error'); }
+  }
+}
 $('#hwFile').addEventListener('change', () => {
   for (const f of $('#hwFile').files) {
     if (f.size > 1_500_000) { toast(`«${f.name}» بزرگ‌تر از ۱.۵ مگابایت است.`, 'error'); continue; }
