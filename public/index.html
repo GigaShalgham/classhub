@@ -912,6 +912,46 @@ h1, h2, h3, h4 { line-height: 1.5; }
    ================================================================ */
 .ann-list { display: flex; flex-direction: column; gap: 11px; max-width: 900px; }
 
+/* ---------- تب‌های صفحه دانش‌آموز ---------- */
+.std-tabs {
+  position: sticky;
+  top: var(--header-h, 56px);
+  z-index: 50;
+  display: flex;
+  gap: 7px;
+  overflow-x: auto;
+  padding: 10px 2px 12px;
+  margin: 0 0 4px;
+  background: rgba(250, 251, 253, 0.92);
+  backdrop-filter: blur(12px) saturate(1.3);
+  -webkit-backdrop-filter: blur(12px) saturate(1.3);
+  scrollbar-width: none;
+}
+.std-tabs::-webkit-scrollbar { display: none; }
+.std-tab {
+  flex: 0 0 auto;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--sub);
+  border-radius: 999px;
+  padding: 8px 15px;
+  font-family: inherit;
+  font-size: var(--fs-sm);
+  line-height: 1.4;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s;
+}
+.std-tab:hover { color: var(--text); border-color: var(--lavender); }
+.std-tab:active { transform: scale(0.97); }
+.std-tab--active {
+  background: var(--lavender);
+  color: var(--lavender-deep);
+  border-color: var(--lavender);
+  font-weight: 700;
+}
+.panel[aria-hidden="true"] { display: none; }
+
 /* ---------- جزوات ---------- */
 .handout-list { display: flex; flex-direction: column; gap: 11px; max-width: 900px; }
 .handout-card {
@@ -2016,7 +2056,14 @@ h1, h2, h3, h4 { line-height: 1.5; }
       <div class="hero-stats" id="heroStats"></div>
     </div>
 
-    <section class="section" aria-label="برنامه هفتگی">
+    <nav class="std-tabs" id="stdTabs" role="tablist" aria-label="بخش‌های صفحه">
+      <button class="std-tab std-tab--active" data-tab="schedule" role="tab" aria-selected="true" type="button">🗓️ برنامه</button>
+      <button class="std-tab" data-tab="tasks" role="tab" aria-selected="false" type="button">⏳ مهلت‌ها</button>
+      <button class="std-tab" data-tab="handouts" role="tab" aria-selected="false" type="button">📚 جزوات و تمارین</button>
+      <button class="std-tab" data-tab="announcements" role="tab" aria-selected="false" type="button">📣 اطلاعیه‌ها</button>
+    </nav>
+
+    <section class="section panel" data-panel="schedule" id="panel-schedule" aria-label="برنامه هفتگی" role="tabpanel">
       <div class="section__head">
         <h2 class="section__title"><span class="emoji" aria-hidden="true">🗓️</span> برنامه هفتگی</h2>
         <div class="tt-nav" role="group" aria-label="ناوبری روزها">
@@ -2036,7 +2083,7 @@ h1, h2, h3, h4 { line-height: 1.5; }
       </div>
     </section>
 
-    <section class="section" aria-label="مهلت‌ها و تکالیف زمان‌دار">
+    <section class="section panel hidden" data-panel="tasks" id="panel-tasks" aria-label="مهلت‌ها و تکالیف زمان‌دار" role="tabpanel">
       <div class="section__head">
         <h2 class="section__title"><span class="emoji" aria-hidden="true">⏳</span> مهلت‌ها و تکالیف زمان‌دار</h2>
         <span class="section__note">مرتب‌شده بر اساس نزدیک‌ترین مهلت</span>
@@ -2048,14 +2095,14 @@ h1, h2, h3, h4 { line-height: 1.5; }
       <div class="tasks-grid" id="expiredGrid" style="margin-top: 14px; display: none;"></div>
     </section>
 
-    <section class="section" aria-label="جزوات">
+    <section class="section panel hidden" data-panel="handouts" id="panel-handouts" aria-label="جزوات و تمارین" role="tabpanel">
       <div class="section__head">
-        <h2 class="section__title"><span class="emoji" aria-hidden="true">📚</span> جزوات</h2>
+        <h2 class="section__title"><span class="emoji" aria-hidden="true">📚</span> جزوات و تمارین</h2>
       </div>
       <div class="handout-list" id="handoutList"></div>
     </section>
 
-    <section class="section" aria-label="اطلاعیه‌ها">
+    <section class="section panel hidden" data-panel="announcements" id="panel-announcements" aria-label="اطلاعیه‌ها" role="tabpanel">
       <div class="section__head">
         <h2 class="section__title"><span class="emoji" aria-hidden="true">📣</span> اطلاعیه‌ها</h2>
       </div>
@@ -3210,7 +3257,7 @@ function renderHandouts() {
   list.textContent = '';
   if (!state.handouts?.length) {
     list.append(el('div', { class: 'empty-state' },
-      el('span', { class: 'face', text: '📚' }), el('div', { text: 'هنوز جزوه‌ای بارگذاری نشده است.' })));
+      el('span', { class: 'face', text: '📚' }), el('div', { text: 'هنوز جزوه یا تمرینی بارگذاری نشده است.' })));
     return;
   }
   const origin = window.__IS_MIRROR__ ? (window.__LIVE_ORIGIN__ || '') : '';
@@ -3320,10 +3367,56 @@ function toggleNotif(force) {
   btn.setAttribute('aria-expanded', String(open));
 }
 
+// ---------- تب‌های صفحه (برنامه / مهلت‌ها / جزوات و تمارین / اطلاعیه‌ها) ----------
+const STUDENT_TABS = ['schedule', 'tasks', 'handouts', 'announcements'];
+let activeTab = 'schedule';
+
+/** ارتفاع هدر را به CSS بده تا نوار تب دقیقاً زیرش بچسبد */
+function syncHeaderHeight() {
+  const h = document.querySelector('.site-header')?.offsetHeight || 56;
+  document.documentElement.style.setProperty('--header-h', `${h}px`);
+}
+
+function switchTab(name, opts = {}) {
+  if (!STUDENT_TABS.includes(name)) name = 'schedule';
+  activeTab = name;
+  for (const btn of document.querySelectorAll('.std-tab')) {
+    const on = btn.dataset.tab === name;
+    btn.classList.toggle('std-tab--active', on);
+    btn.setAttribute('aria-selected', String(on));
+  }
+  for (const panel of document.querySelectorAll('.panel')) {
+    const on = panel.dataset.panel === name;
+    panel.classList.toggle('hidden', !on);
+    panel.setAttribute('aria-hidden', String(!on));
+  }
+  if (opts.updateHash !== false) history.replaceState(null, '', `#${name}`);
+  if (opts.scroll !== false) {
+    const tabs = $('#stdTabs');
+    const top = tabs.getBoundingClientRect().top + window.scrollY - (document.querySelector('.site-header')?.offsetHeight ?? 56) - 6;
+    if (Math.abs(window.scrollY - top) > 40) window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+  }
+}
+
+function setupTabs() {
+  syncHeaderHeight();
+  window.addEventListener('resize', syncHeaderHeight);
+  for (const btn of document.querySelectorAll('.std-tab')) {
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+  }
+  // باز شدن مستقیم تب از لینک (#handouts و مانند آن — قابل اشتراک در تلگرام)
+  window.addEventListener('hashchange', () => {
+    const h = location.hash.replace('#', '');
+    if (STUDENT_TABS.includes(h) && h !== activeTab) switchTab(h, { updateHash: false });
+  });
+  const h = location.hash.replace('#', '');
+  if (STUDENT_TABS.includes(h)) switchTab(h, { updateHash: false, scroll: false });
+}
+
 // ---------- FAB «برو به امروز» ----------
 function setupFab() {
   const fab = $('#fabToday');
-  const tt = document.querySelector('.section[aria-label="برنامه هفتگی"]');
+  const tt = $('#panel-schedule');
   const onScroll = () => {
     const rect = tt.getBoundingClientRect();
     const past = rect.top < 80;
@@ -3332,6 +3425,7 @@ function setupFab() {
   };
   window.addEventListener('scroll', onScroll, { passive: true });
   fab.addEventListener('click', () => {
+    if (activeTab !== 'schedule') switchTab('schedule', { scroll: false });
     if (ttOffset !== 0) { ttOffset = 0; renderTimetable(); }
     scrollToToday();
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -3476,6 +3570,7 @@ if (window.__BOOTSTRAP__ && $('#adminLink')) {
 }
 
 setupSheetDrag();
+setupTabs();
 setupFab();
 
 // به‌روزرسانی شمارش معکوس هر دقیقه

@@ -832,7 +832,7 @@ function renderHandouts() {
   list.textContent = '';
   if (!state.handouts?.length) {
     list.append(el('div', { class: 'empty-state' },
-      el('span', { class: 'face', text: '📚' }), el('div', { text: 'هنوز جزوه‌ای بارگذاری نشده است.' })));
+      el('span', { class: 'face', text: '📚' }), el('div', { text: 'هنوز جزوه یا تمرینی بارگذاری نشده است.' })));
     return;
   }
   const origin = window.__IS_MIRROR__ ? (window.__LIVE_ORIGIN__ || '') : '';
@@ -942,10 +942,56 @@ function toggleNotif(force) {
   btn.setAttribute('aria-expanded', String(open));
 }
 
+// ---------- تب‌های صفحه (برنامه / مهلت‌ها / جزوات و تمارین / اطلاعیه‌ها) ----------
+const STUDENT_TABS = ['schedule', 'tasks', 'handouts', 'announcements'];
+let activeTab = 'schedule';
+
+/** ارتفاع هدر را به CSS بده تا نوار تب دقیقاً زیرش بچسبد */
+function syncHeaderHeight() {
+  const h = document.querySelector('.site-header')?.offsetHeight || 56;
+  document.documentElement.style.setProperty('--header-h', `${h}px`);
+}
+
+function switchTab(name, opts = {}) {
+  if (!STUDENT_TABS.includes(name)) name = 'schedule';
+  activeTab = name;
+  for (const btn of document.querySelectorAll('.std-tab')) {
+    const on = btn.dataset.tab === name;
+    btn.classList.toggle('std-tab--active', on);
+    btn.setAttribute('aria-selected', String(on));
+  }
+  for (const panel of document.querySelectorAll('.panel')) {
+    const on = panel.dataset.panel === name;
+    panel.classList.toggle('hidden', !on);
+    panel.setAttribute('aria-hidden', String(!on));
+  }
+  if (opts.updateHash !== false) history.replaceState(null, '', `#${name}`);
+  if (opts.scroll !== false) {
+    const tabs = $('#stdTabs');
+    const top = tabs.getBoundingClientRect().top + window.scrollY - (document.querySelector('.site-header')?.offsetHeight ?? 56) - 6;
+    if (Math.abs(window.scrollY - top) > 40) window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+  }
+}
+
+function setupTabs() {
+  syncHeaderHeight();
+  window.addEventListener('resize', syncHeaderHeight);
+  for (const btn of document.querySelectorAll('.std-tab')) {
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+  }
+  // باز شدن مستقیم تب از لینک (#handouts و مانند آن — قابل اشتراک در تلگرام)
+  window.addEventListener('hashchange', () => {
+    const h = location.hash.replace('#', '');
+    if (STUDENT_TABS.includes(h) && h !== activeTab) switchTab(h, { updateHash: false });
+  });
+  const h = location.hash.replace('#', '');
+  if (STUDENT_TABS.includes(h)) switchTab(h, { updateHash: false, scroll: false });
+}
+
 // ---------- FAB «برو به امروز» ----------
 function setupFab() {
   const fab = $('#fabToday');
-  const tt = document.querySelector('.section[aria-label="برنامه هفتگی"]');
+  const tt = $('#panel-schedule');
   const onScroll = () => {
     const rect = tt.getBoundingClientRect();
     const past = rect.top < 80;
@@ -954,6 +1000,7 @@ function setupFab() {
   };
   window.addEventListener('scroll', onScroll, { passive: true });
   fab.addEventListener('click', () => {
+    if (activeTab !== 'schedule') switchTab('schedule', { scroll: false });
     if (ttOffset !== 0) { ttOffset = 0; renderTimetable(); }
     scrollToToday();
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1098,6 +1145,7 @@ if (window.__BOOTSTRAP__ && $('#adminLink')) {
 }
 
 setupSheetDrag();
+setupTabs();
 setupFab();
 
 // به‌روزرسانی شمارش معکوس هر دقیقه

@@ -382,7 +382,7 @@ adminRoutes.get('/handouts', requireAdmin(), async (c) => {
 
 adminRoutes.post('/handouts', requireAdmin(), async (c) => {
   const body = await readJson(c.req.raw);
-  const title = str(body.title, 'عنوان جزوه', { min: 2, max: 200 });
+  const title = str(body.title, 'عنوان جزوه/تمرین', { min: 2, max: 200 });
   const description = str(body.description ?? '', 'توضیحات', { required: false, max: 4000 });
   let subjectId: number | null = null;
   const raw = body.subjectId ?? body.subject_id;
@@ -399,7 +399,7 @@ adminRoutes.post('/handouts', requireAdmin(), async (c) => {
 adminRoutes.put('/handouts/:id', requireAdmin(), async (c) => {
   const id = Number(c.req.param('id'));
   const body = await readJson(c.req.raw);
-  const title = str(body.title, 'عنوان جزوه', { min: 2, max: 200 });
+  const title = str(body.title, 'عنوان جزوه/تمرین', { min: 2, max: 200 });
   const description = str(body.description ?? '', 'توضیحات', { required: false, max: 4000 });
   let subjectId: number | null = null;
   const raw = body.subjectId ?? body.subject_id;
@@ -410,14 +410,14 @@ adminRoutes.put('/handouts/:id', requireAdmin(), async (c) => {
   const r = await c.env.DB.prepare(
     'UPDATE handouts SET title=?, description=?, subject_id=?, updated_at=datetime(\'now\') WHERE id=?',
   ).bind(title, description, subjectId, id).run();
-  if (!r.meta.changes) return c.json({ ok: false, error: 'جزوه پیدا نشد.' }, 404);
+  if (!r.meta.changes) return c.json({ ok: false, error: 'جزوه/تمرین پیدا نشد.' }, 404);
   return c.json({ ok: true, id });
 });
 
 adminRoutes.delete('/handouts/:id', requireAdmin(), async (c) => {
   const id = Number(c.req.param('id'));
   const r = await c.env.DB.prepare('DELETE FROM handouts WHERE id = ?').bind(id).run();
-  if (!r.meta.changes) return c.json({ ok: false, error: 'جزوه پیدا نشد.' }, 404);
+  if (!r.meta.changes) return c.json({ ok: false, error: 'جزوه/تمرین پیدا نشد.' }, 404);
   await deleteAttachmentsOf(c.env.DB, 'handout', id);
   return c.json({ ok: true });
 });

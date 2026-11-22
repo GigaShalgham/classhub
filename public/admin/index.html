@@ -911,6 +911,46 @@ h1, h2, h3, h4 { line-height: 1.5; }
    ================================================================ */
 .ann-list { display: flex; flex-direction: column; gap: 11px; max-width: 900px; }
 
+/* ---------- تب‌های صفحه دانش‌آموز ---------- */
+.std-tabs {
+  position: sticky;
+  top: var(--header-h, 56px);
+  z-index: 50;
+  display: flex;
+  gap: 7px;
+  overflow-x: auto;
+  padding: 10px 2px 12px;
+  margin: 0 0 4px;
+  background: rgba(250, 251, 253, 0.92);
+  backdrop-filter: blur(12px) saturate(1.3);
+  -webkit-backdrop-filter: blur(12px) saturate(1.3);
+  scrollbar-width: none;
+}
+.std-tabs::-webkit-scrollbar { display: none; }
+.std-tab {
+  flex: 0 0 auto;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--sub);
+  border-radius: 999px;
+  padding: 8px 15px;
+  font-family: inherit;
+  font-size: var(--fs-sm);
+  line-height: 1.4;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s;
+}
+.std-tab:hover { color: var(--text); border-color: var(--lavender); }
+.std-tab:active { transform: scale(0.97); }
+.std-tab--active {
+  background: var(--lavender);
+  color: var(--lavender-deep);
+  border-color: var(--lavender);
+  font-weight: 700;
+}
+.panel[aria-hidden="true"] { display: none; }
+
 /* ---------- جزوات ---------- */
 .handout-list { display: flex; flex-direction: column; gap: 11px; max-width: 900px; }
 .handout-card {
@@ -2039,7 +2079,7 @@ h1, h2, h3, h4 { line-height: 1.5; }
         <button class="admin-tab" data-tab="calendar" role="tab" aria-selected="false" type="button">📅 تقویم ماهانه</button>
         <button class="admin-tab" data-tab="tasks" role="tab" aria-selected="false" type="button">⏳ مهلت‌ها</button>
         <button class="admin-tab" data-tab="announcements" role="tab" aria-selected="false" type="button">📣 اطلاعیه‌ها</button>
-        <button class="admin-tab" data-tab="handouts" role="tab" aria-selected="false" type="button">📚 جزوات</button>
+        <button class="admin-tab" data-tab="handouts" role="tab" aria-selected="false" type="button">📚 جزوات و تمارین</button>
         <button class="admin-tab" data-tab="subjects" role="tab" aria-selected="false" type="button">🎨 درس‌ها</button>
         <button class="admin-tab" data-tab="settings" role="tab" aria-selected="false" type="button">⚙️ تنظیمات</button>
       </nav>
@@ -2192,12 +2232,12 @@ h1, h2, h3, h4 { line-height: 1.5; }
       <!-- ===== Handouts tab ===== -->
       <section class="admin-panel hidden" id="tab-handouts" role="tabpanel">
         <div class="admin-card">
-          <h2 class="admin-card__title" id="handoutFormTitle">➕ افزودن جزوه</h2>
+          <h2 class="admin-card__title" id="handoutFormTitle">➕ افزودن جزوه/تمرین</h2>
           <form id="handoutForm" novalidate class="form-grid">
             <input type="hidden" id="handoutId">
             <div class="field">
               <label class="field__label" for="handoutTitle">عنوان جزوه <span class="field__req">*</span></label>
-              <input class="input" id="handoutTitle" required maxlength="200" placeholder="مثلاً: خلاصه‌ی فصل ۳ ریاضی">
+              <input class="input" id="handoutTitle" required maxlength="200" placeholder="مثلاً: خلاصه‌ی فصل ۳ ریاضی یا تمرین‌های جلسه‌ی بعد">
             </div>
             <div class="field">
               <label class="field__label" for="handoutSubject">درس (اختیاری)</label>
@@ -2224,7 +2264,7 @@ h1, h2, h3, h4 { line-height: 1.5; }
           </form>
         </div>
         <div class="admin-card">
-          <h2 class="admin-card__title">📚 جزوات بارگذاری‌شده</h2>
+          <h2 class="admin-card__title">📚 جزوات و تمارین بارگذاری‌شده</h2>
           <div class="admin-list" id="handoutsList"></div>
         </div>
       </section>
@@ -3711,7 +3751,7 @@ function renderHandoutsTab() {
   const list = $('#handoutsList');
   list.textContent = '';
   if (!state.handouts.length) {
-    list.append(el('div', { class: 'empty-state', text: 'هنوز جزوه‌ای بارگذاری نشده است.' }));
+    list.append(el('div', { class: 'empty-state', text: 'هنوز جزوه یا تمرینی بارگذاری نشده است.' }));
     return;
   }
   for (const h of state.handouts) {
@@ -3781,7 +3821,7 @@ function resetHandoutForm() {
   $('#handoutTitle').value = '';
   $('#handoutDesc').value = '';
   $('#handoutSubject').value = '';
-  $('#handoutFormTitle').textContent = '➕ افزودن جزوه';
+  $('#handoutFormTitle').textContent = '➕ افزودن جزوه/تمرین';
   state.pendingHandoutFiles.splice(0);
   renderHandoutPending();
   $('#handoutExistingFiles').textContent = '';

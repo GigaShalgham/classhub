@@ -45,7 +45,14 @@
       <div class="hero-stats" id="heroStats"></div>
     </div>
 
-    <section class="section" aria-label="برنامه هفتگی">
+    <nav class="std-tabs" id="stdTabs" role="tablist" aria-label="بخش‌های صفحه">
+      <button class="std-tab std-tab--active" data-tab="schedule" role="tab" aria-selected="true" type="button">🗓️ برنامه</button>
+      <button class="std-tab" data-tab="tasks" role="tab" aria-selected="false" type="button">⏳ مهلت‌ها</button>
+      <button class="std-tab" data-tab="handouts" role="tab" aria-selected="false" type="button">📚 جزوات و تمارین</button>
+      <button class="std-tab" data-tab="announcements" role="tab" aria-selected="false" type="button">📣 اطلاعیه‌ها</button>
+    </nav>
+
+    <section class="section panel" data-panel="schedule" id="panel-schedule" aria-label="برنامه هفتگی" role="tabpanel">
       <div class="section__head">
         <h2 class="section__title"><span class="emoji" aria-hidden="true">🗓️</span> برنامه هفتگی</h2>
         <div class="tt-nav" role="group" aria-label="ناوبری روزها">
@@ -65,7 +72,7 @@
       </div>
     </section>
 
-    <section class="section" aria-label="مهلت‌ها و تکالیف زمان‌دار">
+    <section class="section panel hidden" data-panel="tasks" id="panel-tasks" aria-label="مهلت‌ها و تکالیف زمان‌دار" role="tabpanel">
       <div class="section__head">
         <h2 class="section__title"><span class="emoji" aria-hidden="true">⏳</span> مهلت‌ها و تکالیف زمان‌دار</h2>
         <span class="section__note">مرتب‌شده بر اساس نزدیک‌ترین مهلت</span>
@@ -77,14 +84,14 @@
       <div class="tasks-grid" id="expiredGrid" style="margin-top: 14px; display: none;"></div>
     </section>
 
-    <section class="section" aria-label="جزوات">
+    <section class="section panel hidden" data-panel="handouts" id="panel-handouts" aria-label="جزوات و تمارین" role="tabpanel">
       <div class="section__head">
-        <h2 class="section__title"><span class="emoji" aria-hidden="true">📚</span> جزوات</h2>
+        <h2 class="section__title"><span class="emoji" aria-hidden="true">📚</span> جزوات و تمارین</h2>
       </div>
       <div class="handout-list" id="handoutList"></div>
     </section>
 
-    <section class="section" aria-label="اطلاعیه‌ها">
+    <section class="section panel hidden" data-panel="announcements" id="panel-announcements" aria-label="اطلاعیه‌ها" role="tabpanel">
       <div class="section__head">
         <h2 class="section__title"><span class="emoji" aria-hidden="true">📣</span> اطلاعیه‌ها</h2>
       </div>

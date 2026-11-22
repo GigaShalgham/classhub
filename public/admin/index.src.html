@@ -68,7 +68,7 @@
         <button class="admin-tab" data-tab="calendar" role="tab" aria-selected="false" type="button">📅 تقویم ماهانه</button>
         <button class="admin-tab" data-tab="tasks" role="tab" aria-selected="false" type="button">⏳ مهلت‌ها</button>
         <button class="admin-tab" data-tab="announcements" role="tab" aria-selected="false" type="button">📣 اطلاعیه‌ها</button>
-        <button class="admin-tab" data-tab="handouts" role="tab" aria-selected="false" type="button">📚 جزوات</button>
+        <button class="admin-tab" data-tab="handouts" role="tab" aria-selected="false" type="button">📚 جزوات و تمارین</button>
         <button class="admin-tab" data-tab="subjects" role="tab" aria-selected="false" type="button">🎨 درس‌ها</button>
         <button class="admin-tab" data-tab="settings" role="tab" aria-selected="false" type="button">⚙️ تنظیمات</button>
       </nav>
@@ -221,12 +221,12 @@
       <!-- ===== Handouts tab ===== -->
       <section class="admin-panel hidden" id="tab-handouts" role="tabpanel">
         <div class="admin-card">
-          <h2 class="admin-card__title" id="handoutFormTitle">➕ افزودن جزوه</h2>
+          <h2 class="admin-card__title" id="handoutFormTitle">➕ افزودن جزوه/تمرین</h2>
           <form id="handoutForm" novalidate class="form-grid">
             <input type="hidden" id="handoutId">
             <div class="field">
               <label class="field__label" for="handoutTitle">عنوان جزوه <span class="field__req">*</span></label>
-              <input class="input" id="handoutTitle" required maxlength="200" placeholder="مثلاً: خلاصه‌ی فصل ۳ ریاضی">
+              <input class="input" id="handoutTitle" required maxlength="200" placeholder="مثلاً: خلاصه‌ی فصل ۳ ریاضی یا تمرین‌های جلسه‌ی بعد">
             </div>
             <div class="field">
               <label class="field__label" for="handoutSubject">درس (اختیاری)</label>
@@ -253,7 +253,7 @@
           </form>
         </div>
         <div class="admin-card">
-          <h2 class="admin-card__title">📚 جزوات بارگذاری‌شده</h2>
+          <h2 class="admin-card__title">📚 جزوات و تمارین بارگذاری‌شده</h2>
           <div class="admin-list" id="handoutsList"></div>
         </div>
       </section>

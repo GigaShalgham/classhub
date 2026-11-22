@@ -801,7 +801,7 @@ function renderHandoutsTab() {
   const list = $('#handoutsList');
   list.textContent = '';
   if (!state.handouts.length) {
-    list.append(el('div', { class: 'empty-state', text: 'هنوز جزوه‌ای بارگذاری نشده است.' }));
+    list.append(el('div', { class: 'empty-state', text: 'هنوز جزوه یا تمرینی بارگذاری نشده است.' }));
     return;
   }
   for (const h of state.handouts) {
@@ -871,7 +871,7 @@ function resetHandoutForm() {
   $('#handoutTitle').value = '';
   $('#handoutDesc').value = '';
   $('#handoutSubject').value = '';
-  $('#handoutFormTitle').textContent = '➕ افزودن جزوه';
+  $('#handoutFormTitle').textContent = '➕ افزودن جزوه/تمرین';
   state.pendingHandoutFiles.splice(0);
   renderHandoutPending();
   $('#handoutExistingFiles').textContent = '';
