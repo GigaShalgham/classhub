@@ -14,6 +14,10 @@ import { rateLimit, sweepBuckets, clientIp } from '../ratelimit';
 import {
   MAX_ATTACHMENT_BYTES, MAX_TOTAL_ATTACHMENT_BYTES, safeFilename, validateMime,
 } from '../attachments';
+import {
+  tgConfig, tgSendDocument, tgGetMe, tgDiscoverChat, tgSendMessage,
+  maskToken, validTgTokenShape, validTgChatShape, MAX_TG_FILE_BYTES, MAX_TG_TOTAL_BYTES,
+} from '../telegram';
 
 const adminRoutes = new Hono<{ Bindings: Env }>();
 
@@ -364,21 +368,46 @@ adminRoutes.post('/attachments', requireAdmin(), async (c) => {
   const parentId = int(form.get('parentId'), 'شناسه والد', 1, 10_000_000);
   if (!(file instanceof File)) bad('فایلی ارسال نشده است.');
   if (file.size <= 0) bad('فایل خالی است.');
-  if (file.size > MAX_ATTACHMENT_BYTES) bad(`حجم فایل بیش از حد مجاز است (حداکثر ۱.۵ مگابایت).`);
+
+  // انبار تلگرام فعال است؟ → فایل مستقیم به چت خصوصی می‌رود و فقط file_id ذخیره می‌شود
+  const tg = await tgConfig(c.env.DB);
+  const maxFile = tg ? MAX_TG_FILE_BYTES : MAX_ATTACHMENT_BYTES;
+  const maxTotal = tg ? MAX_TG_TOTAL_BYTES : MAX_TOTAL_ATTACHMENT_BYTES;
+  if (file.size > maxFile) {
+    bad(tg
+      ? 'حجم فایل بیش از ۲۰ مگابایت است — سقف دانلودِ بات‌های تلگرام.'
+      : 'حجم فایل بیش از ۱.۵ مگابایت است. برای فایل حجیم، «انبار تلگرام» را در تنظیمات فعال کنید یا لینک بگذارید.');
+  }
   const filename = safeFilename(file.name || 'file');
   validateMime(file.type, filename);
   if (!(await parentExists(c.env.DB, parentType, parentId))) bad('مورد والد پیدا نشد.');
   const totalRow = await c.env.DB.prepare(
     `SELECT COALESCE(SUM(size),0) AS total FROM attachments WHERE parent_type=? AND parent_id=?`,
   ).bind(parentType, parentId).first<{ total: number }>();
-  if ((totalRow?.total ?? 0) + file.size > MAX_TOTAL_ATTACHMENT_BYTES) {
+  if ((totalRow?.total ?? 0) + file.size > maxTotal) {
     bad('مجموع حجم پیوست‌های این مورد به سقف رسیده است.');
   }
+
+  if (tg) {
+    // آپلود به تلگرام + ثبت شناسه — هیچ بایتی در دیتابیس ذخیره نمی‌شود
+    let fileId: string;
+    try {
+      fileId = (await tgSendDocument(tg, file, filename)).fileId;
+    } catch (e) {
+      bad(`ارسال به تلگرام ناموفق بود: ${(e as Error).message}`);
+    }
+    const r = await c.env.DB.prepare(
+      'INSERT INTO attachments (parent_type, parent_id, filename, mime, size, data, telegram_file_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    ).bind(parentType, parentId, filename, file.type, file.size, new ArrayBuffer(0), fileId).run();
+    return c.json({ ok: true, id: r.meta.last_row_id, filename, size: file.size, storage: 'telegram' });
+  }
+
+  // مسیر جایگزین بدون تلگرام: بلاب در D1 (فقط فایل‌های کوچک)
   const data = await file.arrayBuffer();
   const r = await c.env.DB.prepare(
     'INSERT INTO attachments (parent_type, parent_id, filename, mime, size, data) VALUES (?, ?, ?, ?, ?, ?)',
   ).bind(parentType, parentId, filename, file.type, file.size, data).run();
-  return c.json({ ok: true, id: r.meta.last_row_id, filename, size: file.size });
+  return c.json({ ok: true, id: r.meta.last_row_id, filename, size: file.size, storage: 'db' });
 });
 
 /**
@@ -438,11 +467,24 @@ adminRoutes.put('/settings', requireAdmin(), async (c) => {
     class_name: [2, 120],
     welcome_message: [2, 200],
     admin_note: [0, 300],
+    // پیکربندی انبار فایل تلگرام (سمت سرور نگه داشته می‌شود؛ خالی = پاک‌کردن)
+    tg_bot_token: [0, 100],
+    tg_chat_id: [0, 20],
   };
   const entries: [string, string][] = [];
+  // کلیدهای تلگرام اختیاری‌اند: مقدار خالی = پاک‌کردن پیکربندی
+  const optional = new Set(['tg_bot_token', 'tg_chat_id']);
   for (const [key, [min, max]] of Object.entries(allowed)) {
     if (body[key] !== undefined) {
-      entries.push([key, str(body[key], key, { min, max })]);
+      entries.push([key, str(body[key], key, { min, max, required: !optional.has(key) }).trim()]);
+    }
+  }
+  for (const e of entries) {
+    if (e[0] === 'tg_bot_token' && e[1] && !validTgTokenShape(e[1])) {
+      bad('شکل توکن بات درست نیست — از BotFather کپی کنید (مثل 123456789:AAE...)');
+    }
+    if (e[0] === 'tg_chat_id' && e[1] && !validTgChatShape(e[1])) {
+      bad('chat id باید عدد باشد (مثل 123456789).');
     }
   }
   if (!entries.length) bad('هیچ تنظیمی ارسال نشد.');
@@ -498,6 +540,55 @@ adminRoutes.put('/rotation', requireAdmin(), async (c) => {
   const anchor = setAnchor(curNum === thisSaturday ? thisSaturday - 7 : thisSaturday);
   await writeAnchor(anchor);
   return c.json({ ok: true, anchor });
+});
+
+// ---------- انبار فایل تلگرام ----------
+
+/** وضعیت فعلی پیکربندی (توکن ماسک می‌شود — هرگز کامل برنمی‌گردد) */
+adminRoutes.get('/telegram', requireAdmin(), async (c) => {
+  const cfg = await tgConfig(c.env.DB);
+  if (!cfg) return c.json({ ok: true, configured: false });
+  let bot: string | null = null;
+  try {
+    bot = (await tgGetMe(cfg)).username;
+  } catch {
+    bot = null; // توکن ذخیره شده ولی معتبر نیست
+  }
+  return c.json({
+    ok: true,
+    configured: true,
+    bot,
+    chatId: cfg.chatId,
+    maskedToken: maskToken(cfg.token),
+  });
+});
+
+/** کشف chat_id از پیام‌های رسیده به بات (کاربر باید /start زده باشد) */
+adminRoutes.post('/telegram/chatid', requireAdmin(), async (c) => {
+  const body = await readJson(c.req.raw);
+  const raw = typeof body.token === 'string' ? body.token.trim() : '';
+  const saved = await tgConfig(c.env.DB);
+  const token = raw || saved?.token || '';
+  if (!token) bad('توکن را وارد کنید یا قبلاً ذخیره‌اش کنید.');
+  if (!validTgTokenShape(token)) bad('شکل توکن بات درست نیست — از BotFather کپی کنید (مثل 123456789:AAE...)');
+  const chatId = await tgDiscoverChat({ token, chatId: '' });
+  if (!chatId) {
+    bad('هنوز پیامی از شما به بات نرسیده — اول به بات‌تان /start بزنید و دوباره امتحان کنید.');
+  }
+  return c.json({ ok: true, chatId });
+});
+
+/** تست اتصال: getMe + پیام تست به چت */
+adminRoutes.post('/telegram/test', requireAdmin(), async (c) => {
+  const cfg = await tgConfig(c.env.DB);
+  if (!cfg) bad('اول توکن و chat id را ذخیره کنید.');
+  try {
+    const me = await tgGetMe(cfg);
+    await tgSendMessage(cfg, '☁️ انبار فایل «درس من» وصل شد — پیوست‌ها از این به بعد اینجا ذخیره می‌شوند.');
+    return c.json({ ok: true, bot: me.username });
+  } catch (e) {
+    bad(`اتصال ناموفق: ${(e as Error).message}`);
+  }
 });
 
 export default adminRoutes;

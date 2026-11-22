@@ -74,6 +74,7 @@ export interface AttachmentMeta {
   mime: string;
   size: number;
   url?: string | null; // پیوست «لینک» (درایو/هر URL) — فایل روی سرویس بیرونی است
+  telegram_file_id?: string | null; // پیوست تلگرامی — فایل در چت خصوصی، اینجا فقط شناسه
   created_at: string;
 }
 

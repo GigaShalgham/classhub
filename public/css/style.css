@@ -1936,3 +1936,7 @@ h1, h2, h3, h4 { line-height: 1.5; }
 .link-add { display: flex; gap: 8px; flex-wrap: wrap; align-items: stretch; }
 .file-chip--link { border-style: dashed; }
 .attachment-item--link .attachment-item__size { direction: ltr; }
+
+/* ---------- ناوبری روزها (سربرگ برنامه هفتگی) ---------- */
+.tt-nav { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.tt-nav .btn { flex-shrink: 0; }

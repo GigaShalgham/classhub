@@ -46,6 +46,7 @@ const state = {
   settings: {},
   me: null,
   hwLessonId: null,   // lesson whose homework is being edited
+  tg: { configured: false }, // انبار فایل تلگرام
   pendingUploads: [], // newly picked File objects for homework
   hwLinks: [],        // پیوست‌های لینکیِ در انتظار (تکلیف)
   taskLinks: [],      // پیوست‌های لینکیِ در انتظار (مهلت)
@@ -535,7 +536,7 @@ function renderExistingFiles(files) {
         isLink
           ? el('div', { class: 'admin-row__title' }, el('a', { href: f.url, target: '_blank', rel: 'noopener', text: f.filename, dir: 'ltr' }))
           : el('div', { class: 'admin-row__title', text: f.filename }),
-        el('div', { class: 'admin-row__sub', text: isLink ? 'لینک بیرونی' : `${faDigits(f.size)} بایت` })),
+        el('div', { class: 'admin-row__sub', text: isLink ? 'لینک بیرونی' : f.telegram_file_id ? `☁️ تلگرام · ${formatSizeFa(f.size)}` : `${formatSizeFa(f.size)} · دیتابیس` })),
       el('button', {
         class: 'btn btn--danger btn--sm', type: 'button', text: '🗑️',
         onclick: async () => {
@@ -919,10 +920,81 @@ async function flipRotation() {
   btn.disabled = false;
 }
 
+function formatSizeFa(bytes) {
+  if (bytes >= 1_048_576) return `${faDigits((bytes / 1_048_576).toFixed(1))} مگابایت`;
+  if (bytes >= 1024) return `${faDigits(Math.round(bytes / 1024))} کیلوبایت`;
+  return `${faDigits(bytes)} بایت`;
+}
+
 function fillSettingsForm() {
   $('#setClassName').value = state.settings.class_name || '';
   $('#setWelcome').value = state.settings.welcome_message || '';
   $('#setNote').value = state.settings.admin_note || '';
+  loadTgStatus();
+}
+
+/** وضعیت انبار تلگرام: فرم + برچسب سقف فایل‌ها */
+async function loadTgStatus() {
+  try {
+    const st = await api('/api/admin/telegram');
+    state.tg = st;
+    const chatInput = $('#tgChat');
+    if (chatInput && st.chatId && !chatInput.value) chatInput.value = st.chatId;
+    const note = $('#tgStatus');
+    if (note) {
+      note.textContent = st.configured
+        ? (st.bot
+          ? `✅ فعال — بات @${st.bot} (توکن ${st.maskedToken})؛ سقف هر فایل ۲۰ مگابایت.`
+          : `⚠️ توکن ذخیره شده ولی بات پاسخ نداد — دوباره تست بگیرید.`)
+        : 'غیرفعال — فایل‌ها در دیتابیس (سقف ۱.۵ مگابایت) ذخیره می‌شوند.';
+    }
+  } catch { /* آفلاین/بدون نشست — بی‌صدا */ }
+  const limit = $('#hwLimitNote');
+  if (limit) limit.textContent = state.tg.configured ? 'هر فایل تا ۲۰ مگابایت (انبار تلگرام)' : 'هر فایل تا ۱.۵ مگابایت (با انبار تلگرام تا ۲۰)';
+}
+
+async function submitTgForm(e) {
+  e.preventDefault();
+  const body = {};
+  const token = $('#tgToken').value.trim();
+  const chat = $('#tgChat').value.trim();
+  if (token) body.tg_bot_token = token;
+  if (chat !== '') body.tg_chat_id = chat;
+  if (!Object.keys(body).length) { toast('چیزی برای ذخیره نیست.', 'error'); return; }
+  try {
+    await api('/api/admin/settings', { method: 'PUT', body });
+    toast('تنظیمات انبار ذخیره شد ✅', 'success');
+    $('#tgToken').value = '';
+    await loadTgStatus();
+  } catch (err) { toast(err.message, 'error'); }
+}
+
+async function tgDiscover() {
+  try {
+    // توکن خالی → سرور از توکنِ ذخیره‌شده استفاده می‌کند
+    const st = await api('/api/admin/telegram/chatid', { method: 'POST', body: { token: $('#tgToken').value.trim() } });
+    $('#tgChat').value = st.chatId;
+    toast(`chat id پیدا شد: ${st.chatId} — «ذخیره» را بزنید.`, 'success');
+  } catch (err) {
+    toast(err.message, 'error');
+  }
+}
+
+async function tgDisable() {
+  try {
+    await api('/api/admin/settings', { method: 'PUT', body: { tg_bot_token: '', tg_chat_id: '' } });
+    toast('انبار تلگرام غیرفعال شد — پیوست‌ها به دیتابیس برمی‌گردند.', 'success');
+    $('#tgToken').value = ''; $('#tgChat').value = '';
+    await loadTgStatus();
+  } catch (err) { toast(err.message, 'error'); }
+}
+
+async function tgTest() {
+  try {
+    const r = await api('/api/admin/telegram/test', { method: 'POST', body: {} });
+    toast(`اتصال برقرار است ✅ بات @${r.bot}`, 'success');
+    await loadTgStatus();
+  } catch (err) { toast(err.message, 'error'); }
 }
 
 async function submitSettings(e) {
@@ -1245,6 +1317,10 @@ $('#annForm').addEventListener('submit', submitAnn);
 $('#annReset').addEventListener('click', resetAnnForm);
 $('#subjectForm').addEventListener('submit', submitSubject);
 $('#settingsForm').addEventListener('submit', submitSettings);
+$('#tgForm').addEventListener('submit', submitTgForm);
+$('#tgDiscover').addEventListener('click', tgDiscover);
+$('#tgTest').addEventListener('click', tgTest);
+$('#tgDisable').addEventListener('click', tgDisable);
 $('#hwForm').addEventListener('submit', submitHomework);
 $('#hwDelete').addEventListener('click', deleteHomework);
 $('#hwClose').addEventListener('click', () => closeOverlay($('#hwOverlay')));

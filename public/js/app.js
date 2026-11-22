@@ -318,20 +318,26 @@ function lessonCard(lesson, dateMs) {
 
 // پنجره نمایش: تعداد روزهای نشان‌داده‌شده (از روزِ تمرکز به بعد)
 const WINDOW_DAYS = 7;
+// جابه‌جایی دستی پنجره (گشت‌وگذار روزهای گذشته/آینده نسبت به روزِ تمرکز)
+let ttOffset = 0;
+const TT_OFFSET_MIN = -7;  // تا یک هفته گذشته
+const TT_OFFSET_MAX = 14;  // تا دو هفته آینده
 
 function renderTimetable() {
   const grid = $('#ttGrid');
   grid.textContent = '';
-  // پنجره از روزِ تمرکز شروع می‌شود: عصرِ بعدازمدرسه، اولین ستون «فردا» است نه امروزِ گذشته
+  // پنجره از روزِ تمرکز (+ جابه‌جاییِ دستی کاربر) شروع می‌شود:
+  // عصرِ بعدازمدرسه اولین ستون «فردا» است؛ با «روز قبل» می‌توان به گذشته هم برگشت.
   const focus = focusDay();
-  const windowDays = rollingWindow(WINDOW_DAYS, Date.now() + focus.offset * 86_400_000);
+  const windowDays = rollingWindow(WINDOW_DAYS, Date.now() + (focus.offset + ttOffset) * 86_400_000);
   const todayDayNum = tehranDayNumber();
   let anyLessons = false;
+  updateDayNav(focus);
 
   for (const { date, dayIdx } of windowDays) {
     const dateMs = date.getTime();
     // مقایسه با شماره‌ی روزِ تهران — مستقل از منطقه‌ی زمانی مرورگر (VPN)
-    const isToday = focus.offset === 0 && tehranDayNumber(dateMs) === todayDayNum;
+    const isToday = tehranDayNumber(dateMs) === todayDayNum;
     const lessons = state.days[dayIdx] || [];
     anyLessons = anyLessons || lessons.length > 0;
     const col = el('div', {
@@ -365,7 +371,7 @@ function renderTimetable() {
     $('#heroSub').textContent = 'هنوز برنامه‌ای ثبت نشده است؛ به‌زودی توسط سرِ کلاس تکمیل می‌شود.';
   }
   $('#updatedAt').textContent = faDigits(tehranHHMM(Date.now()));
-  renderDots(windowDays, focus.offset === 0 ? todayDayNum : null);
+  renderDots(windowDays, todayDayNum);
   updateScrollState();
 }
 
@@ -441,7 +447,7 @@ function scrollToDay(dayIdx, dateKey, smooth = true) {
 }
 
 function scrollToToday(smooth = true) {
-  // اولین ستونِ «امروز» (اولین ستون پنجره)
+  // بازگشت به روزِ تمرکز (اولین ستون پنجره): صبح «امروز»، عصر «فردا»
   const scroll = $('#ttScroll');
   if (!scroll) return;
   const col = scroll.querySelector('.day-col');
@@ -450,6 +456,27 @@ function scrollToToday(smooth = true) {
   const sRect = scroll.getBoundingClientRect();
   const delta = (rect.left + rect.width / 2) - (sRect.left + scroll.clientWidth / 2);
   scroll.scrollBy({ left: delta, behavior: smooth ? 'smooth' : 'auto' });
+}
+
+/** جابه‌جایی پنجره‌ی روزها (−۱ روز / +۱ روز) و رندر مجدد */
+function shiftWindow(delta) {
+  ttOffset = Math.max(TT_OFFSET_MIN, Math.min(TT_OFFSET_MAX, ttOffset + delta));
+  renderTimetable();
+  scrollToToday(false);
+}
+
+/** دکمه‌های ناوبری روز + برچسبِ دکمه‌ی «برو به …» بر اساس روز تمرکز */
+function updateDayNav(focus) {
+  const prev = $('#dayPrev');
+  const next = $('#dayNext');
+  if (prev) prev.disabled = ttOffset <= TT_OFFSET_MIN;
+  if (next) next.disabled = ttOffset >= TT_OFFSET_MAX;
+  // صبح (هنوز کلاس داریم) → «برو به امروز»؛ عصر/آخر هفته → «برو به فردا» یا روز بعد
+  const goLabel = focus.offset === 0 ? 'برو به امروز' : focus.offset === 1 ? 'برو به فردا' : `برو به ${WEEK_DAY_NAMES[focus.dayIdx]}`;
+  const todayBtn = $('#todayBtn');
+  if (todayBtn) todayBtn.textContent = goLabel;
+  const fabLabel = $('#fabTodayLabel');
+  if (fabLabel) fabLabel.textContent = goLabel;
 }
 
 // ---------- پنل جزئیات ----------
@@ -856,6 +883,7 @@ function setupFab() {
   };
   window.addEventListener('scroll', onScroll, { passive: true });
   fab.addEventListener('click', () => {
+    if (ttOffset !== 0) { ttOffset = 0; renderTimetable(); }
     scrollToToday();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
@@ -955,7 +983,9 @@ $('#detailClose').addEventListener('click', () => closeOverlay($('#detailOverlay
 $('#detailOverlay').addEventListener('mousedown', (e) => {
   if (e.target === $('#detailOverlay')) closeOverlay($('#detailOverlay'));
 });
-$('#todayBtn').addEventListener('click', () => scrollToToday());
+$('#todayBtn').addEventListener('click', () => { ttOffset = 0; renderTimetable(); scrollToToday(); });
+$('#dayPrev').addEventListener('click', () => shiftWindow(-1));
+$('#dayNext').addEventListener('click', () => shiftWindow(1));
 $('#notifBtn').addEventListener('click', () => toggleNotif());
 $('#ttPrev').addEventListener('click', () => {
   const scroll = $('#ttScroll');

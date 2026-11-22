@@ -1949,6 +1949,10 @@ h1, h2, h3, h4 { line-height: 1.5; }
 .file-chip--link { border-style: dashed; }
 .attachment-item--link .attachment-item__size { direction: ltr; }
 
+/* ---------- ناوبری روزها (سربرگ برنامه هفتگی) ---------- */
+.tt-nav { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.tt-nav .btn { flex-shrink: 0; }
+
 </style>
 </head>
 <body>
@@ -2230,6 +2234,34 @@ h1, h2, h3, h4 { line-height: 1.5; }
         </div>
 
         <div class="admin-card">
+          <h2 class="admin-card__title">☁️ انبار فایل تلگرام (فضای بیشتر)</h2>
+          <p class="admin-note">
+            پیوست‌ها به‌جای دیتابیس کوچک، به چتِ خصوصی خودتان در تلگرام فرستاده می‌شوند و فقط
+            شناسه‌شان اینجا ذخیره می‌شود؛ دانش‌آموز موقع دانلود، فایل را از تلگرام می‌گیرد.
+            سقف هر فایل از ۱.۵ مگابایت به <b>۲۰ مگابایت</b> می‌رسد.
+            راه‌اندازی: ۱) در تلگرام به <span dir="ltr">@BotFather</span> پیام <span dir="ltr">/newbot</span> بدهید و توکن را بردارید.
+            ۲) به باتِ خودتان <span dir="ltr">/start</span> بزنید. ۳) توکن را همین‌جا بچسبانید و «دریافت chat id» را بزنید.
+          </p>
+          <div id="tgStatus" class="admin-note"></div>
+          <form id="tgForm" novalidate>
+            <div class="field">
+              <label class="field__label" for="tgToken">توکن بات (از BotFather)</label>
+              <input class="input" id="tgToken" dir="ltr" placeholder="123456789:AAE..." autocomplete="off">
+            </div>
+            <div class="field">
+              <label class="field__label" for="tgChat">شناسه چت (chat id)</label>
+              <input class="input" id="tgChat" dir="ltr" placeholder="123456789" autocomplete="off">
+            </div>
+            <div class="btn-row">
+              <button class="btn btn--primary" type="submit">ذخیره</button>
+              <button class="btn btn--ghost" type="button" id="tgDiscover">دریافت chat id</button>
+              <button class="btn btn--ghost" type="button" id="tgTest">تست اتصال</button>
+              <button class="btn btn--danger" type="button" id="tgDisable">غیرفعال‌کردن</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="admin-card">
           <h2 class="admin-card__title">🔄 زنگ‌های گردشی</h2>
           <p class="admin-note">
             این زنگ‌ها هفته‌به‌هفته بین دو درس می‌چرخند. اگر برنامه‌ی مدرسه با چیزی که سایت نشان می‌دهد فرق دارد
@@ -2282,7 +2314,7 @@ h1, h2, h3, h4 { line-height: 1.5; }
             <textarea class="textarea" id="hwNotes" maxlength="2000" style="min-height:70px;"></textarea>
           </div>
           <div class="field">
-            <label class="field__label">پیوست‌ها (تصویر / PDF / آفیس — هر فایل تا ۱.۵ مگابایت)</label>
+            <label class="field__label">پیوست‌ها (تصویر / PDF / آفیس — <span id="hwLimitNote">هر فایل تا ۱.۵ مگابایت</span>)</label>
             <div class="upload-row" id="hwUploadRow"></div>
             <input type="file" id="hwFile" class="hidden" multiple
               accept=".png,.jpg,.jpeg,.webp,.gif,.pdf,.txt,.doc,.docx,.ppt,.pptx,.xls,.xlsx">
@@ -2879,6 +2911,7 @@ const state = {
   settings: {},
   me: null,
   hwLessonId: null,   // lesson whose homework is being edited
+  tg: { configured: false }, // انبار فایل تلگرام
   pendingUploads: [], // newly picked File objects for homework
   hwLinks: [],        // پیوست‌های لینکیِ در انتظار (تکلیف)
   taskLinks: [],      // پیوست‌های لینکیِ در انتظار (مهلت)
@@ -3368,7 +3401,7 @@ function renderExistingFiles(files) {
         isLink
           ? el('div', { class: 'admin-row__title' }, el('a', { href: f.url, target: '_blank', rel: 'noopener', text: f.filename, dir: 'ltr' }))
           : el('div', { class: 'admin-row__title', text: f.filename }),
-        el('div', { class: 'admin-row__sub', text: isLink ? 'لینک بیرونی' : `${faDigits(f.size)} بایت` })),
+        el('div', { class: 'admin-row__sub', text: isLink ? 'لینک بیرونی' : f.telegram_file_id ? `☁️ تلگرام · ${formatSizeFa(f.size)}` : `${formatSizeFa(f.size)} · دیتابیس` })),
       el('button', {
         class: 'btn btn--danger btn--sm', type: 'button', text: '🗑️',
         onclick: async () => {
@@ -3752,10 +3785,81 @@ async function flipRotation() {
   btn.disabled = false;
 }
 
+function formatSizeFa(bytes) {
+  if (bytes >= 1_048_576) return `${faDigits((bytes / 1_048_576).toFixed(1))} مگابایت`;
+  if (bytes >= 1024) return `${faDigits(Math.round(bytes / 1024))} کیلوبایت`;
+  return `${faDigits(bytes)} بایت`;
+}
+
 function fillSettingsForm() {
   $('#setClassName').value = state.settings.class_name || '';
   $('#setWelcome').value = state.settings.welcome_message || '';
   $('#setNote').value = state.settings.admin_note || '';
+  loadTgStatus();
+}
+
+/** وضعیت انبار تلگرام: فرم + برچسب سقف فایل‌ها */
+async function loadTgStatus() {
+  try {
+    const st = await api('/api/admin/telegram');
+    state.tg = st;
+    const chatInput = $('#tgChat');
+    if (chatInput && st.chatId && !chatInput.value) chatInput.value = st.chatId;
+    const note = $('#tgStatus');
+    if (note) {
+      note.textContent = st.configured
+        ? (st.bot
+          ? `✅ فعال — بات @${st.bot} (توکن ${st.maskedToken})؛ سقف هر فایل ۲۰ مگابایت.`
+          : `⚠️ توکن ذخیره شده ولی بات پاسخ نداد — دوباره تست بگیرید.`)
+        : 'غیرفعال — فایل‌ها در دیتابیس (سقف ۱.۵ مگابایت) ذخیره می‌شوند.';
+    }
+  } catch { /* آفلاین/بدون نشست — بی‌صدا */ }
+  const limit = $('#hwLimitNote');
+  if (limit) limit.textContent = state.tg.configured ? 'هر فایل تا ۲۰ مگابایت (انبار تلگرام)' : 'هر فایل تا ۱.۵ مگابایت (با انبار تلگرام تا ۲۰)';
+}
+
+async function submitTgForm(e) {
+  e.preventDefault();
+  const body = {};
+  const token = $('#tgToken').value.trim();
+  const chat = $('#tgChat').value.trim();
+  if (token) body.tg_bot_token = token;
+  if (chat !== '') body.tg_chat_id = chat;
+  if (!Object.keys(body).length) { toast('چیزی برای ذخیره نیست.', 'error'); return; }
+  try {
+    await api('/api/admin/settings', { method: 'PUT', body });
+    toast('تنظیمات انبار ذخیره شد ✅', 'success');
+    $('#tgToken').value = '';
+    await loadTgStatus();
+  } catch (err) { toast(err.message, 'error'); }
+}
+
+async function tgDiscover() {
+  try {
+    // توکن خالی → سرور از توکنِ ذخیره‌شده استفاده می‌کند
+    const st = await api('/api/admin/telegram/chatid', { method: 'POST', body: { token: $('#tgToken').value.trim() } });
+    $('#tgChat').value = st.chatId;
+    toast(`chat id پیدا شد: ${st.chatId} — «ذخیره» را بزنید.`, 'success');
+  } catch (err) {
+    toast(err.message, 'error');
+  }
+}
+
+async function tgDisable() {
+  try {
+    await api('/api/admin/settings', { method: 'PUT', body: { tg_bot_token: '', tg_chat_id: '' } });
+    toast('انبار تلگرام غیرفعال شد — پیوست‌ها به دیتابیس برمی‌گردند.', 'success');
+    $('#tgToken').value = ''; $('#tgChat').value = '';
+    await loadTgStatus();
+  } catch (err) { toast(err.message, 'error'); }
+}
+
+async function tgTest() {
+  try {
+    const r = await api('/api/admin/telegram/test', { method: 'POST', body: {} });
+    toast(`اتصال برقرار است ✅ بات @${r.bot}`, 'success');
+    await loadTgStatus();
+  } catch (err) { toast(err.message, 'error'); }
 }
 
 async function submitSettings(e) {
@@ -4078,6 +4182,10 @@ $('#annForm').addEventListener('submit', submitAnn);
 $('#annReset').addEventListener('click', resetAnnForm);
 $('#subjectForm').addEventListener('submit', submitSubject);
 $('#settingsForm').addEventListener('submit', submitSettings);
+$('#tgForm').addEventListener('submit', submitTgForm);
+$('#tgDiscover').addEventListener('click', tgDiscover);
+$('#tgTest').addEventListener('click', tgTest);
+$('#tgDisable').addEventListener('click', tgDisable);
 $('#hwForm').addEventListener('submit', submitHomework);
 $('#hwDelete').addEventListener('click', deleteHomework);
 $('#hwClose').addEventListener('click', () => closeOverlay($('#hwOverlay')));

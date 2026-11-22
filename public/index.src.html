@@ -48,7 +48,11 @@
     <section class="section" aria-label="برنامه هفتگی">
       <div class="section__head">
         <h2 class="section__title"><span class="emoji" aria-hidden="true">🗓️</span> برنامه هفتگی</h2>
-        <button class="btn btn--ghost btn--sm" id="todayBtn" type="button">برو به امروز</button>
+        <div class="tt-nav" role="group" aria-label="ناوبری روزها">
+          <button class="btn btn--ghost btn--sm" id="dayPrev" type="button" title="یک روز به عقب">‹ روز قبل</button>
+          <button class="btn btn--ghost btn--sm" id="todayBtn" type="button">برو به فردا</button>
+          <button class="btn btn--ghost btn--sm" id="dayNext" type="button" title="یک روز به جلو">روز بعد ›</button>
+        </div>
         <span class="section__note">به‌روزرسانی: <span id="updatedAt">…</span></span>
       </div>
       <div class="tt-wrap" id="ttWrap">
@@ -89,7 +93,7 @@
 
   <!-- دکمه شناور «برو به امروز» -->
   <button class="fab-today" id="fabToday" type="button">
-    <span aria-hidden="true">📌</span> برو به امروز
+    <span aria-hidden="true">📌</span> <span id="fabTodayLabel">برو به فردا</span>
   </button>
 
   <!-- پنل جزئیات: کنار صفحه در دسکتاپ، بات‌شیت در موبایل -->

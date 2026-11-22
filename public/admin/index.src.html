@@ -290,6 +290,34 @@
         </div>
 
         <div class="admin-card">
+          <h2 class="admin-card__title">☁️ انبار فایل تلگرام (فضای بیشتر)</h2>
+          <p class="admin-note">
+            پیوست‌ها به‌جای دیتابیس کوچک، به چتِ خصوصی خودتان در تلگرام فرستاده می‌شوند و فقط
+            شناسه‌شان اینجا ذخیره می‌شود؛ دانش‌آموز موقع دانلود، فایل را از تلگرام می‌گیرد.
+            سقف هر فایل از ۱.۵ مگابایت به <b>۲۰ مگابایت</b> می‌رسد.
+            راه‌اندازی: ۱) در تلگرام به <span dir="ltr">@BotFather</span> پیام <span dir="ltr">/newbot</span> بدهید و توکن را بردارید.
+            ۲) به باتِ خودتان <span dir="ltr">/start</span> بزنید. ۳) توکن را همین‌جا بچسبانید و «دریافت chat id» را بزنید.
+          </p>
+          <div id="tgStatus" class="admin-note"></div>
+          <form id="tgForm" novalidate>
+            <div class="field">
+              <label class="field__label" for="tgToken">توکن بات (از BotFather)</label>
+              <input class="input" id="tgToken" dir="ltr" placeholder="123456789:AAE..." autocomplete="off">
+            </div>
+            <div class="field">
+              <label class="field__label" for="tgChat">شناسه چت (chat id)</label>
+              <input class="input" id="tgChat" dir="ltr" placeholder="123456789" autocomplete="off">
+            </div>
+            <div class="btn-row">
+              <button class="btn btn--primary" type="submit">ذخیره</button>
+              <button class="btn btn--ghost" type="button" id="tgDiscover">دریافت chat id</button>
+              <button class="btn btn--ghost" type="button" id="tgTest">تست اتصال</button>
+              <button class="btn btn--danger" type="button" id="tgDisable">غیرفعال‌کردن</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="admin-card">
           <h2 class="admin-card__title">🔄 زنگ‌های گردشی</h2>
           <p class="admin-note">
             این زنگ‌ها هفته‌به‌هفته بین دو درس می‌چرخند. اگر برنامه‌ی مدرسه با چیزی که سایت نشان می‌دهد فرق دارد
@@ -342,7 +370,7 @@
             <textarea class="textarea" id="hwNotes" maxlength="2000" style="min-height:70px;"></textarea>
           </div>
           <div class="field">
-            <label class="field__label">پیوست‌ها (تصویر / PDF / آفیس — هر فایل تا ۱.۵ مگابایت)</label>
+            <label class="field__label">پیوست‌ها (تصویر / PDF / آفیس — <span id="hwLimitNote">هر فایل تا ۱.۵ مگابایت</span>)</label>
             <div class="upload-row" id="hwUploadRow"></div>
             <input type="file" id="hwFile" class="hidden" multiple
               accept=".png,.jpg,.jpeg,.webp,.gif,.pdf,.txt,.doc,.docx,.ppt,.pptx,.xls,.xlsx">
