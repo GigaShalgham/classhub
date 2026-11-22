@@ -1,22 +1,9 @@
-# کش طولانی برای فایل‌های ثابت (فونت/عکس) — کلید رفع مشکل اینترنت ضعیف:
-# قبلاً max-age=0 بود یعنی هر بازدید همه‌چیز از نو دانلود می‌شد.
-# نام فایل‌ها با تغییر محتوا عوض می‌شوند یا استایل/اسکریپت با no-cache می‌مانند.
-/fonts/*
-  Cache-Control: public, max-age=31536000, immutable
-
-/css/*
-  Cache-Control: public, max-age=86400
-
-/js/*
-  Cache-Control: public, max-age=86400
-
-# صفحه تک‌فایلی دانش‌آموز (پاسخ /): نمایش فوری از کش + به‌روزرسانی در پس‌زمینه.
-# داده‌های واقعی همیشه از /api/bootstrap تازه می‌آیند. کش پوسته فقط ۵ دقیقه است
-# تا رفع باگ‌ها سریع به دست کاربر برسد (قبلاً ۱ ساعت بود و کاربران نسخه‌ی قدیمی
-# را می‌دیدند) — روی شبکه ضعیف بازدید بعدی همچنان تقریباً صفر دانلود است.
+# صفحات HTML همیشه از سرور اعتبارسنجی شوند (etag → 304) تا هر دیپلوی
+# بلافاصله برای همه‌ی کاربران دیده شود. پیش‌فرض پلتفرم (max-age=300 +
+# stale-while-revalidate=86400) باعث می‌شد مرورگر تا یک روز نسخه‌ی کهنه نشان دهد.
 /
-  Cache-Control: public, max-age=300, stale-while-revalidate=86400
-
-# پنل ادمین هم تک‌فایلی است — همان کش کوتاه پوسته
+  Cache-Control: public, max-age=0, must-revalidate
+/admin
+  Cache-Control: public, max-age=0, must-revalidate
 /admin/*
-  Cache-Control: public, max-age=300, stale-while-revalidate=86400
+  Cache-Control: public, max-age=0, must-revalidate
