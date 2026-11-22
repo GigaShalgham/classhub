@@ -44,9 +44,12 @@ Browser Check (`scripts/fix_security_level.sh`).
 **لایه ۳ — آینه‌ی استاتیک روی GitHub Pages** (`scripts/publish_mirror.py`):
 داده‌های زنده بیک می‌شوند داخل خود صفحه (`window.__BOOTSTRAP__`)، فونت‌ها data-URI،
 و به شاخه‌ی gh-pages پوش می‌شود. روی شبکه‌ی Fastly — غیر-کلادفلر — میزبانی می‌شود:
-- **https://gigashalgham.github.io/school-s-stuff/** ← لینک اصلی نجات
-- https://cdn.jsdelivr.net/gh/GigaShalgham/school-s-stuff@gh-pages/ (jsDelivr فایل‌های
-  .html را text/plain سرو می‌کند؛ فقط برای دانلود/کش مفید است، نه مرور مستقیم)
+- **https://gigashalgham.github.io/classhub/** ← لینک اصلی نجات (تست‌شده در مرورگر)
+- **https://gigashalgham.github.io/classhub/admin/** ← آینه‌ی ادمین (API زنده، تست‌شده)
+- نکته CDNها: jsDelivr فایل .html را `text/plain + nosniff` می‌دهد (متن خام!) و
+  githack یک صفحه‌ی هشدار کلیکی («Open the page») نشان می‌دهد؛ statically هم به
+  http سقوط می‌کند. هیچ‌کدام برای مرور مستقیم مناسب نیستند — آینه‌ی قابل‌مرور فقط
+  GitHub Pages است. (لینک‌های CDN فقط برای دانلود فایل تک‌صفحه‌ای بدرد می‌خورند.)
 اجرای دوباره بعد از هر تغییر داده: `python3 scripts/publish_mirror.py`
 (اگر CDN نسخه‌ی کهنه داد: purge با اضافه‌کردن `?v=<تاریخ>` به URL).
 
@@ -57,7 +60,6 @@ Browser Check (`scripts/fix_security_level.sh`).
 ۱. https://school.gigaspaceturnip.workers.dev
 ۲. https://www.the-big-school.de5.net
 ۳. https://gigashalgham.github.io/classhub/ ← تقریباً همیشه باز است
-۴. https://cdn.jsdelivr.net/gh/GigaShalgham/classhub@gh-pages/index.html
 اگر هیچ‌کدام باز نشد، مشکل شبکه/دستگاه خودشان است (نه سایت).
 ⚠️ دامنه‌ی `school.sigmababyboy.ccwu.cc` در آبان ۱۴۰۵ بازنشسته شد (Worker Domain آن حذف شد) — لینک زنده نیست.
 نکته DNS: Private DNS = `1.1.1.1` در اندروید (Settings → Network → Private DNS)

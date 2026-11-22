@@ -10,7 +10,8 @@
 # نتیجه: چند لینک روی شبکه‌های غیر-کلادفلر (Fastly):
 #   https://gigashalgham.github.io/classhub/
 #   https://gigashalgham.github.io/classhub/admin/
-#   https://cdn.jsdelivr.net/gh/GigaShalgham/classhub@gh-pages/index.html
+#   (CDNهایی مثل jsdelivr/githack فایل .html را برای مرورگر نمی‌سروند —
+#    jsdelivr: text/plain، githack: صفحه‌ی هشدار کلیکی؛ فقط github.io قابل‌مرور است)
 # اجرا: python3 scripts/publish_mirror.py
 
 import base64
@@ -154,7 +155,7 @@ if status == 409:
                         {'source': {'branch': 'gh-pages', 'path': '/'}})
         print(f'   تغییر source به gh-pages: {"OK" if s3 == 200 else f"{s3} {b3}"}')
 
-print('\nلینک‌های آینه (چند دقیقه بعد از انتشار CDN فعال می‌شوند):')
+print('\nلینک‌های آینه (چند دقیقه بعد از انتشار فعال می‌شوند):')
 print(f'  A) دانش‌آموز: https://gigashalgham.github.io/classhub/')
 print(f'  B) ادمین:     https://gigashalgham.github.io/classhub/admin/')
-print(f'  C) CDN:       https://cdn.jsdelivr.net/gh/{REPO}@gh-pages/index.html')
+print('  نکته: CDNها (jsdelivr/githack) صفحه .html را برای مرورگر نمی‌سروند — لینک قابل‌مرور فقط github.io است.')
