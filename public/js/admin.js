@@ -231,6 +231,86 @@ function showAdmin() {
   refreshAll();
 }
 
+// ---------- بارگذاری فایل با نوار پیشرفت (XHR برای رویداد progress) ----------
+let activeUploadXhr = null;
+
+function setUploadProgress(loaded, total, processing = false) {
+  const pct = total ? Math.min(100, Math.round((loaded / total) * 100)) : 0;
+  const fill = $('#uploadBarFill');
+  fill.style.width = (processing ? 100 : pct) + '%';
+  fill.classList.toggle('upload-bar__fill--processing', processing);
+  $('#uploadPct').textContent = processing ? 'در حال پردازش…' : `${faDigits(pct)}٪`;
+  $('#uploadBytes').textContent = (total && !processing) ? `${formatSizeFa(loaded)} از ${formatSizeFa(total)}` : '';
+}
+
+function showUploadOverlay() {
+  const ov = $('#uploadOverlay');
+  ov.hidden = false;
+  requestAnimationFrame(() => ov.classList.add('overlay--open'));
+}
+
+function hideUploadOverlay() {
+  const ov = $('#uploadOverlay');
+  ov.classList.remove('overlay--open');
+  setTimeout(() => { ov.hidden = true; }, 250);
+}
+
+/** یک فایل را با رویداد پیشرفت بفرست — همان قرارداد api() اما با progress */
+function uploadWithProgress(fd, onProgress) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    activeUploadXhr = xhr;
+    xhr.open('POST', `${window.__API_BASE__ ?? API_BASE}/api/admin/attachments`);
+    const token = storedToken();
+    if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+    xhr.timeout = 180_000; // فایل بزرگ روی شبکه ضعیف
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable && onProgress) onProgress(e.loaded, e.total);
+    };
+    xhr.onload = () => {
+      let data = {};
+      try { data = JSON.parse(xhr.responseText || '{}'); } catch { /* بدنه‌ی خالی */ }
+      if (xhr.status >= 200 && xhr.status < 300) resolve(data);
+      else reject(new Error(data.error || `خطای ${xhr.status}`));
+    };
+    xhr.onerror = () => reject(new Error('اتصال به سرور برقرار نشد.'));
+    xhr.ontimeout = () => reject(new Error('شبکه کند است — زمان بارگذاری تمام شد.'));
+    xhr.onabort = () => { const e = new Error('لغو شد'); e.aborted = true; reject(e); };
+    xhr.send(fd);
+  });
+}
+
+/** چند فایل را پشت‌سرهم با نوار پیشرفت و امکان لغو بالا بفرست؛ تعداد موفق را برمی‌گرداند */
+async function uploadFilesWithProgress(files, parentType, parentId) {
+  if (!files.length) return 0;
+  $('#uploadTitle').textContent = 'در حال بارگذاری فایل…';
+  showUploadOverlay();
+  let uploaded = 0;
+  let aborted = false;
+  for (const [i, file] of files.entries()) {
+    $('#uploadFileName').textContent = file.name;
+    $('#uploadCount').textContent = files.length > 1 ? `فایل ${faDigits(i + 1)} از ${faDigits(files.length)}` : '';
+    setUploadProgress(0, file.size);
+    try {
+      const fd = new FormData();
+      fd.append('parentType', parentType);
+      fd.append('parentId', String(parentId));
+      fd.append('file', file);
+      await uploadWithProgress(fd, (loaded, total) => {
+        setUploadProgress(loaded, total, loaded >= total); // انتها = فاز پردازش سرور
+      });
+      uploaded += 1;
+    } catch (err) {
+      if (err.aborted) { aborted = true; break; }
+      toast(`آپلود «${file.name}» ناموفق: ${err.message}`, 'error');
+    }
+  }
+  hideUploadOverlay();
+  activeUploadXhr = null;
+  if (aborted) toast(`بارگذاری لغو شد — ${faDigits(uploaded)} از ${faDigits(files.length)} فایل آپلود شد.`, 'error');
+  return uploaded;
+}
+
 // ---------- data refresh ----------
 async function refreshAll() {
   const [sched, tasks, anns, subjects, settings, tg, houts] = await Promise.allSettled([
@@ -583,20 +663,8 @@ async function submitHomework(e) {
   };
   try {
     const res = await api(`/api/admin/lessons/${state.hwLessonId}/homework`, { method: 'PUT', body: payload });
-    // upload pending attachments
-    let uploaded = 0;
-    for (const file of state.pendingUploads) {
-      const fd = new FormData();
-      fd.append('parentType', 'homework');
-      fd.append('parentId', String(res.id));
-      fd.append('file', file);
-      try {
-        await api('/api/admin/attachments', { method: 'POST', body: fd });
-        uploaded += 1;
-      } catch (err) {
-        toast(`آپلود «${file.name}» ناموفق: ${err.message}`, 'error');
-      }
-    }
+    // آپلود پیوست‌ها با نوار پیشرفت
+    const uploaded = await uploadFilesWithProgress(state.pendingUploads.splice(0), 'homework', res.id);
     toast(uploaded ? `تکلیف و ${faDigits(uploaded)} پیوست ذخیره شد ✅` : 'تکلیف ذخیره شد ✅', 'success');
     closeOverlay($('#hwOverlay'));
     refreshAll();
@@ -641,12 +709,8 @@ async function submitTask(e) {
       // attach pending file if any
       const file = state.taskFile;
       if (file) {
-        const fd = new FormData();
-        fd.append('parentType', 'task');
-        fd.append('parentId', String(res.id));
-        fd.append('file', file);
-        try { await api('/api/admin/attachments', { method: 'POST', body: fd }); } catch (err) { toast(`آپلود پیوست ناموفق: ${err.message}`, 'error'); }
         state.taskFile = null;
+        await uploadFilesWithProgress([file], 'task', res.id);
       }
       toast('مهلت جدید ایجاد شد ✅', 'success');
     }
@@ -736,12 +800,8 @@ async function submitAnn(e) {
       const res = await api('/api/admin/announcements', { method: 'POST', body: payload });
       const file = state.annFile;
       if (file) {
-        const fd = new FormData();
-        fd.append('parentType', 'announcement');
-        fd.append('parentId', String(res.id));
-        fd.append('file', file);
-        try { await api('/api/admin/attachments', { method: 'POST', body: fd }); } catch (err) { toast(`آپلود پیوست ناموفق: ${err.message}`, 'error'); }
         state.annFile = null;
+        await uploadFilesWithProgress([file], 'announcement', res.id);
       }
       toast('اطلاعیه منتشر شد ✅', 'success');
     }
@@ -907,17 +967,7 @@ async function submitHandout(e) {
       const res = await api('/api/admin/handouts', { method: 'POST', body: payload });
       id = res.id;
     }
-    let uploaded = 0;
-    for (const file of state.pendingHandoutFiles.splice(0)) {
-      const fd = new FormData();
-      fd.append('parentType', 'handout');
-      fd.append('parentId', String(id));
-      fd.append('file', file);
-      try {
-        await api('/api/admin/attachments', { method: 'POST', body: fd });
-        uploaded += 1;
-      } catch (err) { toast(`آپلود «${file.name}» ناموفق: ${err.message}`, 'error'); }
-    }
+    const uploaded = await uploadFilesWithProgress(state.pendingHandoutFiles.splice(0), 'handout', id);
     toast(uploaded ? `جزوه و ${faDigits(uploaded)} فایل ذخیره شد ✅` : 'جزوه ذخیره شد ✅', 'success');
     resetHandoutForm();
     refreshAll();
@@ -1442,6 +1492,7 @@ $('#hwFile').addEventListener('change', () => {
 });
 
 $('#handoutForm').addEventListener('submit', submitHandout);
+$('#uploadCancel').addEventListener('click', () => activeUploadXhr?.abort());
 $('#handoutReset').addEventListener('click', resetHandoutForm);
 $('#handoutAddFile').addEventListener('click', () => $('#handoutFile').click());
 // سقف فایل جزوه: با انبار تلگرام ۲۰ مگ، بدون آن ۱.۵ مگ — پویا از state.tg

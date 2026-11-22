@@ -439,6 +439,21 @@
     </div>
   </div>
 
+  <!-- ===== نوار پیشرفت بارگذاری فایل ===== -->
+  <div class="overlay" id="uploadOverlay" role="dialog" aria-modal="true" aria-labelledby="uploadTitle" hidden>
+    <div class="sheet upload-box">
+      <div class="upload-box__icon" aria-hidden="true">⬆️</div>
+      <h2 class="sheet__title" id="uploadTitle" style="font-size:16px;">در حال بارگذاری فایل…</h2>
+      <div class="upload-box__file" id="uploadFileName">—</div>
+      <div class="upload-box__count" id="uploadCount"></div>
+      <div class="upload-bar" aria-hidden="true"><div class="upload-bar__fill" id="uploadBarFill"></div></div>
+      <div class="upload-box__meta"><span id="uploadPct">۰٪</span><span id="uploadBytes"></span></div>
+      <div class="btn-row" style="justify-content:center;">
+        <button class="btn btn--ghost btn--sm" type="button" id="uploadCancel">لغو بارگذاری</button>
+      </div>
+    </div>
+  </div>
+
   <div class="toast-region" id="toastRegion" aria-live="polite"></div>
 
   <script type="module" src="/js/admin.js"></script>
