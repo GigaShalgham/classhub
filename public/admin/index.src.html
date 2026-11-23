@@ -65,6 +65,7 @@
 
       <nav class="admin-tabs" id="adminTabs" role="tablist" aria-label="بخش‌های مدیریت">
         <button class="admin-tab admin-tab--active" data-tab="lessons" role="tab" aria-selected="true" type="button">🗓️ برنامه و تکالیف</button>
+        <button class="admin-tab" data-tab="bells" role="tab" aria-selected="false" type="button">🔔 زنگ‌ها</button>
         <button class="admin-tab" data-tab="calendar" role="tab" aria-selected="false" type="button">📅 تقویم ماهانه</button>
         <button class="admin-tab" data-tab="tasks" role="tab" aria-selected="false" type="button">⏳ مهلت‌ها</button>
         <button class="admin-tab" data-tab="announcements" role="tab" aria-selected="false" type="button">📣 اطلاعیه‌ها</button>
@@ -107,8 +108,9 @@
         <div class="admin-card">
           <h2 class="admin-card__title">🗓️ برنامه هفتگی کلاس</h2>
           <p class="field__hint" style="margin-top:-10px;">
-            درس هر خانه را از فهرست انتخاب کنید — ساعت‌ها خودکار بر اساس زنگ‌های استاندارد (۰۷:۴۵ تا ۱۳:۴۵؛ دوشنبه تا ۱۲:۱۵) پر می‌شوند. برای خالی‌کردن یک خانه «—» را انتخاب کنید. اگر زنگی هفته‌به‌هفته بین دو درس می‌چرخد (مثل هندسه/دفاعی)، درس دوم را از فهرست «🔄 گردشی» همان خانه انتخاب کنید.
+            درس هر خانه را از فهرست انتخاب کنید — ساعت‌ها خودکار از تب «🔔 زنگ‌ها» گرفته می‌شوند. برای خالی‌کردن یک خانه «—» را انتخاب کنید. اگر زنگی هفته‌به‌هفته بین دو درس می‌چرخد (مثل هندسه/دفاعی)، درس دوم را از فهرست «🔄 گردشی» همان خانه انتخاب کنید.
           </p>
+          <div class="setup-banner hidden" id="setupBanner" role="region" aria-label="راه‌اندازی اولیه"></div>
           <div class="tt-wrap admin-tt-wrap">
             <div class="tt-scroll admin-tt-scroll">
               <table class="grid-editor" id="gridEditor" aria-label="ویرایش برنامه هفتگی">
@@ -127,6 +129,23 @@
           <h2 class="admin-card__title">📝 تکالیف ثبت‌شده</h2>
           <p class="field__hint" style="margin-top:-8px;">برای ویرایش تکلیف هر درس، در جدول بالا روی دکمه 📝 همان خانه بزنید.</p>
           <div class="admin-list" id="lessonsList"></div>
+        </div>
+      </section>
+
+      <!-- ===== Bells tab ===== -->
+      <section class="admin-panel hidden" id="tab-bells" role="tabpanel">
+        <div class="admin-card">
+          <h2 class="admin-card__title">🔔 زنگ‌های هفته</h2>
+          <p class="field__hint" style="margin-top:-10px;">
+            ساختار کلاس خودتان را بسازید: هر روز چند زنگ دارد و هر زنگ چه ساعتی شروع و پایان می‌یابد. برنامه‌ی هفتگی و زنگ‌های گردشی بر اساس همین زنگ‌ها ساخته می‌شوند. ترتیب زنگ‌ها بر اساس ساعت شروعِ همان روز چیده می‌شود. اگر زنگی را حذف کنید، درسِ آن زنگ فقط از برنامه پنهان می‌شود (از بین نمی‌رود).
+          </p>
+          <div class="bells-days" id="bellsDays"></div>
+          <div class="btn-row" style="margin-top:14px;flex-wrap:wrap;">
+            <button class="btn btn--primary" type="button" id="bellsSave">💾 ذخیره‌ی زنگ‌ها</button>
+            <button class="btn" type="button" id="bellsTemplate" title="۴ زنگ ۷۵ دقیقه‌ای از ۰۷:۴۵ تا ۱۳:۴۵ برای شنبه تا چهارشنبه">✨ الگوی ۴ زنگ (شنبه تا چهارشنبه)</button>
+            <button class="btn btn--ghost" type="button" id="bellsReset">↩️ بازخوانی از سرور</button>
+          </div>
+          <span class="field__hint" id="bellsStatus"></span>
         </div>
       </section>
 
@@ -374,15 +393,9 @@
             <label class="field__label" for="hwDesc">توضیحات کامل</label>
             <textarea class="textarea" id="hwDesc" maxlength="4000" placeholder="شرح کامل تکلیف برای دانش‌آموزان…"></textarea>
           </div>
-          <div class="form-grid">
-            <div class="field">
-              <label class="field__label" for="hwPages">صفحات کتاب</label>
-              <input class="input" id="hwPages" maxlength="200" placeholder="مثلاً: صفحه ۴۲ تا ۴۴">
-            </div>
-            <div class="field">
-              <label class="field__label" for="hwDueField">مهلت تحویل (شمسی، اختیاری)</label>
-              <div id="hwDueField"></div>
-            </div>
+          <div class="field">
+            <label class="field__label" for="hwPages">صفحات کتاب</label>
+            <input class="input" id="hwPages" maxlength="200" placeholder="مثلاً: صفحه ۴۲ تا ۴۴">
           </div>
           <div class="field">
             <label class="field__label" for="hwInstructions">دستورالعمل تکلیف</label>

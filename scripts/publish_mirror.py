@@ -16,6 +16,7 @@
 
 import base64
 import json
+import os
 import re
 import subprocess
 import sys
@@ -24,8 +25,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 PUB = ROOT / 'public'
-REPO = 'GigaShalgham/classhub'
-LIVE = 'https://school.gigaspaceturnip.workers.dev'
+# برای نصب روی حساب خودتان، این دو را با متغیر محیطی عوض کنید:
+#   MIRROR_REPO='username/my-classhub' LIVE_URL='https://my-school.workers.dev' python3 scripts/publish_mirror.py
+REPO = os.environ.get('MIRROR_REPO', 'GigaShalgham/classhub')
+LIVE = os.environ.get('LIVE_URL', 'https://school.gigaspaceturnip.workers.dev').rstrip('/')
 GH_TOKEN = None
 
 # ---------- توکن گیت‌هاب از فایل توکن‌ها ----------

@@ -154,6 +154,43 @@ function parseAltSubject(body: Record<string, unknown>): number | null | 'invali
   return n;
 }
 
+// ---------- Bells (ساختار زنگ‌های هفته — داده، نه کد) ----------
+const HHMM_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+async function bellFor(db: D1Database, day: number, period: number): Promise<{ start_time: string; end_time: string } | null> {
+  return db.prepare('SELECT start_time, end_time FROM bells WHERE day = ? AND period = ?').bind(day, period).first();
+}
+
+adminRoutes.put('/bells', requireAdmin(), async (c) => {
+  const body = await readJson(c.req.raw);
+  const list = body.bells;
+  if (!Array.isArray(list)) bad('فهرست زنگ‌ها ارسال نشده است.');
+  if (list.length > 84) bad('زنگ‌ها بیش از حد مجاز است (حداکثر ۱۲ زنگ × ۷ روز).');
+  const seen = new Set<string>();
+  const rows: [number, number, string, string][] = [];
+  for (const b of list) {
+    const day = Number(b.day);
+    const period = Number(b.period);
+    const start = str(b.start ?? b.startTime, 'ساعت شروع', { max: 5 });
+    const end = str(b.end ?? b.endTime, 'ساعت پایان', { max: 5 });
+    if (!Number.isInteger(day) || day < 0 || day > 6) bad('روزِ هفته معتبر نیست.');
+    if (!Number.isInteger(period) || period < 1 || period > 12) bad('شماره‌ی زنگ باید بین ۱ تا ۱۲ باشد.');
+    if (!HHMM_RE.test(start) || !HHMM_RE.test(end)) bad(`ساعت زنگ باید به شکل HH:MM باشد (${start} تا ${end}).`);
+    if (start >= end) bad('ساعت شروع زنگ باید قبل از ساعت پایان باشد.');
+    const key = `${day}:${period}`;
+    if (seen.has(key)) bad('شماره‌ی زنگ برای یک روز تکراری است.');
+    seen.add(key);
+    rows.push([day, period, start, end]);
+  }
+  // بازنویسی اتمی: پاک‌کردن و درج همه در یک batch
+  const stmts: D1PreparedStatement[] = [c.env.DB.prepare('DELETE FROM bells')];
+  for (const r of rows) {
+    stmts.push(c.env.DB.prepare('INSERT INTO bells (day, period, start_time, end_time) VALUES (?, ?, ?, ?)').bind(...r));
+  }
+  await c.env.DB.batch(stmts);
+  return c.json({ ok: true });
+});
+
 adminRoutes.post('/lessons', requireAdmin(), async (c) => {
   const body = await readJson(c.req.raw);
   const day = int(body.day, 'روز', 0, 6);
@@ -162,15 +199,14 @@ adminRoutes.post('/lessons', requireAdmin(), async (c) => {
   const altRaw = parseAltSubject(body);
   if (altRaw === 'invalid') bad('درس گردشی نامعتبر است.');
   const altSubjectId = altRaw && altRaw === subjectId ? null : altRaw; // همان درس؟ گردشی بی‌معنی است
-  const startTime = timeStr(body.startTime ?? body.start_time, 'ساعت شروع');
-  const endTime = timeStr(body.endTime ?? body.end_time, 'ساعت پایان');
-  if (endTime <= startTime) bad('ساعت پایان باید بعد از شروع باشد.');
+  const bell = await bellFor(c.env.DB, day, period);
+  if (!bell) bad('برای این روز و شماره‌ی زنگ، زنگی ساخته نشده است. اول از تب «زنگ‌ها» ساعت‌ها را تعیین کنید.');
   if (!(await subjectExists(c.env.DB, subjectId))) bad('درس انتخاب‌شده وجود ندارد.');
   if (altSubjectId && !(await subjectExists(c.env.DB, altSubjectId))) bad('درس گردشی انتخاب‌شده وجود ندارد.');
   try {
     const r = await c.env.DB.prepare(
       'INSERT INTO lessons (day, period, subject_id, alt_subject_id, start_time, end_time) VALUES (?, ?, ?, ?, ?, ?)',
-    ).bind(day, period, subjectId, altSubjectId, startTime, endTime).run();
+    ).bind(day, period, subjectId, altSubjectId, bell.start_time, bell.end_time).run();
     return c.json({ ok: true, id: r.meta.last_row_id });
   } catch (e) {
     if (String(e).includes('UNIQUE')) return c.json({ ok: false, error: 'این روز و زنگ قبلاً پر شده است.' }, 409);
@@ -187,15 +223,14 @@ adminRoutes.put('/lessons/:id', requireAdmin(), async (c) => {
   const altRaw = parseAltSubject(body);
   if (altRaw === 'invalid') bad('درس گردشی نامعتبر است.');
   const altSubjectId = altRaw && altRaw === subjectId ? null : altRaw;
-  const startTime = timeStr(body.startTime ?? body.start_time, 'ساعت شروع');
-  const endTime = timeStr(body.endTime ?? body.end_time, 'ساعت پایان');
-  if (endTime <= startTime) bad('ساعت پایان باید بعد از شروع باشد.');
+  const bell = await bellFor(c.env.DB, day, period);
+  if (!bell) bad('برای این روز و شماره‌ی زنگ، زنگی ساخته نشده است. اول از تب «زنگ‌ها» ساعت‌ها را تعیین کنید.');
   if (!(await subjectExists(c.env.DB, subjectId))) bad('درس انتخاب‌شده وجود ندارد.');
   if (altSubjectId && !(await subjectExists(c.env.DB, altSubjectId))) bad('درس گردشی انتخاب‌شده وجود ندارد.');
   try {
     const r = await c.env.DB.prepare(
       `UPDATE lessons SET day=?, period=?, subject_id=?, alt_subject_id=?, start_time=?, end_time=?, updated_at=datetime('now') WHERE id=?`,
-    ).bind(day, period, subjectId, altSubjectId, startTime, endTime, id).run();
+    ).bind(day, period, subjectId, altSubjectId, bell.start_time, bell.end_time, id).run();
     if (!r.meta.changes) return c.json({ ok: false, error: 'درس پیدا نشد.' }, 404);
     return c.json({ ok: true });
   } catch (e) {
@@ -223,15 +258,15 @@ adminRoutes.put('/lessons/:id/homework', requireAdmin(), async (c) => {
   const textbookPages = str(body.textbookPages ?? body.textbook_pages, 'صفحات کتاب', { required: false, max: 200 });
   const instructions = str(body.instructions, 'دستورالعمل', { required: false, max: 2000 });
   const notes = str(body.notes, 'یادداشت سرِ کلاس', { required: false, max: 2000 });
-  const dueAt = isoDate(body.dueAt ?? body.due_at, 'مهلت تحویل', false);
+  // «مهلت تحویل» از فرم تکلیف حذف شد — مهلت‌ها فقط در تب «مهلت‌ها» تعریف می‌شوند.
   const r = await c.env.DB.prepare(`
-    INSERT INTO homework (lesson_id, title, description, textbook_pages, instructions, notes, due_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO homework (lesson_id, title, description, textbook_pages, instructions, notes)
+    VALUES (?, ?, ?, ?, ?, ?)
     ON CONFLICT(lesson_id) DO UPDATE SET
       title=excluded.title, description=excluded.description, textbook_pages=excluded.textbook_pages,
       instructions=excluded.instructions, notes=excluded.notes, due_at=excluded.due_at,
       updated_at=datetime('now')
-  `).bind(id, title, description, textbookPages, instructions, notes, dueAt).run();
+  `).bind(id, title, description, textbookPages, instructions, notes).run();
   return c.json({ ok: true, id: r.meta.last_row_id });
 });
 

@@ -34,6 +34,7 @@ export interface Lesson {
   alt_color_key: ColorKey | null;
   start_time: string;
   end_time: string;
+  updated_at: string;
   homework: Homework | null;
   attachment_count: number;
 }

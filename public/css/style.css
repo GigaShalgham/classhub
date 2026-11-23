@@ -899,6 +899,43 @@ h1, h2, h3, h4 { line-height: 1.5; }
    ================================================================ */
 .ann-list { display: flex; flex-direction: column; gap: 11px; max-width: 900px; }
 
+/* ---------- چکیده تکالیف (زیر تقویم) ---------- */
+.digest-list { display: flex; flex-direction: column; gap: 8px; }
+.digest-row {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 10px 14px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 14px;
+  cursor: pointer; text-align: right; font-family: inherit;
+  transition: border-color 0.2s, transform 0.15s;
+}
+.digest-row:hover { border-color: var(--lavender-deep); }
+.digest-row:active { transform: scale(0.99); }
+.digest-row--high { border-inline-start: 3px solid var(--pink-deep); }
+.digest-row__dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.digest-row__icon { font-size: 17px; flex-shrink: 0; }
+.digest-row__title {
+  flex: 1; min-width: 0; font-weight: 700; font-size: var(--fs-sm);
+  color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.digest-row__label {
+  flex-shrink: 0; border-radius: 999px; padding: 3px 10px;
+  font-size: var(--fs-xs); font-weight: 700; white-space: nowrap;
+}
+.dl-today { background: #FBE0E0; color: var(--pink-deep); }
+.dl-tomorrow { background: var(--cream); color: var(--cream-deep); }
+.dl-soon { background: var(--lavender); color: var(--lavender-deep); }
+.dl-later { background: var(--surface-3); color: var(--sub); }
+.digest-empty {
+  padding: 16px; text-align: center; color: var(--sub);
+  background: var(--surface); border: 1px dashed var(--border-strong); border-radius: 14px;
+  font-size: var(--fs-sm);
+}
+.digest-more {
+  align-self: center; border: none; background: none; cursor: pointer;
+  color: var(--lavender-deep); font-family: inherit; font-size: var(--fs-xs);
+  font-weight: 700; padding: 4px 10px;
+}
+
 /* ---------- تب‌های صفحه دانش‌آموز ---------- */
 .std-tabs {
   position: sticky;
@@ -931,6 +968,21 @@ h1, h2, h3, h4 { line-height: 1.5; }
 }
 .std-tab:hover { color: var(--text); border-color: var(--lavender); }
 .std-tab:active { transform: scale(0.97); }
+.std-tab { position: relative; }
+.std-tab__badge {
+  position: absolute; top: -7px; inset-inline-start: -7px;
+  min-width: 18px; height: 18px; padding: 0 5px;
+  border-radius: 999px; background: var(--pink-deep); color: #fff;
+  font-size: 11px; font-weight: 700; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 0 2px var(--bg);
+  animation: badge-pop 0.35s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+@keyframes badge-pop {
+  from { transform: scale(0); }
+  60% { transform: scale(1.2); }
+  to { transform: scale(1); }
+}
 .std-tab--active {
   background: var(--lavender);
   color: var(--lavender-deep);
@@ -938,6 +990,38 @@ h1, h2, h3, h4 { line-height: 1.5; }
   font-weight: 700;
 }
 .panel[aria-hidden="true"] { display: none; }
+
+/* ---------- تب زنگ‌ها (ادمین) ---------- */
+.bells-days { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.bell-day { border: 1px solid var(--border); border-radius: 16px; padding: 14px; background: var(--surface); }
+.bell-day--off { opacity: 0.55; }
+.bell-day__head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.bell-day__name { font-weight: 800; font-size: var(--fs-sm); color: var(--text); }
+.bell-day__count { font-size: var(--fs-xs); color: var(--sub); }
+.bell-day__rows { display: flex; flex-direction: column; gap: 8px; }
+.bell-row { display: flex; align-items: center; gap: 8px; }
+.bell-row__n { font-size: var(--fs-xs); color: var(--sub); min-width: 54px; font-weight: 700; }
+.bell-row__time { width: 96px; padding: 6px 8px; font-size: var(--fs-sm); text-align: center; direction: ltr; }
+.bell-row__sep { font-size: var(--fs-xs); color: var(--sub); }
+.bell-day__add { margin-top: 10px; width: 100%; }
+.grid-empty { padding: 26px 16px; text-align: center; color: var(--sub); font-size: var(--fs-sm); }
+
+/* ---------- بنر راه‌اندازی اولیه (ادمین) ---------- */
+.setup-banner {
+  border: 1px dashed var(--lavender-deep); background: var(--lavender);
+  border-radius: 16px; padding: 16px 18px; margin: 0 0 16px;
+}
+.setup-banner__title { margin: 0 0 8px; font-size: var(--fs-md); color: var(--text); }
+.setup-step { display: flex; gap: 10px; padding: 7px 0; align-items: flex-start; }
+.setup-step__n {
+  width: 26px; height: 26px; border-radius: 50%; background: var(--surface);
+  border: 1px solid var(--border-strong); display: flex; align-items: center;
+  justify-content: center; font-weight: 800; font-size: var(--fs-xs); flex-shrink: 0; color: var(--text);
+}
+.setup-step--done .setup-step__n { background: var(--mint); border-color: var(--mint-deep); }
+.setup-step__body { flex: 1; }
+.setup-step__title { font-weight: 700; font-size: var(--fs-sm); color: var(--text); }
+.setup-step__desc { font-size: var(--fs-xs); color: var(--sub); margin: 2px 0 6px; line-height: 1.8; }
 
 /* ---------- نوار پیشرفت بارگذاری ---------- */
 .upload-box { max-width: 380px; text-align: center; }

@@ -4,6 +4,10 @@ A cute, pastel-themed single-page class hub for a school class: the weekly timet
 
 Deployed on **Cloudflare Workers** (single Worker serving both the static frontend and the JSON API) with **Cloudflare D1** for persistence.
 
+## 🚀 راه‌اندازی روی حساب خودتان
+
+این پروژه از نسخه‌ی ۵ به بعد کاملاً پیکربندی‌پذیر است (زنگ‌ها، درس‌ها، برنامه و زنگ‌های گردشی همه از پنل ادمین ساخته می‌شوند — هیچ چیزِ کلاس در کد هاردکد نیست). برای راه‌اندازی روی حساب کلادفلر/تلگرام/گیتهاب خودتان راهنمای گام‌به‌گام فارسی: **[SETUP.md](SETUP.md)** یا فقط `bash scripts/setup.sh`.
+
 **Production (لینک اصلی — تأییدشده توسط خود کاربر در ایران):** https://school.gigaspaceturnip.workers.dev — ۸/۸ شبکه ایرانی ۲۰۰؛ بهینه برای اینترنت ضعیف (بارگذاری اول ~۱۱۶KB، بازدیدهای بعدی ~۲KB)
 **جایگزین:** https://www.the-big-school.de5.net — ۷/۸ شبکه ایرانی ۲۰۰؛ ⚠️ برخی شبکه‌های ایران کل پسوند `de5.net` را بلاک می‌کنند — برای مخاطب عمومی ایران تضمین‌ناپذیر است، لینک اصلی نیست.
 

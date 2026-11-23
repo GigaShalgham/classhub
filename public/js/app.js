@@ -4,7 +4,7 @@ import {
   WEEK_DAY_NAMES, iranDayIndex, KIND_LABELS, KIND_ICONS, PRIORITY_LABELS,
   tehranHHMM, rollingWindow, weekParity, tehranDayIndex, tehranDayNumber, tehranLocalDate,
 } from './utils.js';
-import { periodsPerDay } from './schedule.js';
+import { periodsPerDay, periodTimes, setBells, getBells } from './schedule.js';
 
 const $ = (sel) => document.querySelector(sel);
 
@@ -308,25 +308,19 @@ function lessonCard(lesson, dateMs) {
     el('span', { class: 'lesson-card__period', text: faDigits(lesson.period), 'aria-hidden': 'true' }),
     el('span', { class: 'lesson-card__emoji', text: subjectEmoji(subj.subject_name), 'aria-hidden': 'true' }),
     el('span', { class: 'lesson-card__subject', text: subj.subject_name }),
-    el('span', { class: 'lesson-card__time', text: `${faTime(lesson.start_time)}–${faTime(lesson.end_time)}` }),
+    (() => {
+      // ساعت از زنگِ پیکربندی‌شده می‌آید (منبع حقیقت)؛ فقط اگر نبود، از ردیف درس
+      const bt = periodTimes(lesson.day, lesson.period) ?? [lesson.start_time, lesson.end_time];
+      return el('span', { class: 'lesson-card__time', text: `${faTime(bt[0])}–${faTime(bt[1])}` });
+    })(),
   );
   card.append(top);
 
   if (hw) {
-    const cd = hw.due_at ? countdown(hw.due_at) : null;
     const hwLine = el('div', { class: 'lesson-card__hw' },
       el('span', { text: `📝 ${hw.title}` }),
     );
-    if (cd && cd.state !== 'passed') {
-      hwLine.append(el('span', {
-        class: 'lesson-card__time', text: cd.text,
-        style: 'flex-shrink:0;font-weight:700;color:var(--cream-deep);',
-      }));
-    }
     card.append(hwLine);
-    if (cd && (cd.state === 'today' || cd.state === 'soon')) {
-      card.append(el('span', { class: 'lesson-card__badge', text: cd.state === 'today' ? 'امروز!' : 'نزدیک!' }));
-    }
   } else {
     card.append(el('div', { class: 'lesson-card__hw lesson-card__hw--none', text: 'تکلیفی ثبت نشده' }));
   }
@@ -587,12 +581,6 @@ function renderLessonDetail(lesson, dateMs) {
     if (hw.textbook_pages) {
       dl.append(el('div', { class: 'dl-row' }, el('dt', { text: 'صفحات کتاب' }), el('dd', { text: hw.textbook_pages })));
     }
-    if (hw.due_at) {
-      const cd = countdown(hw.due_at);
-      dl.append(el('div', { class: 'dl-row' },
-        el('dt', { text: 'مهلت تحویل' }),
-        el('dd', {}, `${formatJalaliDateTime(hw.due_at)} (${cd.text})`)));
-    }
     if (dl.children.length) wrap.append(el('div', { class: 'detail-block' }, dl));
     if (hw.instructions) {
       wrap.append(el('div', { class: 'detail-block' },
@@ -683,6 +671,113 @@ function setupSheetDrag() {
   grip.addEventListener('mousedown', onStart);
   window.addEventListener('mousemove', onMove);
   window.addEventListener('mouseup', onEnd);
+}
+
+// ---------- چکیده تکالیف (زیر تقویم هفتگی) ----------
+/** برچسب نسبیِ مهلت: امروز / فردا / پس‌فردا / n روز مانده / تاریخ شمسی */
+function dueLabelFa(dueAt) {
+  const dueMs = new Date(dueAt).getTime();
+  const diff = tehranDayNumber(dueMs) - tehranDayNumber(Date.now());
+  if (diff === 0) return { text: 'امروز', cls: 'dl-today' };
+  if (diff === 1) return { text: 'فردا', cls: 'dl-tomorrow' };
+  if (diff === 2) return { text: 'پس‌فردا', cls: 'dl-tomorrow' };
+  if (diff > 2 && diff <= 6) return { text: `${faDigits(diff)} روز مانده`, cls: 'dl-soon' };
+  return { text: formatJalali(new Date(dueMs), { withYear: false }), cls: 'dl-later' };
+}
+
+function renderDigest() {
+  const list = $('#digestList');
+  if (!list) return;
+  list.textContent = '';
+  // مهلت‌های فعال از قبل بر اساس نزدیکی مرتب‌اند؛ فقط ۶ مورد نخست
+  const items = (state.tasks?.active ?? []).slice(0, 6);
+  if (!items.length) {
+    list.append(el('div', { class: 'digest-empty', text: 'مهلت نزدیکی نداریم — نفس بکش! 🌿' }));
+    return;
+  }
+  for (const task of items) {
+    const label = dueLabelFa(task.due_at);
+    const row = el('button', {
+      class: `digest-row${task.priority === 'high' ? ' digest-row--high' : ''}`,
+      type: 'button',
+      onclick: () => openTask(task.id),
+      title: task.title,
+    });
+    if (task.subject_name) {
+      row.append(el('span', {
+        class: 'digest-row__dot',
+        style: `background: var(--${task.color_key ?? 'lavender'});`,
+        'aria-hidden': 'true',
+      }));
+    }
+    row.append(
+      el('span', { class: 'digest-row__icon', text: KIND_ICONS[task.kind] || '📌', 'aria-hidden': 'true' }),
+      el('span', { class: 'digest-row__title', text: `${task.subject_name ? task.subject_name + ' — ' : ''}${task.title}` }),
+      el('span', { class: `digest-row__label ${label.cls}`, text: label.text }),
+    );
+    list.append(row);
+  }
+  if (state.tasks.active.length > 6) {
+    list.append(el('button', {
+      class: 'digest-more', type: 'button', text: `نمایش همه‌ی ${faDigits(state.tasks.active.length)} مهلت ←`,
+      onclick: () => switchTab('tasks'),
+    }));
+  }
+}
+
+// ---------- نشان «دیده‌نشده» روی سربرگ تب‌ها ----------
+const SEEN_KEY = 'classhub_seen_v1';
+
+function getSeen() {
+  try { return JSON.parse(localStorage.getItem(SEEN_KEY)); } catch { return null; }
+}
+
+function markTabSeen(tab, when = Date.now()) {
+  const s = getSeen() ?? {};
+  s[tab] = when;
+  try { localStorage.setItem(SEEN_KEY, JSON.stringify(s)); } catch { /* حالت خصوصی مرورگر */ }
+}
+
+/** چند موردِ تازه (آیتم‌هایی که بعد از آخرین بازدید تغییر کرده‌اند) برای هر تب */
+function tabFreshCounts() {
+  const seen = getSeen();
+  if (!seen) return { schedule: 0, tasks: 0, handouts: 0, announcements: 0 };
+  const counts = { schedule: 0, tasks: 0, handouts: 0, announcements: 0 };
+  for (const lessons of state.days ?? []) {
+    for (const l of lessons ?? []) {
+      const ts = Math.max(Date.parse(l.updated_at ?? '') || 0, Date.parse(l.homework?.updated_at ?? '') || 0);
+      if (ts > (seen.schedule ?? 0)) counts.schedule += 1;
+    }
+  }
+  for (const task of [...(state.tasks?.active ?? []), ...(state.tasks?.expired ?? [])]) {
+    const ts = Math.max(Date.parse(task.created_at ?? '') || 0, Date.parse(task.updated_at ?? '') || 0);
+    if (ts > (seen.tasks ?? 0)) counts.tasks += 1;
+  }
+  for (const h of state.handouts ?? []) {
+    if ((Date.parse(h.updated_at ?? '') || 0) > (seen.handouts ?? 0)) counts.handouts += 1;
+  }
+  for (const a of state.announcements ?? []) {
+    if ((Date.parse(a.published_at ?? a.publishedAt ?? '') || 0) > (seen.announcements ?? 0)) counts.announcements += 1;
+  }
+  return counts;
+}
+
+function renderTabBadges() {
+  const counts = tabFreshCounts();
+  for (const btn of document.querySelectorAll('.std-tab')) {
+    const tab = btn.dataset.tab;
+    let badge = btn.querySelector('.std-tab__badge');
+    const n = tab === activeTab ? 0 : (counts[tab] ?? 0);
+    if (n > 0) {
+      if (!badge) {
+        badge = el('span', { class: 'std-tab__badge' });
+        btn.append(badge);
+      }
+      badge.textContent = faDigits(Math.min(n, 99));
+    } else if (badge) {
+      badge.remove();
+    }
+  }
 }
 
 // ---------- مهلت‌ها ----------
@@ -966,6 +1061,8 @@ function switchTab(name, opts = {}) {
     panel.setAttribute('aria-hidden', String(!on));
   }
   if (opts.updateHash !== false) history.replaceState(null, '', `#${name}`);
+  markTabSeen(name); // با باز شدن تب، نشان «دیده‌نشده»‌اش پاک می‌شود
+  renderTabBadges();
   if (opts.scroll !== false) {
     const tabs = $('#stdTabs');
     const top = tabs.getBoundingClientRect().top + window.scrollY - (document.querySelector('.site-header')?.offsetHeight ?? 56) - 6;
@@ -986,6 +1083,8 @@ function setupTabs() {
   });
   const h = location.hash.replace('#', '');
   if (STUDENT_TABS.includes(h)) switchTab(h, { updateHash: false, scroll: false });
+  // اولین بازدیدِ هر مرورگر: نشان نزنیم تا فقط مطالبِ بعد از این لحظه «تازه» باشند
+  if (!getSeen()) for (const tab of STUDENT_TABS) markTabSeen(tab);
 }
 
 // ---------- FAB «برو به امروز» ----------
@@ -1036,6 +1135,16 @@ function setConnState(mode) {
   }
 }
 
+// رفرش دوره‌ی دیتا — نشان «دیده‌نشده» و مطالب تازه بدون رفرش صفحه می‌آیند
+let pollScheduled = false;
+function schedulePoll() {
+  if (pollScheduled) return;
+  pollScheduled = true;
+  setInterval(() => {
+    if (document.visibilityState === 'visible') loadAll();
+  }, 30_000);
+}
+
 async function loadAll() {
   setConnState('loading');
   let data = null;
@@ -1058,6 +1167,8 @@ async function loadAll() {
   setConnState('ok');
 
   state.days = data.days ?? [];
+  state.bells = data.bells ?? [];
+  setBells(state.bells);
   state.tasks = { active: data.tasks?.active ?? [], expired: data.tasks?.expired ?? [] };
   state.announcements = data.announcements ?? [];
   state.handouts = data.handouts ?? [];
@@ -1066,10 +1177,12 @@ async function loadAll() {
   renderHeader();
   renderHero();
   renderTimetable();
+  renderDigest();
   renderTasks();
   renderAnnouncements();
   renderHandouts();
   renderNotifications();
+  renderTabBadges();
   // اسکرول به امروز بعد از آنکه layout ستون‌ها کامل شد
   if (window.innerWidth < 1360) {
     requestAnimationFrame(() => requestAnimationFrame(() => scrollToToday(false)));
@@ -1082,11 +1195,13 @@ async function loadAll() {
       window.__BOOTSTRAP__ = null;
       if (!fresh || !Array.isArray(fresh.days)) return;
       state.days = fresh.days ?? state.days;
+      state.bells = fresh.bells ?? state.bells;
+      setBells(state.bells);
       state.tasks = { active: fresh.tasks?.active ?? state.tasks.active, expired: fresh.tasks?.expired ?? state.tasks.expired };
       state.announcements = fresh.announcements ?? state.announcements;
       state.handouts = fresh.handouts ?? state.handouts;
       state.settings = fresh.settings ?? state.settings;
-      renderHeader(); renderHero(); renderTimetable(); renderTasks(); renderAnnouncements(); renderHandouts(); renderNotifications();
+      renderHeader(); renderHero(); renderTimetable(); renderDigest(); renderTasks(); renderAnnouncements(); renderHandouts(); renderNotifications(); renderTabBadges();
     }).catch(() => {
       // مسیر زنده بسته بود — فقط یادداشت کوچک «نسخه‌ی آفلاین» می‌ماند
       if (!document.querySelector('.mirror-note')) {
@@ -1097,6 +1212,8 @@ async function loadAll() {
       }
     });
   }
+  // از این به بعد هر ۳۰ ثانیه (وقتی تب مرورگر باز است) دیتا تازه می‌شود
+  schedulePoll();
 }
 
 // اتصال رویدادها
@@ -1151,8 +1268,10 @@ setupFab();
 // به‌روزرسانی شمارش معکوس هر دقیقه
 setInterval(() => {
   renderTasks();
+  renderDigest();
   renderNotifications();
   renderHero();
+  renderTabBadges();
 }, 60_000);
 
 loadAll();

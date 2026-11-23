@@ -14,9 +14,10 @@ const publicRoutes = new Hono<{ Bindings: Env }>();
 function lessonQuery() {
   return `
     SELECT l.id, l.day, l.period, l.start_time AS startTime, l.end_time AS endTime,
+           l.updated_at AS updatedAt,
            s.id AS subjectId, s.name AS subjectName, s.color_key AS colorKey,
            a.id AS altSubjectId, a.name AS altSubjectName, a.color_key AS altColorKey,
-           h.id AS hwId, h.title AS hwTitle, h.due_at AS hwDueAt,
+           h.id AS hwId, h.title AS hwTitle, h.due_at AS hwDueAt, h.updated_at AS hwUpdatedAt,
            (SELECT COUNT(*) FROM attachments a2 WHERE a2.parent_type='homework' AND a2.parent_id = h.id) AS hwAtt
     FROM lessons l
     JOIN subjects s ON s.id = l.subject_id
@@ -27,7 +28,7 @@ function lessonQuery() {
 }
 
 interface LessonRow {
-  id: number; day: number; period: number; startTime: string; endTime: string;
+  id: number; day: number; period: number; startTime: string; endTime: string; updatedAt: string; hwUpdatedAt?: string | null;
   subjectId: number; subjectName: string; colorKey: string;
   altSubjectId: number | null; altSubjectName: string | null; altColorKey: string | null;
   hwId: number | null; hwTitle: string | null; hwDueAt: string | null; hwAtt: number;
@@ -46,6 +47,7 @@ function rowToLesson(r: LessonRow): Lesson {
     alt_color_key: (r.altColorKey ?? null) as Lesson['alt_color_key'],
     start_time: r.startTime,
     end_time: r.endTime,
+    updated_at: r.updatedAt,
     homework: r.hwId ? {
       id: r.hwId,
       lesson_id: r.id,
@@ -56,29 +58,37 @@ function rowToLesson(r: LessonRow): Lesson {
       notes: '',
       due_at: r.hwDueAt,
       created_at: '',
-      updated_at: '',
+      updated_at: r.hwUpdatedAt ?? '',
     } : null,
     attachment_count: r.hwAtt ?? 0,
   };
 }
 
+function bellQuery() {
+  return 'SELECT day, period, start_time AS startTime, end_time AS endTime FROM bells ORDER BY day, period';
+}
+
 publicRoutes.get('/schedule', async (c) => {
-  const { results } = await c.env.DB.prepare(lessonQuery()).all<LessonRow>();
+  const [lessonRes, bellRes] = await Promise.all([
+    c.env.DB.prepare(lessonQuery()).all<LessonRow>(),
+    c.env.DB.prepare(bellQuery()).all(),
+  ]);
   const days: (Lesson[] | null)[] = Array.from({ length: WEEK_DAYS }, () => null);
-  for (const r of results ?? []) {
+  for (const r of lessonRes.results ?? []) {
     (days[r.day] ??= []).push(rowToLesson(r));
   }
-  return c.json({ ok: true, days });
+  return c.json({ ok: true, days, bells: bellRes.results ?? [] });
 });
 
 // Single round-trip bootstrap for the student page (weak-network optimization):
 // merges /schedule + /tasks + /announcements + /settings into one payload.
 // Read-only, additive; the individual endpoints stay untouched.
 publicRoutes.get('/bootstrap', async (c) => {
-  const [lessonRows, taskRows, annRows, settingRows, handoutRows, handoutAttRows] = await Promise.all([
+  const [lessonRows, taskRows, annRows, settingRows, handoutRows, handoutAttRows, bellRows] = await Promise.all([
     c.env.DB.prepare(lessonQuery()).all<LessonRow>(),
     c.env.DB.prepare(`
       SELECT t.id, t.kind, t.title, t.description, t.due_at AS dueAt, t.priority, t.archived,
+             t.created_at AS createdAt, t.updated_at AS updatedAt,
              s.id AS subjectId, s.name AS subjectName, s.color_key AS colorKey,
              (SELECT COUNT(*) FROM attachments a WHERE a.parent_type='task' AND a.parent_id = t.id) AS att
       FROM tasks t
@@ -105,6 +115,7 @@ publicRoutes.get('/bootstrap', async (c) => {
       `SELECT parent_id AS parentId, id, filename, mime, size FROM attachments
        WHERE parent_type='handout' ORDER BY id`,
     ).all<Record<string, unknown>>(),
+    c.env.DB.prepare(bellQuery()).all(),
   ]);
 
   const days: (Lesson[] | null)[] = Array.from({ length: WEEK_DAYS }, () => null);
@@ -148,8 +159,8 @@ publicRoutes.get('/bootstrap', async (c) => {
       due_at: r.dueAt as string,
       priority: r.priority as Task['priority'],
       archived: Boolean(r.archived),
-      created_at: '',
-      updated_at: '',
+      created_at: (r.createdAt ?? '') as string,
+      updated_at: (r.updatedAt ?? '') as string,
       attachment_count: (r.att ?? 0) as number,
     };
     if (t.archived || new Date(t.due_at).getTime() < now) expired.push(t);
@@ -170,7 +181,7 @@ publicRoutes.get('/bootstrap', async (c) => {
   const settings: Record<string, string> = {};
   for (const r of settingRows.results ?? []) settings[r.key] = r.value;
 
-  return c.json({ ok: true, days, tasks: { active, expired }, announcements, handouts, settings });
+  return c.json({ ok: true, days, tasks: { active, expired }, announcements, handouts, settings, bells: bellRows.results ?? [] });
 });
 
 publicRoutes.get('/lessons/:id', async (c) => {
@@ -230,6 +241,7 @@ publicRoutes.get('/lessons/:id', async (c) => {
 publicRoutes.get('/tasks', async (c) => {
   const { results } = await c.env.DB.prepare(`
     SELECT t.id, t.kind, t.title, t.description, t.due_at AS dueAt, t.priority, t.archived,
+           t.created_at AS createdAt, t.updated_at AS updatedAt,
            s.id AS subjectId, s.name AS subjectName, s.color_key AS colorKey,
            (SELECT COUNT(*) FROM attachments a WHERE a.parent_type='task' AND a.parent_id = t.id) AS att
     FROM tasks t
@@ -251,8 +263,8 @@ publicRoutes.get('/tasks', async (c) => {
       due_at: r.dueAt as string,
       priority: r.priority as Task['priority'],
       archived: Boolean(r.archived),
-      created_at: '',
-      updated_at: '',
+      created_at: (r.createdAt ?? '') as string,
+      updated_at: (r.updatedAt ?? '') as string,
       attachment_count: (r.att ?? 0) as number,
     };
     if (t.archived || new Date(t.due_at).getTime() < now) expired.push(t);

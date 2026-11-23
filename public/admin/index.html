@@ -911,6 +911,43 @@ h1, h2, h3, h4 { line-height: 1.5; }
    ================================================================ */
 .ann-list { display: flex; flex-direction: column; gap: 11px; max-width: 900px; }
 
+/* ---------- چکیده تکالیف (زیر تقویم) ---------- */
+.digest-list { display: flex; flex-direction: column; gap: 8px; }
+.digest-row {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 10px 14px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 14px;
+  cursor: pointer; text-align: right; font-family: inherit;
+  transition: border-color 0.2s, transform 0.15s;
+}
+.digest-row:hover { border-color: var(--lavender-deep); }
+.digest-row:active { transform: scale(0.99); }
+.digest-row--high { border-inline-start: 3px solid var(--pink-deep); }
+.digest-row__dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.digest-row__icon { font-size: 17px; flex-shrink: 0; }
+.digest-row__title {
+  flex: 1; min-width: 0; font-weight: 700; font-size: var(--fs-sm);
+  color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.digest-row__label {
+  flex-shrink: 0; border-radius: 999px; padding: 3px 10px;
+  font-size: var(--fs-xs); font-weight: 700; white-space: nowrap;
+}
+.dl-today { background: #FBE0E0; color: var(--pink-deep); }
+.dl-tomorrow { background: var(--cream); color: var(--cream-deep); }
+.dl-soon { background: var(--lavender); color: var(--lavender-deep); }
+.dl-later { background: var(--surface-3); color: var(--sub); }
+.digest-empty {
+  padding: 16px; text-align: center; color: var(--sub);
+  background: var(--surface); border: 1px dashed var(--border-strong); border-radius: 14px;
+  font-size: var(--fs-sm);
+}
+.digest-more {
+  align-self: center; border: none; background: none; cursor: pointer;
+  color: var(--lavender-deep); font-family: inherit; font-size: var(--fs-xs);
+  font-weight: 700; padding: 4px 10px;
+}
+
 /* ---------- تب‌های صفحه دانش‌آموز ---------- */
 .std-tabs {
   position: sticky;
@@ -943,6 +980,21 @@ h1, h2, h3, h4 { line-height: 1.5; }
 }
 .std-tab:hover { color: var(--text); border-color: var(--lavender); }
 .std-tab:active { transform: scale(0.97); }
+.std-tab { position: relative; }
+.std-tab__badge {
+  position: absolute; top: -7px; inset-inline-start: -7px;
+  min-width: 18px; height: 18px; padding: 0 5px;
+  border-radius: 999px; background: var(--pink-deep); color: #fff;
+  font-size: 11px; font-weight: 700; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 0 2px var(--bg);
+  animation: badge-pop 0.35s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+@keyframes badge-pop {
+  from { transform: scale(0); }
+  60% { transform: scale(1.2); }
+  to { transform: scale(1); }
+}
 .std-tab--active {
   background: var(--lavender);
   color: var(--lavender-deep);
@@ -950,6 +1002,38 @@ h1, h2, h3, h4 { line-height: 1.5; }
   font-weight: 700;
 }
 .panel[aria-hidden="true"] { display: none; }
+
+/* ---------- تب زنگ‌ها (ادمین) ---------- */
+.bells-days { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.bell-day { border: 1px solid var(--border); border-radius: 16px; padding: 14px; background: var(--surface); }
+.bell-day--off { opacity: 0.55; }
+.bell-day__head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.bell-day__name { font-weight: 800; font-size: var(--fs-sm); color: var(--text); }
+.bell-day__count { font-size: var(--fs-xs); color: var(--sub); }
+.bell-day__rows { display: flex; flex-direction: column; gap: 8px; }
+.bell-row { display: flex; align-items: center; gap: 8px; }
+.bell-row__n { font-size: var(--fs-xs); color: var(--sub); min-width: 54px; font-weight: 700; }
+.bell-row__time { width: 96px; padding: 6px 8px; font-size: var(--fs-sm); text-align: center; direction: ltr; }
+.bell-row__sep { font-size: var(--fs-xs); color: var(--sub); }
+.bell-day__add { margin-top: 10px; width: 100%; }
+.grid-empty { padding: 26px 16px; text-align: center; color: var(--sub); font-size: var(--fs-sm); }
+
+/* ---------- بنر راه‌اندازی اولیه (ادمین) ---------- */
+.setup-banner {
+  border: 1px dashed var(--lavender-deep); background: var(--lavender);
+  border-radius: 16px; padding: 16px 18px; margin: 0 0 16px;
+}
+.setup-banner__title { margin: 0 0 8px; font-size: var(--fs-md); color: var(--text); }
+.setup-step { display: flex; gap: 10px; padding: 7px 0; align-items: flex-start; }
+.setup-step__n {
+  width: 26px; height: 26px; border-radius: 50%; background: var(--surface);
+  border: 1px solid var(--border-strong); display: flex; align-items: center;
+  justify-content: center; font-weight: 800; font-size: var(--fs-xs); flex-shrink: 0; color: var(--text);
+}
+.setup-step--done .setup-step__n { background: var(--mint); border-color: var(--mint-deep); }
+.setup-step__body { flex: 1; }
+.setup-step__title { font-weight: 700; font-size: var(--fs-sm); color: var(--text); }
+.setup-step__desc { font-size: var(--fs-xs); color: var(--sub); margin: 2px 0 6px; line-height: 1.8; }
 
 /* ---------- نوار پیشرفت بارگذاری ---------- */
 .upload-box { max-width: 380px; text-align: center; }
@@ -2105,6 +2189,7 @@ h1, h2, h3, h4 { line-height: 1.5; }
 
       <nav class="admin-tabs" id="adminTabs" role="tablist" aria-label="بخش‌های مدیریت">
         <button class="admin-tab admin-tab--active" data-tab="lessons" role="tab" aria-selected="true" type="button">🗓️ برنامه و تکالیف</button>
+        <button class="admin-tab" data-tab="bells" role="tab" aria-selected="false" type="button">🔔 زنگ‌ها</button>
         <button class="admin-tab" data-tab="calendar" role="tab" aria-selected="false" type="button">📅 تقویم ماهانه</button>
         <button class="admin-tab" data-tab="tasks" role="tab" aria-selected="false" type="button">⏳ مهلت‌ها</button>
         <button class="admin-tab" data-tab="announcements" role="tab" aria-selected="false" type="button">📣 اطلاعیه‌ها</button>
@@ -2147,8 +2232,9 @@ h1, h2, h3, h4 { line-height: 1.5; }
         <div class="admin-card">
           <h2 class="admin-card__title">🗓️ برنامه هفتگی کلاس</h2>
           <p class="field__hint" style="margin-top:-10px;">
-            درس هر خانه را از فهرست انتخاب کنید — ساعت‌ها خودکار بر اساس زنگ‌های استاندارد (۰۷:۴۵ تا ۱۳:۴۵؛ دوشنبه تا ۱۲:۱۵) پر می‌شوند. برای خالی‌کردن یک خانه «—» را انتخاب کنید. اگر زنگی هفته‌به‌هفته بین دو درس می‌چرخد (مثل هندسه/دفاعی)، درس دوم را از فهرست «🔄 گردشی» همان خانه انتخاب کنید.
+            درس هر خانه را از فهرست انتخاب کنید — ساعت‌ها خودکار از تب «🔔 زنگ‌ها» گرفته می‌شوند. برای خالی‌کردن یک خانه «—» را انتخاب کنید. اگر زنگی هفته‌به‌هفته بین دو درس می‌چرخد (مثل هندسه/دفاعی)، درس دوم را از فهرست «🔄 گردشی» همان خانه انتخاب کنید.
           </p>
+          <div class="setup-banner hidden" id="setupBanner" role="region" aria-label="راه‌اندازی اولیه"></div>
           <div class="tt-wrap admin-tt-wrap">
             <div class="tt-scroll admin-tt-scroll">
               <table class="grid-editor" id="gridEditor" aria-label="ویرایش برنامه هفتگی">
@@ -2167,6 +2253,23 @@ h1, h2, h3, h4 { line-height: 1.5; }
           <h2 class="admin-card__title">📝 تکالیف ثبت‌شده</h2>
           <p class="field__hint" style="margin-top:-8px;">برای ویرایش تکلیف هر درس، در جدول بالا روی دکمه 📝 همان خانه بزنید.</p>
           <div class="admin-list" id="lessonsList"></div>
+        </div>
+      </section>
+
+      <!-- ===== Bells tab ===== -->
+      <section class="admin-panel hidden" id="tab-bells" role="tabpanel">
+        <div class="admin-card">
+          <h2 class="admin-card__title">🔔 زنگ‌های هفته</h2>
+          <p class="field__hint" style="margin-top:-10px;">
+            ساختار کلاس خودتان را بسازید: هر روز چند زنگ دارد و هر زنگ چه ساعتی شروع و پایان می‌یابد. برنامه‌ی هفتگی و زنگ‌های گردشی بر اساس همین زنگ‌ها ساخته می‌شوند. ترتیب زنگ‌ها بر اساس ساعت شروعِ همان روز چیده می‌شود. اگر زنگی را حذف کنید، درسِ آن زنگ فقط از برنامه پنهان می‌شود (از بین نمی‌رود).
+          </p>
+          <div class="bells-days" id="bellsDays"></div>
+          <div class="btn-row" style="margin-top:14px;flex-wrap:wrap;">
+            <button class="btn btn--primary" type="button" id="bellsSave">💾 ذخیره‌ی زنگ‌ها</button>
+            <button class="btn" type="button" id="bellsTemplate" title="۴ زنگ ۷۵ دقیقه‌ای از ۰۷:۴۵ تا ۱۳:۴۵ برای شنبه تا چهارشنبه">✨ الگوی ۴ زنگ (شنبه تا چهارشنبه)</button>
+            <button class="btn btn--ghost" type="button" id="bellsReset">↩️ بازخوانی از سرور</button>
+          </div>
+          <span class="field__hint" id="bellsStatus"></span>
         </div>
       </section>
 
@@ -2414,15 +2517,9 @@ h1, h2, h3, h4 { line-height: 1.5; }
             <label class="field__label" for="hwDesc">توضیحات کامل</label>
             <textarea class="textarea" id="hwDesc" maxlength="4000" placeholder="شرح کامل تکلیف برای دانش‌آموزان…"></textarea>
           </div>
-          <div class="form-grid">
-            <div class="field">
-              <label class="field__label" for="hwPages">صفحات کتاب</label>
-              <input class="input" id="hwPages" maxlength="200" placeholder="مثلاً: صفحه ۴۲ تا ۴۴">
-            </div>
-            <div class="field">
-              <label class="field__label" for="hwDueField">مهلت تحویل (شمسی، اختیاری)</label>
-              <div id="hwDueField"></div>
-            </div>
+          <div class="field">
+            <label class="field__label" for="hwPages">صفحات کتاب</label>
+            <input class="input" id="hwPages" maxlength="200" placeholder="مثلاً: صفحه ۴۲ تا ۴۴">
           </div>
           <div class="field">
             <label class="field__label" for="hwInstructions">دستورالعمل تکلیف</label>
@@ -2961,35 +3058,55 @@ function createJalaliField(container) {
 
 ;
 // درس من — ساختور زنگ‌های کلاس (مشترک بین دانش‌آموز و مدیر)
-// شنبه تا چهارشنبه: ۴ زنگ (۰۷:۴۵ تا ۱۳:۴۵)
-// دوشنبه: ۳ زنگ (پایان ۱۲:۱۵)
-// پنجشنبه و جمعه: تعطیل
-// زنگ‌های ۷۵ دقیقه‌ای با تفریح‌های ۱۵ و ۳۰ دقیقه‌ای (ناهار)
+// زنگ‌ها از این پس «داده» هستند: مدیر کلاس در تب «زنگ‌ها» ساعت‌های هر روز را
+// می‌سازد و می‌چیند و این ماژول فقط همان را می‌خواند. هیچ چیزی هاردکد نیست —
+// هر کلاسی با هر تعداد زنگ (۰ تا ۱۲ زنگ در روز) پشتیبانی می‌شود.
 
-const PERIODS_NORMAL = 4;
-const PERIODS_MONDAY = 3;
+/** زنگ‌های دریافت‌شده از سرور (روی هر بار لود/رفرش دیتا setBells صدا می‌شود) */
+let BELLS = [];
+let BY_DAY = new Map();
 
-/** بازه‌ی زمانی استاندارد زنگ‌ها [شروع, پایان] */
-const PERIOD_TABLE = [
-  ['07:45', '09:00'],
-  ['09:15', '10:30'],
-  ['11:00', '12:15'],
-  ['12:30', '13:45'],
-];
+function setBells(list) {
+  // هر دو سبک کلید (snake_case از دیتابیس / camelCase از API) نرمال می‌شوند
+  BELLS = Array.isArray(list) ? list
+    .filter((b) => b && Number.isInteger(Number(b.day)) && (b.start_time ?? b.startTime))
+    .map((b) => ({
+      day: Number(b.day),
+      period: Number(b.period),
+      start_time: b.start_time ?? b.startTime,
+      end_time: b.end_time ?? b.endTime,
+    })) : [];
+  BY_DAY = new Map();
+  for (const b of BELLS) {
+    if (!BY_DAY.has(b.day)) BY_DAY.set(b.day, []);
+    BY_DAY.get(b.day).push(b);
+  }
+  for (const arr of BY_DAY.values()) arr.sort((a, b) => a.period - b.period);
+}
 
-/** روزهای کلاس‌دار (0=شنبه … 4=چهارشنبه) */
-const CLASS_DAYS = [0, 1, 2, 3, 4];
+function getBells() {
+  return BELLS;
+}
+
+/** روزهای کلاس‌دار (روزهایی که دست‌کم یک زنگ دارند) */
+function classDays() {
+  return [...BY_DAY.keys()].sort((a, b) => a - b);
+}
 
 /** تعداد زنگ‌های یک روز هفته (0=شنبه … 6=جمعه) */
 function periodsPerDay(day) {
-  if (day === 2) return PERIODS_MONDAY; // دوشنبه
-  if (day === 5 || day === 6) return 0; // پنجشنبه و جمعه: تعطیل
-  return PERIODS_NORMAL;
+  return BY_DAY.get(day)?.length ?? 0;
 }
 
-/** بازه زمانی استاندارد یک زنگ: [شروع, پایان] */
+/** زنگ‌های یک روز، مرتب بر اساس شماره */
+function bellsOfDay(day) {
+  return BY_DAY.get(day) ?? [];
+}
+
+/** بازه‌ی زمانی زنگ (day, period): [شروع, پایان] یا null اگر چنین زنگی نیست */
 function periodTimes(day, period) {
-  return PERIOD_TABLE[Math.min(period, 4) - 1];
+  const b = BY_DAY.get(day)?.find((x) => x.period === period);
+  return b ? [b.start_time, b.end_time] : null;
 }
 
 ;
@@ -3035,6 +3152,7 @@ const $ = (sel) => document.querySelector(sel);
 const state = {
   subjects: [],
   scheduleDays: [],
+  bells: [],
   tasks: { active: [], expired: [] },
   announcements: [],
   settings: {},
@@ -3305,6 +3423,136 @@ async function uploadFilesWithProgress(files, parentType, parentId) {
   return uploaded;
 }
 
+// ---------- تب زنگ‌ها (ساختار زنگ‌های هفته) ----------
+// پیش‌نویسِ محلی: تا «ذخیره» چیزی روی سرور نمی‌رود
+let bellsDraft = null;
+let bellsDirty = false;
+
+function renderBells() {
+  const wrap = $('#bellsDays');
+  if (!wrap) return;
+  // پیش‌نویس از زنگ‌های نرمال‌شده‌ی schedule.js (نه پاسخ خام API با کلیدهای camelCase)
+  if (!bellsDraft) bellsDraft = JSON.parse(JSON.stringify(getBells()));
+  wrap.textContent = '';
+  for (let d = 0; d < 7; d++) {
+    const rows = bellsDraft.filter((b) => b.day === d).sort((a, b) => a.start_time.localeCompare(b.start_time));
+    const card = el('div', { class: `bell-day${rows.length ? '' : ' bell-day--off'}` });
+    const head = el('div', { class: 'bell-day__head' },
+      el('span', { class: 'bell-day__name', text: WEEK_DAY_NAMES[d] }),
+      el('span', { class: 'bell-day__count', text: rows.length ? `${faDigits(rows.length)} زنگ` : 'تعطیل / بدون زنگ' }),
+    );
+    card.append(head);
+    const list = el('div', { class: 'bell-day__rows' });
+    rows.forEach((b, i) => {
+      const row = el('div', { class: 'bell-row' },
+        el('span', { class: 'bell-row__n', text: `زنگ ${faDigits(i + 1)}` }),
+      );
+      const sIn = el('input', { class: 'input bell-row__time', type: 'time', value: b.start_time, 'aria-label': `شروع زنگ ${i + 1} ${WEEK_DAY_NAMES[d]}` });
+      row.append(sIn, el('span', { class: 'bell-row__sep', text: 'تا' }));
+      const eIn = el('input', { class: 'input bell-row__time', type: 'time', value: b.end_time, 'aria-label': `پایان زنگ ${i + 1} ${WEEK_DAY_NAMES[d]}` });
+      row.append(eIn);
+      // هر تغییر ورودی، همان لحظه در پیش‌نویس نوشته می‌شود
+      const touch = () => {
+        bellsDirty = true;
+        $('#bellsStatus').textContent = 'تغییرات ذخیره نشده — «ذخیره‌ی زنگ‌ها» را بزنید.';
+      };
+      sIn.addEventListener('change', () => { if (sIn.value) { b.start_time = sIn.value; touch(); } });
+      eIn.addEventListener('change', () => { if (eIn.value) { b.end_time = eIn.value; touch(); } });
+      const del = el('button', { class: 'btn btn--danger btn--sm', type: 'button', title: 'حذف این زنگ', 'aria-label': `حذف زنگ ${i + 1} ${WEEK_DAY_NAMES[d]}` }, '🗑️');
+      del.addEventListener('click', () => {
+        bellsDraft = bellsDraft.filter((x) => x !== b);
+        bellsDirty = true;
+        renderBells();
+      });
+      row.append(del);
+      list.append(row);
+    });
+    card.append(list);
+    const add = el('button', { class: 'btn btn--ghost btn--sm bell-day__add', type: 'button' }, '＋ افزودن زنگ');
+    add.addEventListener('click', () => {
+      // زنگ جدید: شروع = پایانِ زنگِ قبلی + ۱۵ دقیقه تفریح؛ مدت ۷۵ دقیقه
+      const lastEnd = rows.length ? rows[rows.length - 1].end_time : '07:45';
+      const [h, m] = lastEnd.split(':').map(Number);
+      const startMin = Math.min(h * 60 + m + 15, 22 * 60);
+      const endMin = Math.min(startMin + 75, 23 * 60 + 45);
+      const fmt = (x) => `${String(Math.floor(x / 60)).padStart(2, '0')}:${String(x % 60).padStart(2, '0')}`;
+      bellsDraft.push({ day: d, period: rows.length + 1, start_time: fmt(startMin), end_time: fmt(endMin) });
+      bellsDirty = true;
+      renderBells();
+    });
+    card.append(add);
+    wrap.append(card);
+  }
+  $('#bellsStatus').textContent = bellsDirty ? 'تغییرات ذخیره نشده — «ذخیره‌ی زنگ‌ها» را بزنید.' : '';
+}
+
+async function saveBells() {
+  if (!bellsDraft) return;
+  // مرتب‌سازی هر روز بر اساس ساعت شروع + شماره‌گذاری مجدد
+  const out = [];
+  for (let d = 0; d < 7; d++) {
+    const rows = bellsDraft.filter((b) => b.day === d).sort((a, b) => a.start_time.localeCompare(b.start_time));
+    rows.forEach((b, i) => out.push({ day: d, period: i + 1, start: b.start_time, end: b.end_time }));
+  }
+  try {
+    await api('/api/admin/bells', { method: 'PUT', body: { bells: out } });
+    bellsDirty = false;
+    toast('زنگ‌ها ذخیره شد ✅', 'success');
+    await refreshAll();
+    renderGrid();
+  } catch (err) {
+    toast(err.message, 'error');
+  }
+}
+
+function bellsTemplate() {
+  // الگوی رایج مدارس: شنبه تا چهارشنبه ۴ زنگِ ۷۵ دقیقه‌ای از ۰۷:۴۵
+  const tpl = [['07:45', '09:00'], ['09:15', '10:30'], ['11:00', '12:15'], ['12:30', '13:45']];
+  bellsDraft = [];
+  for (let d = 0; d <= 4; d++) {
+    tpl.forEach(([s, e], i) => bellsDraft.push({ day: d, period: i + 1, start_time: s, end_time: e }));
+  }
+  bellsDirty = true;
+  renderBells();
+  toast('الگو آماده شد — اگر مناسب است «ذخیره‌ی زنگ‌ها» را بزنید.', 'info');
+}
+
+// ---------- بنر راه‌اندازی برای نصب تازه ----------
+function updateSetupBanner() {
+  const banner = $('#setupBanner');
+  if (!banner) return;
+  const hasBells = (state.bells ?? []).length > 0;
+  const hasSubjects = (state.subjects ?? []).length > 0;
+  const hasLessons = (state.scheduleDays ?? []).some((d) => (d ?? []).length > 0);
+  if (hasBells && hasSubjects && hasLessons) {
+    banner.classList.add('hidden');
+    return;
+  }
+  banner.classList.remove('hidden');
+  banner.textContent = '';
+  const step = (n, done, title, desc, btn) => el('div', { class: `setup-step${done ? ' setup-step--done' : ''}` },
+    el('span', { class: 'setup-step__n', text: done ? '✅' : faDigits(n) }),
+    el('div', { class: 'setup-step__body' },
+      el('div', { class: 'setup-step__title', text: title }),
+      el('div', { class: 'setup-step__desc', text: desc }),
+      btn),
+  );
+  const goto = (tab, label) => {
+    const b = el('button', { class: 'btn btn--ghost btn--sm', type: 'button' }, label);
+    b.addEventListener('click', () => {
+      const tabBtn = document.querySelector(`.admin-tab[data-tab="${tab}"]`);
+      tabBtn?.click();
+    });
+    return b;
+  };
+  banner.append(
+    el('h3', { class: 'setup-banner__title', text: '🚀 راه‌اندازی پنل کلاس' }),
+    step(1, hasBells, 'ساخت زنگ‌ها', 'ساعت شروع و پایان زنگ‌های هر روز هفته را تعیین کنید (یا از الگوی آماده استفاده کنید).', goto('bells', 'رفتن به زنگ‌ها')),
+    step(2, hasSubjects, 'افزودن درس‌ها', 'فهرست درس‌های کلاس را با رنگ دلخواه بسازید.', goto('subjects', 'رفتن به درس‌ها')),
+    step(3, hasLessons, 'چیدن برنامه‌ی هفتگی', 'در جدول برنامه، درسِ هر زنگ را انتخاب و ذخیره کنید. زنگ‌های گردشی هم همان‌جا تنظیم می‌شوند.', goto('lessons', 'رفتن به برنامه')),
+  );
+}
+
 // ---------- data refresh ----------
 async function refreshAll() {
   const [sched, tasks, anns, subjects, settings, tg, houts] = await Promise.allSettled([
@@ -3312,7 +3560,13 @@ async function refreshAll() {
   ]);
   // وضعیت انبار تلگرام از ابتدای بوت لازم است: سقف فایل و برچسب‌ها به آن وابسته‌اند
   if (tg.status === 'fulfilled') { state.tg = tg.value; updateTgUi(); }
-  if (sched.status === 'fulfilled') state.scheduleDays = sched.value.days;
+  if (sched.status === 'fulfilled') {
+    state.scheduleDays = sched.value.days;
+    state.bells = sched.value.bells ?? [];
+    setBells(state.bells);
+    renderBells();
+    updateSetupBanner();
+  }
   if (tasks.status === 'fulfilled') state.tasks = { active: tasks.value.active, expired: tasks.value.expired };
   if (anns.status === 'fulfilled') state.announcements = anns.value.announcements;
   if (houts.status === 'fulfilled') state.handouts = houts.value.handouts ?? [];
@@ -3352,14 +3606,21 @@ function renderGrid() {
   head.textContent = '';
   body.textContent = '';
 
-  // سرستون: زنگ + بازه زمانی
+  // سرستون: زنگ + بازه زمانی — از زنگ‌های پیکربندی‌شده (بیشترین تعداد زنگ بین روزها)
+  const days = classDays();
+  const maxP = days.reduce((m, d) => Math.max(m, periodsPerDay(d)), 0);
   const hr = el('tr', {},
     el('th', { text: 'زنگ ↓', style: 'text-align:right;' }),
   );
-  for (let p = 1; p <= 4; p++) {
-    const [s, e] = PERIOD_TABLE[p - 1];
+  for (let p = 1; p <= maxP; p++) {
+    // بازه‌ی زمانی هر ستون از اولین روزِ دارای این زنگ
+    let range = '';
+    for (const d of days) {
+      const bt = periodTimes(d, p);
+      if (bt) { range = `${bt[0]}–${bt[1]}`; break; }
+    }
     hr.append(el('th', {}, `${faDigits(p)}`,
-      el('span', { class: 'grid-day-sub', text: `${s}–${e}` })));
+      el('span', { class: 'grid-day-sub', text: range })));
   }
   head.append(hr);
 
@@ -3373,14 +3634,22 @@ function renderGrid() {
     }
   }
 
-  for (const d of CLASS_DAYS) {
-    const nPeriods = periodsPerDay(d);
+  if (!days.length) {
+    // هنوز زنگی ساخته نشده — راه‌اندازی تازه
+    body.append(el('tr', {}, el('td', {
+      class: 'grid-empty',
+      colspan: String(maxP + 1),
+      text: 'هنوز زنگی ساخته نشده است. از تب «🔔 زنگ‌ها» ساختار روزهای کلاس را بسازید.',
+    })));
+  }
+  for (const d of days) {
+    const dayBells = bellsOfDay(d);
     const tr = el('tr', { class: 'grid-row' });
     tr.append(el('td', { class: 'grid-row__day' },
       WEEK_DAY_NAMES[d],
-      el('small', { text: d === 2 ? 'تا ۱۲:۱۵' : 'تا ۱۳:۴۵' })));
-    for (let p = 1; p <= nPeriods; p++) {
-      tr.append(gridCellEl(d, p));
+      el('small', { text: dayBells.length ? `تا ${dayBells[dayBells.length - 1].end_time}` : '' })));
+    for (const b of dayBells) {
+      tr.append(gridCellEl(d, b.period));
     }
     body.append(tr);
   }
@@ -3389,7 +3658,8 @@ function renderGrid() {
 }
 
 function gridCellEl(day, period) {
-  const [t0, t1] = periodTimes(day, period);
+  const bt = periodTimes(day, period) ?? ['--:--', '--:--'];
+  const [t0, t1] = bt;
   const cellData = grid.cells[gridKey(day, period)];
   const td = el('td', { class: 'grid-cell' });
 
@@ -3484,7 +3754,7 @@ async function saveGrid() {
       const tdAlt = document.querySelector(`#gridEditor select[aria-label="درس گردشی ${WEEK_DAY_NAMES[d]} زنگ ${faDigits(p)}"]`);
       const newSubject = tdSel ? Number(tdSel.value) : null;
       const newAlt = tdAlt && tdAlt.value ? Number(tdAlt.value) : null;
-      const [t0, t1] = periodTimes(d, p);
+      // ساعت‌ها دیگر از کلاینت فرستاده نمی‌شوند — سرور آنها را از جدول زنگ‌ها می‌گیرد
       try {
         if (!newSubject) {
           // خالی‌کردن خانه
@@ -3494,12 +3764,12 @@ async function saveGrid() {
         } else if (cell.lessonId) {
           await api(`/api/admin/lessons/${cell.lessonId}`, {
             method: 'PUT',
-            body: { day: d, period: p, subjectId: newSubject, altSubjectId: newAlt, startTime: t0, endTime: t1 },
+            body: { day: d, period: p, subjectId: newSubject, altSubjectId: newAlt },
           });
         } else {
           await api('/api/admin/lessons', {
             method: 'POST',
-            body: { day: d, period: p, subjectId: newSubject, altSubjectId: newAlt, startTime: t0, endTime: t1 },
+            body: { day: d, period: p, subjectId: newSubject, altSubjectId: newAlt },
           });
         }
         done += 1;
@@ -3568,7 +3838,7 @@ async function openHwEditor(lesson) {
   $('#hwPages').value = '';
   $('#hwInstructions').value = '';
   $('#hwNotes').value = '';
-  hwDueField.setISO(null);
+
   renderPendingUploads();
   $('#hwExistingFiles').textContent = '';
   $('#hwDelete').classList.toggle('hidden', !lesson.homework);
@@ -3584,7 +3854,7 @@ async function openHwEditor(lesson) {
         $('#hwPages').value = hw.textbook_pages || '';
         $('#hwInstructions').value = hw.instructions || '';
         $('#hwNotes').value = hw.notes || '';
-        hwDueField.setISO(hw.due_at || null);
+
       }
       const files = data.lesson.attachments || [];
       renderExistingFiles(files);
@@ -3596,7 +3866,6 @@ async function openHwEditor(lesson) {
 }
 
 // فیلدهای تاریخ/ساعت شمسی (جایگزین datetime-local میلادی)
-const hwDueField = createJalaliField($('#hwDueField'));
 const taskDueField = createJalaliField($('#taskDueField'));
 taskDueField.setDefault(); // فرم خالی: پیش‌فرضِ مفید (فردا ۰۸:۰۰)
 
@@ -3653,7 +3922,6 @@ async function submitHomework(e) {
     textbookPages: $('#hwPages').value.trim(),
     instructions: $('#hwInstructions').value.trim(),
     notes: $('#hwNotes').value.trim(),
-    dueAt: hwDueField.getISO(),
   };
   try {
     const res = await api(`/api/admin/lessons/${state.hwLessonId}/homework`, { method: 'PUT', body: payload });
@@ -4452,6 +4720,9 @@ $('#loginForm').addEventListener('submit', async (e) => {
 // wire events
 $('#logoutBtn').addEventListener('click', handleLogout);
 $('#gridSave').addEventListener('click', saveGrid);
+$('#bellsSave').addEventListener('click', saveBells);
+$('#bellsTemplate').addEventListener('click', bellsTemplate);
+$('#bellsReset').addEventListener('click', () => { bellsDraft = null; bellsDirty = false; renderBells(); });
 $('#taskForm').addEventListener('submit', submitTask);
 $('#taskReset').addEventListener('click', resetTaskForm);
 $('#annForm').addEventListener('submit', submitAnn);
