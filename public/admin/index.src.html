@@ -107,6 +107,12 @@
       <section class="admin-panel" id="tab-lessons" role="tabpanel">
         <div class="admin-card">
           <h2 class="admin-card__title">🗓️ برنامه هفتگی کلاس</h2>
+          <div class="week-nav" role="group" aria-label="پیمایش هفته‌ها">
+            <button class="btn btn--ghost btn--sm" id="weekPrev" type="button" title="هفته‌ی قبل">‹ هفته قبل</button>
+            <span class="week-nav__label" id="weekLabel">هفته‌ی جاری</span>
+            <button class="btn btn--ghost btn--sm hidden" id="weekToday" type="button">برو به هفته‌ی جاری</button>
+            <button class="btn btn--ghost btn--sm" id="weekNext" type="button" title="هفته‌ی بعد">هفته بعد ›</button>
+          </div>
           <p class="field__hint" style="margin-top:-10px;">
             درس هر خانه را از فهرست انتخاب کنید — ساعت‌ها خودکار از تب «🔔 زنگ‌ها» گرفته می‌شوند. برای خالی‌کردن یک خانه «—» را انتخاب کنید. اگر زنگی هفته‌به‌هفته بین دو درس می‌چرخد (مثل هندسه/دفاعی)، درس دوم را از فهرست «🔄 گردشی» همان خانه انتخاب کنید.
           </p>

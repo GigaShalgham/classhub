@@ -11,18 +11,34 @@ const WEEK_DAYS = 7;
 const publicRoutes = new Hono<{ Bindings: Env }>();
 
 /** lessons with subject info + rotating alt subject + latest homework + attachment counts */
+// بازه‌ی نمایش تکالیف: از n روز گذشته تا n روز آینده (وقتِ تهران)
+const HW_RANGE_DAYS = { past: 21, future: 45 };
+
+function tehranDateUTC(offsetDays = 0): string {
+  // تاریخِ تهران (UTC+3:30) به شکل YYYY-MM-DD
+  const now = Date.now() + 3.5 * 3600_000 + offsetDays * 86_400_000;
+  return new Date(now).toISOString().slice(0, 10);
+}
+
+/** بازه‌ی مرئیِ تقویم: از «۲۱ روز قبل» تا «۴۵ روز بعد» — پوشش ۲ ماه جلالی */
+export function hwRange(): { from: string; to: string } {
+  return { from: tehranDateUTC(-HW_RANGE_DAYS.past), to: tehranDateUTC(HW_RANGE_DAYS.future) };
+}
+
 function lessonQuery() {
+  // تکالیفِ هر درس در بازه‌ی مرئی — با تاریخ. چند هفته = چند ردیف per lesson.
+  const { from, to } = hwRange();
   return `
     SELECT l.id, l.day, l.period, l.start_time AS startTime, l.end_time AS endTime,
            l.updated_at AS updatedAt,
            s.id AS subjectId, s.name AS subjectName, s.color_key AS colorKey,
            a.id AS altSubjectId, a.name AS altSubjectName, a.color_key AS altColorKey,
-           h.id AS hwId, h.title AS hwTitle, h.due_at AS hwDueAt, h.updated_at AS hwUpdatedAt,
+           h.id AS hwId, h.title AS hwTitle, h.hw_date AS hwDate, h.updated_at AS hwUpdatedAt,
            (SELECT COUNT(*) FROM attachments a2 WHERE a2.parent_type='homework' AND a2.parent_id = h.id) AS hwAtt
     FROM lessons l
     JOIN subjects s ON s.id = l.subject_id
     LEFT JOIN subjects a ON a.id = l.alt_subject_id
-    LEFT JOIN homework h ON h.lesson_id = l.id
+    LEFT JOIN homework h ON h.lesson_id = l.id AND h.hw_date BETWEEN '${from}' AND '${to}'
     ORDER BY l.day, l.period
   `;
 }
@@ -31,7 +47,7 @@ interface LessonRow {
   id: number; day: number; period: number; startTime: string; endTime: string; updatedAt: string; hwUpdatedAt?: string | null;
   subjectId: number; subjectName: string; colorKey: string;
   altSubjectId: number | null; altSubjectName: string | null; altColorKey: string | null;
-  hwId: number | null; hwTitle: string | null; hwDueAt: string | null; hwAtt: number;
+  hwId: number | null; hwTitle: string | null; hwDate: string | null; hwAtt: number;
 }
 
 function rowToLesson(r: LessonRow): Lesson {
@@ -48,20 +64,43 @@ function rowToLesson(r: LessonRow): Lesson {
     start_time: r.startTime,
     end_time: r.endTime,
     updated_at: r.updatedAt,
-    homework: r.hwId ? {
-      id: r.hwId,
-      lesson_id: r.id,
-      title: r.hwTitle ?? '',
-      description: '',      // list view: headline only
-      textbook_pages: '',
-      instructions: '',
-      notes: '',
-      due_at: r.hwDueAt,
-      created_at: '',
-      updated_at: r.hwUpdatedAt ?? '',
-    } : null,
-    attachment_count: r.hwAtt ?? 0,
+    homework: null,           // تکالیف جداگانه و تاریخ‌محور (hwByDate) اعمال می‌شوند
+    attachment_count: 0,
   };
+}
+
+/**
+ * ردیف‌های خام join شده (lesson × homework-in-range) را به روزهای هفته تبدیل می‌کند.
+ * هر درس یک‌بار می‌آید؛ تکالیفش بر اساس تاریخ در hwByDate کنارش جمع می‌شود.
+ */
+function rowsToDays(rows: LessonRow[]): (Lesson[] | null)[] {
+  const days: (Lesson[] | null)[] = Array.from({ length: WEEK_DAYS }, () => null);
+  const byLesson = new Map<number, Lesson>();
+  for (const r of rows) {
+    let lesson = byLesson.get(r.id);
+    if (!lesson) {
+      lesson = rowToLesson(r);
+      byLesson.set(r.id, lesson);
+      (days[r.day] ??= []).push(lesson);
+    }
+    if (r.hwId && r.hwDate) {
+      lesson.hwByDate ??= {};
+      lesson.hwByDate[r.hwDate] = {
+        id: r.hwId,
+        lesson_id: r.id,
+        title: r.hwTitle ?? '',
+        description: '',      // list view: headline only
+        textbook_pages: '',
+        instructions: '',
+        notes: '',
+        due_at: null,
+        created_at: '',
+        updated_at: r.hwUpdatedAt ?? '',
+      };
+      lesson.attachment_count += r.hwAtt ?? 0;
+    }
+  }
+  return days;
 }
 
 function bellQuery() {
@@ -73,11 +112,8 @@ publicRoutes.get('/schedule', async (c) => {
     c.env.DB.prepare(lessonQuery()).all<LessonRow>(),
     c.env.DB.prepare(bellQuery()).all(),
   ]);
-  const days: (Lesson[] | null)[] = Array.from({ length: WEEK_DAYS }, () => null);
-  for (const r of lessonRes.results ?? []) {
-    (days[r.day] ??= []).push(rowToLesson(r));
-  }
-  return c.json({ ok: true, days, bells: bellRes.results ?? [] });
+  const days = rowsToDays(lessonRes.results ?? []);
+  return c.json({ ok: true, days, bells: bellRes.results ?? [], hwRange: hwRange() });
 });
 
 // Single round-trip bootstrap for the student page (weak-network optimization):
@@ -118,10 +154,7 @@ publicRoutes.get('/bootstrap', async (c) => {
     c.env.DB.prepare(bellQuery()).all(),
   ]);
 
-  const days: (Lesson[] | null)[] = Array.from({ length: WEEK_DAYS }, () => null);
-  for (const r of lessonRows.results ?? []) {
-    (days[r.day] ??= []).push(rowToLesson(r));
-  }
+  const days = rowsToDays(lessonRows.results ?? []);
 
   // جزوات: هر جزوه با فایل‌هایش — دانلود مستقیم از /api/attachments/:id
   const handoutFiles = new Map<number, { id: number; filename: string; mime: string; size: number }[]>();
@@ -181,24 +214,27 @@ publicRoutes.get('/bootstrap', async (c) => {
   const settings: Record<string, string> = {};
   for (const r of settingRows.results ?? []) settings[r.key] = r.value;
 
-  return c.json({ ok: true, days, tasks: { active, expired }, announcements, handouts, settings, bells: bellRows.results ?? [] });
+  return c.json({ ok: true, days, tasks: { active, expired }, announcements, handouts, settings, bells: bellRows.results ?? [], hwRange: hwRange() });
 });
 
 publicRoutes.get('/lessons/:id', async (c) => {
   const id = Number(c.req.param('id'));
   if (!Number.isInteger(id)) return c.json({ ok: false, error: 'شناسه نامعتبر.' }, 400);
+  // تاریخِ درس (وقتِ تهران) — تکلیفِ همان روزِ همان هفته برمی‌گردد
+  const dateParam = c.req.query('date');
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(dateParam ?? '') ? (dateParam as string) : tehranDateUTC();
   const row = await c.env.DB.prepare(`
     SELECT l.*, s.name AS subjectName, s.color_key AS colorKey,
            sa.id AS altSubjectId, sa.name AS altSubjectName, sa.color_key AS altColorKey,
            h.id AS hwId, h.title AS hwTitle, h.description AS hwDescription,
            h.textbook_pages AS hwPages, h.instructions AS hwInstructions,
-           h.notes AS hwNotes, h.due_at AS hwDueAt, h.created_at AS hwCreated, h.updated_at AS hwUpdated
+           h.notes AS hwNotes, h.hw_date AS hwDate, h.created_at AS hwCreated, h.updated_at AS hwUpdated
     FROM lessons l
     JOIN subjects s ON s.id = l.subject_id
     LEFT JOIN subjects sa ON sa.id = l.alt_subject_id
-    LEFT JOIN homework h ON h.lesson_id = l.id
+    LEFT JOIN homework h ON h.lesson_id = l.id AND h.hw_date = ?
     WHERE l.id = ?
-  `).bind(id).first<Record<string, unknown>>();
+  `).bind(date, id).first<Record<string, unknown>>();
   if (!row) return c.json({ ok: false, error: 'درس پیدا نشد.' }, 404);
   const hwId = row.hwId as number | null;
   const attachments = hwId
@@ -229,7 +265,7 @@ publicRoutes.get('/lessons/:id', async (c) => {
         textbook_pages: row.hwPages,
         instructions: row.hwInstructions,
         notes: row.hwNotes,
-        due_at: row.hwDueAt,
+        due_at: null,
         created_at: row.hwCreated,
         updated_at: row.hwUpdated,
       } : null,

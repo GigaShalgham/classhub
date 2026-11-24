@@ -38,10 +38,58 @@ function subjectEmoji(name) {
 
 const $ = (sel) => document.querySelector(sel);
 
+// تاریخِ امروز تهران به شکل YYYY-MM-DD
+function tehranTodayISO() {
+  return new Date(Date.now() + 3.5 * 3600_000).toISOString().slice(0, 10);
+}
+
+// شنبه‌ی هفته‌ای که تاریخِ داده‌شده در آن است (YYYY-MM-DD)
+function saturdayOf(dateISO) {
+  const d = new Date(dateISO + 'T00:00:00Z');
+  const dow = d.getUTCDay(); // 0=Sunday…6=Saturday
+  const back = (dow + 1) % 7; // شنبه‌محور: 0=شنبه
+  d.setUTCDate(d.getUTCDate() - back);
+  return d.toISOString().slice(0, 10);
+}
+
+// شنبه‌ی جاری/مبنا + n هفته
+function shiftSaturday(weeks) {
+  const base = state.focusSaturday ?? tehranTodayISO();
+  const d = new Date(base + 'T00:00:00Z');
+  d.setUTCDate(d.getUTCDate() + weeks * 7);
+  return d.toISOString().slice(0, 10);
+}
+
+// تاریخِ روز d (0=شنبه) در هفته‌ی در حال مرور
+function dateOfDayInFocus(d) {
+  const base = new Date((state.focusSaturday ?? saturdayOf(tehranTodayISO())) + 'T00:00:00Z');
+  base.setUTCDate(base.getUTCDate() + d);
+  return base.toISOString().slice(0, 10);
+}
+
+// برچسب شمسی هفته‌ی در حال مرور
+function focusWeekLabel() {
+  const sat = state.focusSaturday ?? saturdayOf(tehranTodayISO());
+  const a = toJalali(new Date(sat + 'T00:00:00Z'));
+  const end = new Date(sat + 'T00:00:00Z'); end.setUTCDate(end.getUTCDate() + 6);
+  const b = toJalali(end);
+  const cur = saturdayOf(tehranTodayISO());
+  if (sat === cur) return 'هفته‌ی جاری';
+  if (sat < cur) {
+    const wk = Math.round((new Date(cur) - new Date(sat)) / (7 * 86_400_000));
+    return `${faDigits(wk)} هفته قبل`;
+  }
+  const wk = Math.round((new Date(sat) - new Date(cur)) / (7 * 86_400_000));
+  return `${faDigits(wk)} هفته بعد`;
+}
+
 const state = {
   subjects: [],
   scheduleDays: [],
   bells: [],
+  // هفته‌ای که گرید برنامه برایش باز است (تاریخِ شنبه‌ی آن، YYYY-MM-DD)؛
+  // null = هفته‌ی جاری
+  focusSaturday: null,
   tasks: { active: [], expired: [] },
   announcements: [],
   settings: {},
@@ -410,9 +458,9 @@ function bellsTemplate() {
 function updateSetupBanner() {
   const banner = $('#setupBanner');
   if (!banner) return;
-  const hasBells = (state.bells ?? []).length > 0;
+  const hasBells = getBells().length > 0;
   const hasSubjects = (state.subjects ?? []).length > 0;
-  const hasLessons = (state.scheduleDays ?? []).some((d) => (d ?? []).length > 0);
+  const hasLessons = (state.scheduleDays ?? []).some((d) => Array.isArray(d) && d.length > 0);
   if (hasBells && hasSubjects && hasLessons) {
     banner.classList.add('hidden');
     return;
@@ -454,13 +502,15 @@ async function refreshAll() {
     state.bells = sched.value.bells ?? [];
     setBells(state.bells);
     renderBells();
-    updateSetupBanner();
   }
   if (tasks.status === 'fulfilled') state.tasks = { active: tasks.value.active, expired: tasks.value.expired };
   if (anns.status === 'fulfilled') state.announcements = anns.value.announcements;
   if (houts.status === 'fulfilled') state.handouts = houts.value.handouts ?? [];
   if (subjects.status === 'fulfilled') state.subjects = subjects.value.subjects;
   if (settings.status === 'fulfilled') state.settings = settings.value.settings;
+  // بنر بعد از آماده‌شدن همه‌ی state (subjects/bells/lessons) ارزیابی می‌شود —
+  // قبلاً subjects هنوز خالی بود و بنر هرگز پنهان نمی‌شد.
+  updateSetupBanner();
   renderLessonsTab();
   renderTasksTab();
   renderAnnsTab();
@@ -605,9 +655,9 @@ function gridCellEl(day, period) {
       toast('برای فعال‌شدن دکمه تکلیف، اول برنامه را ذخیره کنید.', 'error');
       return;
     }
-    // درس از state سرور
+    // درس از state سرور — تکلیف برای تاریخِ همین روز در هفته‌ی در حال مرور
     const lesson = (state.scheduleDays[day] || []).find((l) => l.period === period);
-    if (lesson) openHwEditor(lesson);
+    if (lesson) openHwEditor(lesson, dateOfDayInFocus(day));
   });
 
   const meta = el('div', { class: 'grid-cell__meta' },
@@ -692,21 +742,25 @@ async function deleteLesson(lesson) {
 function renderLessonsTab() {
   fillSelects();
   renderGrid();
+  updateWeekNav();
   const list = $('#lessonsList');
   list.textContent = '';
+  const weekSat = state.focusSaturday ?? saturdayOf(tehranTodayISO());
   let count = 0;
   for (let d = 0; d < 7; d++) {
     const lessons = state.scheduleDays[d] || [];
     for (const lesson of lessons) {
       count += 1;
+      const hwDate = dateOfDayInFocus(d);
+      const hw = lesson.hwByDate?.[hwDate] ?? null;
       const title = lesson.alt_subject_name
         ? `${subjectEmoji(lesson.subject_name)} ${lesson.subject_name} 🔄 ${subjectEmoji(lesson.alt_subject_name)} ${lesson.alt_subject_name} — ${WEEK_DAY_NAMES[lesson.day]}، زنگ ${faDigits(lesson.period)}`
         : `${subjectEmoji(lesson.subject_name)} ${lesson.subject_name} — ${WEEK_DAY_NAMES[lesson.day]}، زنگ ${faDigits(lesson.period)}`;
       const row = el('div', { class: 'admin-row' },
         el('div', { class: 'admin-row__main' },
           el('div', { class: 'admin-row__title', text: title }),
-          el('div', { class: 'admin-row__sub', text: `${faDigits(lesson.start_time)}–${faDigits(lesson.end_time)} · ${lesson.homework ? `تکلیف: ${lesson.homework.title}` : 'بدون تکلیف'}` })),
-        el('button', { class: 'btn btn--ghost btn--sm', type: 'button', onclick: () => openHwEditor(lesson), text: '📝 تکلیف' }),
+          el('div', { class: 'admin-row__sub', text: `${faDigits(lesson.start_time)}–${faDigits(lesson.end_time)} · ${hw ? `تکلیف: ${hw.title}` : 'بدون تکلیف'}` })),
+        el('button', { class: 'btn btn--ghost btn--sm', type: 'button', onclick: () => openHwEditor(lesson, hwDate), text: '📝 تکلیف' }),
         el('button', { class: 'btn btn--danger btn--sm', type: 'button', onclick: () => deleteLesson(lesson), text: '🗑️' }),
       );
       list.append(row);
@@ -717,12 +771,31 @@ function renderLessonsTab() {
   }
 }
 
+// ---------- ناوبری هفته (گرید و لیست تکالیف) ----------
+function updateWeekNav() {
+  const label = $('#weekLabel');
+  if (!label) return;
+  label.textContent = focusWeekLabel();
+  const back = $('#weekPrev'), fwd = $('#weekNext'), today = $('#weekToday');
+  if (!back || !fwd || !today) return;
+  const isCurrent = (state.focusSaturday ?? saturdayOf(tehranTodayISO())) === saturdayOf(tehranTodayISO());
+  today.classList.toggle('hidden', isCurrent);
+  // روی هفته‌های خیلی دور (۲ ماه) قفل نمی‌کنیم — بازه‌ی مرئی API از ۳ هفته قبل تا ~۶ هفته بعد است
+}
+
+function setFocusWeek(sat) {
+  state.focusSaturday = sat;
+  renderLessonsTab();
+}
+
 // ---------- homework editor ----------
-async function openHwEditor(lesson) {
+async function openHwEditor(lesson, hwDate = tehranTodayISO()) {
   state.hwLessonId = lesson.id;
+  state.hwDate = hwDate;
   state.pendingUploads = [];
-  $('#hwTitle').textContent = `تکلیف: ${subjectEmoji(lesson.subject_name)} ${lesson.subject_name} (${WEEK_DAY_NAMES[lesson.day]}، زنگ ${faDigits(lesson.period)})`;
-  $('#hwTitleInput').value = lesson.homework?.title || '';
+  const j = toJalali(new Date(hwDate + 'T00:00:00Z'));
+  $('#hwTitle').textContent = `تکلیف: ${subjectEmoji(lesson.subject_name)} ${lesson.subject_name} (${WEEK_DAY_NAMES[lesson.day]}، زنگ ${faDigits(lesson.period)} — ${faDigits(j.jd)} ${JALALI_MONTHS[j.jm - 1]} ${faDigits(j.jy)})`;
+  $('#hwTitleInput').value = '';
   $('#hwDesc').value = '';
   $('#hwPages').value = '';
   $('#hwInstructions').value = '';
@@ -730,12 +803,13 @@ async function openHwEditor(lesson) {
 
   renderPendingUploads();
   $('#hwExistingFiles').textContent = '';
-  $('#hwDelete').classList.toggle('hidden', !lesson.homework);
 
-  if (lesson.homework) {
-    // fetch full homework
+  const existing = lesson.hwByDate?.[hwDate] ?? null;
+  $('#hwDelete').classList.toggle('hidden', !existing);
+  if (existing) {
+    // fetch full homework — همان تاریخ
     try {
-      const data = await api(`/api/lessons/${lesson.id}`);
+      const data = await api(`/api/lessons/${lesson.id}?date=${hwDate}`);
       const hw = data.lesson.homework;
       if (hw) {
         $('#hwTitleInput').value = hw.title || '';
@@ -807,6 +881,7 @@ async function submitHomework(e) {
   if (!title) { toast('عنوان تکلیف الزامی است.', 'error'); return; }
   const payload = {
     title,
+    hwDate: state.hwDate,
     description: $('#hwDesc').value.trim(),
     textbookPages: $('#hwPages').value.trim(),
     instructions: $('#hwInstructions').value.trim(),
@@ -828,7 +903,7 @@ async function deleteHomework() {
   const ok = await confirmDialog('حذف کامل تکلیف این درس (به‌همراه پیوست‌ها)؟');
   if (!ok) return;
   try {
-    await api(`/api/admin/lessons/${state.hwLessonId}/homework`, { method: 'DELETE' });
+    await api(`/api/admin/lessons/${state.hwLessonId}/homework`, { method: 'DELETE', body: { hwDate: state.hwDate } });
     toast('تکلیف حذف شد.', 'success');
     closeOverlay($('#hwOverlay'));
     refreshAll();
@@ -1378,7 +1453,13 @@ function renderCalendar() {
     const dayIdx = iranDayIndex(date);
     const isOff = dayIdx === 5 || dayIdx === 6;
     const dayTasks = tasksOnJalaliDay(cal.jy, cal.jm, jd);
-    const nLessons = periodsPerDay(dayIdx);
+    const nP2 = periodsPerDay(dayIdx);
+    const dateISO = date.toISOString().slice(0, 10);
+    const dayHW = nP2
+      ? (state.scheduleDays[dayIdx] || []).filter((l) => l.period <= (nP2 || 12))
+          .reduce((n, l) => n + (l.hwByDate?.[dateISO] ? 1 : 0), 0)
+      : 0;
+    const nLessons = nP2;
 
     const cell = el('button', {
       class: `cal-cell${isToday ? ' cal-cell--today' : ''}${isOff ? ' cal-cell--off' : ''}`,
@@ -1389,6 +1470,7 @@ function renderCalendar() {
       el('span', { class: 'cal-cell__num', text: faDigits(jd) }),
       el('span', { class: 'cal-cell__dots' },
         nLessons ? el('i', { class: 'cal-dot cal-dot--lesson', title: `${faDigits(nLessons)} زنگ` }) : null,
+        dayHW ? el('i', { class: 'cal-dot cal-dot--hw', title: `${faDigits(dayHW)} تکلیف در این روز` }) : null,
         ...dayTasks.slice(0, 3).map((t) => el('i', {
           class: `cal-dot cal-dot--task${t.priority === 'high' ? ' cal-dot--high' : ''}`,
           title: `${KIND_LABELS[t.kind] || t.kind}: ${t.title}`,
@@ -1431,6 +1513,7 @@ function jm0() { return cal.jm; }
 function openCalDay(jy, jm, jd) {
   const date = fromJalali(jy, jm, jd);
   const dayIdx = iranDayIndex(date);
+  state.calDateISO = date.toISOString().slice(0, 10);
   $('#dayTitle').textContent = `${WEEK_DAY_NAMES[dayIdx]} ${faDigits(jd)} ${JALALI_MONTHS[jm - 1]} ${faDigits(jy)}`;
   const body = $('#dayBody');
   body.textContent = '';
@@ -1443,6 +1526,7 @@ function openCalDay(jy, jm, jd) {
   // زنگ‌های روز
   const nP = periodsPerDay(dayIdx);
   const lessons = (state.scheduleDays[dayIdx] || []).filter((l) => l.period <= (nP || 12));
+  const dayISO = state.calDateISO;
   const lessonsBlock = el('div', { class: 'detail-block' },
     el('p', { class: 'detail-block__title', text: `🗓️ زنگ‌های این روز (${faDigits(lessons.length)})` }));
   if (!lessons.length) {
@@ -1450,18 +1534,20 @@ function openCalDay(jy, jm, jd) {
   } else {
     const lList = el('div', { class: 'cal-day-lessons' });
     for (const l of lessons) {
-      // برای زنگ گردشی، درسِ واقعی همین هفته مشخص شود
+      // برای زنگ گردشی، درسِ واقعیِ همان هفته (نه «این هفته») مشخص شود
       let name = l.subject_name;
       if (l.alt_subject_name) {
-        const useAlt = weekParity(Date.now(), state.settings.rotation_anchor) === 'alt';
+        const useAlt = weekParity(date.getTime(), state.settings.rotation_anchor) === 'alt';
         name = useAlt ? l.alt_subject_name : l.subject_name;
-        name = `${name} (گردشی — این هفته)`;
+        name = `${name} (گردشی)`;
       }
+      const hw = l.hwByDate?.[dayISO];
       lList.append(el('div', { class: 'cal-day-lesson' },
         el('span', { class: 'cal-day-lesson__p', text: faDigits(l.period) }),
         el('span', { class: 'cal-day-lesson__name', text: name }),
         el('span', { class: 'cal-day-lesson__time', text: `${faDigits(l.start_time)}–${faDigits(l.end_time)}` }),
-        el('button', { class: 'btn btn--ghost btn--sm', type: 'button', text: '📝', onclick: () => { closeOverlay($('#dayOverlay')); openHwEditor(l); } })));
+        el('span', { class: 'cal-day-lesson__hw', text: hw ? `📝 ${hw.title}` : '' }),
+        el('button', { class: 'btn btn--ghost btn--sm', type: 'button', title: hw ? 'ویرایش تکلیف این روز' : 'ثبت تکلیف برای این روز', text: '📝', onclick: () => { closeOverlay($('#dayOverlay')); openHwEditor(l, dayISO); } })));
     }
     lessonsBlock.append(lList);
   }
@@ -1610,6 +1696,9 @@ $('#loginForm').addEventListener('submit', async (e) => {
 $('#logoutBtn').addEventListener('click', handleLogout);
 $('#gridSave').addEventListener('click', saveGrid);
 $('#bellsSave').addEventListener('click', saveBells);
+$('#weekPrev')?.addEventListener('click', () => setFocusWeek(shiftSaturday(-1)));
+$('#weekNext')?.addEventListener('click', () => setFocusWeek(shiftSaturday(1)));
+$('#weekToday')?.addEventListener('click', () => setFocusWeek(saturdayOf(tehranTodayISO())));
 $('#bellsTemplate').addEventListener('click', bellsTemplate);
 $('#bellsReset').addEventListener('click', () => { bellsDraft = null; bellsDirty = false; renderBells(); });
 $('#taskForm').addEventListener('submit', submitTask);

@@ -36,6 +36,8 @@ export interface Lesson {
   end_time: string;
   updated_at: string;
   homework: Homework | null;
+  /** تکالیفِ تاریخ‌محور این زنگ — کلید: تاریخِ درس (YYYY-MM-DD) */
+  hwByDate?: Record<string, Homework>;
   attachment_count: number;
 }
 

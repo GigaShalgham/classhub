@@ -8,6 +8,11 @@ import { periodsPerDay, periodTimes, setBells, getBells } from './schedule.js';
 
 const $ = (sel) => document.querySelector(sel);
 
+// تاریخِ (به وقت تهران) یک timestamp به شکل YYYY-MM-DD
+function tehranDateISO(ms) {
+  return new Date(ms + 3.5 * 3600_000).toISOString().slice(0, 10);
+}
+
 // ایموجی اختصاصی هر درس (با نام درس تطبیق می‌شود)
 const SUBJECT_EMOJI = [
   ['کارگاه', '🔧'], ['ریاضی', '📐'], ['هندسه', '📐'], ['فیزیک', '🧲'], ['شیمی', '⚗️'],
@@ -296,7 +301,8 @@ function renderHero() {
 // ---------- جدول هفتگی ----------
 function lessonCard(lesson, dateMs) {
   const subj = resolveSubject(lesson, dateMs);
-  const hw = lesson.homework;
+  // تکلیفِ همان تاریخِ همین زنگ — نه همه‌ی هفته‌ها (تفکیک هفته‌ها)
+  const hw = lesson.hwByDate?.[tehranDateISO(dateMs)] ?? null;
   const card = el('button', {
     class: `lesson-card sub-${subj.color_key}`,
     type: 'button',
@@ -337,8 +343,9 @@ function lessonCard(lesson, dateMs) {
 const WINDOW_DAYS = 7;
 // جابه‌جایی دستی پنجره (گشت‌وگذار روزهای گذشته/آینده نسبت به روزِ تمرکز)
 let ttOffset = 0;
-const TT_OFFSET_MIN = -7;  // تا یک هفته گذشته
-const TT_OFFSET_MAX = 14;  // تا دو هفته آینده
+// بازه‌ی مرور با بازه‌ی API هم‌پوشان است: ۳ هفته گذشته تا ~۶ هفته آینده
+const TT_OFFSET_MIN = -21; // تا سه هفته گذشته (برای مرور تکالیف هفته‌های قبل)
+const TT_OFFSET_MAX = 45;  // تا شش هفته آینده
 
 function renderTimetable() {
   const grid = $('#ttGrid');
@@ -537,7 +544,7 @@ async function openLesson(id, dateMs = Date.now()) {
   openOverlay(overlay);
   $('#detailClose').focus();
   try {
-    const data = await api(`/api/lessons/${id}`);
+    const data = await api(`/api/lessons/${id}?date=${tehranDateISO(dateMs)}`);
     renderLessonDetail(data.lesson, dateMs);
   } catch (err) {
     $('#detailBody').append(el('div', { class: 'error-state', text: `خطا در دریافت جزئیات: ${err.message}` }));

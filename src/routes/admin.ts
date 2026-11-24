@@ -250,9 +250,15 @@ adminRoutes.delete('/lessons/:id', requireAdmin(), async (c) => {
 
 adminRoutes.put('/lessons/:id/homework', requireAdmin(), async (c) => {
   const id = Number(c.req.param('id'));
-  const lesson = await c.env.DB.prepare('SELECT id FROM lessons WHERE id = ?').bind(id).first();
+  const lesson = await c.env.DB.prepare('SELECT id, day FROM lessons WHERE id = ?').bind(id).first<{ id: number; day: number }>();
   if (!lesson) return c.json({ ok: false, error: 'درس پیدا نشد.' }, 404);
   const body = await readJson(c.req.raw);
+  // تاریخِ تکلیف = تاریخِ همین زنگ در هفته‌ای که مدیر از آن می‌بیند (YYYY-MM-DD، وقت تهران).
+  const hwDate = str(body.hwDate ?? body.hw_date, 'تاریخ تکلیف', { max: 10 });
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(hwDate)) bad('تاریخ تکلیف باید به شکل YYYY-MM-DD باشد.');
+  // سازگاری روزِ هفته: تاریخِ ارسالی باید همان روزِ هفته‌ی درس باشد (شنبه=0)
+  const givenDow = new Date(hwDate + 'T00:00:00Z').getUTCDay();
+  if (((givenDow + 1) % 7) !== lesson.day) bad('تاریخِ تکلیف با روزِ هفته‌ی این درس نمی‌خواند.');
   const title = str(body.title, 'عنوان تکلیف', { min: 2, max: 200 });
   const description = str(body.description, 'توضیحات', { required: false, max: 4000 });
   const textbookPages = str(body.textbookPages ?? body.textbook_pages, 'صفحات کتاب', { required: false, max: 200 });
@@ -260,23 +266,55 @@ adminRoutes.put('/lessons/:id/homework', requireAdmin(), async (c) => {
   const notes = str(body.notes, 'یادداشت سرِ کلاس', { required: false, max: 2000 });
   // «مهلت تحویل» از فرم تکلیف حذف شد — مهلت‌ها فقط در تب «مهلت‌ها» تعریف می‌شوند.
   const r = await c.env.DB.prepare(`
-    INSERT INTO homework (lesson_id, title, description, textbook_pages, instructions, notes)
-    VALUES (?, ?, ?, ?, ?, ?)
-    ON CONFLICT(lesson_id) DO UPDATE SET
+    INSERT INTO homework (lesson_id, hw_date, title, description, textbook_pages, instructions, notes)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(lesson_id, hw_date) DO UPDATE SET
       title=excluded.title, description=excluded.description, textbook_pages=excluded.textbook_pages,
-      instructions=excluded.instructions, notes=excluded.notes, due_at=excluded.due_at,
+      instructions=excluded.instructions, notes=excluded.notes,
       updated_at=datetime('now')
-  `).bind(id, title, description, textbookPages, instructions, notes).run();
-  return c.json({ ok: true, id: r.meta.last_row_id });
+  `).bind(id, hwDate, title, description, textbookPages, instructions, notes).run();
+  return c.json({ ok: true, id: r.meta.last_row_id, hwDate });
 });
 
 adminRoutes.delete('/lessons/:id/homework', requireAdmin(), async (c) => {
   const id = Number(c.req.param('id'));
-  const hw = await c.env.DB.prepare('SELECT id FROM homework WHERE lesson_id = ?').bind(id).first<{ id: number }>();
-  const r = await c.env.DB.prepare('DELETE FROM homework WHERE lesson_id = ?').bind(id).run();
+  const body = await readJson(c.req.raw).catch(() => ({}) as Record<string, unknown>);
+  // فقط تکلیفِ همان تاریخ پاک می‌شود — تکالیف هفته‌های دیگر دست‌نخورده می‌مانند
+  const hwDate = str(body.hwDate ?? body.hw_date, 'تاریخ تکلیف', { max: 10 });
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(hwDate)) bad('تاریخ تکلیف باید به شکل YYYY-MM-DD باشد.');
+  const hw = await c.env.DB.prepare('SELECT id FROM homework WHERE lesson_id = ? AND hw_date = ?').bind(id, hwDate).first<{ id: number }>();
+  const r = await c.env.DB.prepare('DELETE FROM homework WHERE lesson_id = ? AND hw_date = ?').bind(id, hwDate).run();
   if (!r.meta.changes) return c.json({ ok: false, error: 'تکلیفی برای حذف نبود.' }, 404);
   if (hw) await deleteAttachmentsOf(c.env.DB, 'homework', hw.id);
   return c.json({ ok: true });
+});
+
+// ---------- Homework list (تاریخ‌محور؛ برای مرور هفته‌های گذشته/آینده) ----------
+adminRoutes.get('/homework', requireAdmin(), async (c) => {
+  const rows = await c.env.DB.prepare(`
+    SELECT h.id, h.lesson_id AS lessonId, h.hw_date AS hwDate, h.title,
+           l.day, l.period, l.start_time AS startTime, l.end_time AS endTime,
+           s.name AS subjectName, a.name AS altSubjectName,
+           (SELECT COUNT(*) FROM attachments at2 WHERE at2.parent_type='homework' AND at2.parent_id = h.id) AS att
+    FROM homework h
+    JOIN lessons l ON l.id = h.lesson_id
+    JOIN subjects s ON s.id = l.subject_id
+    LEFT JOIN subjects a ON a.id = l.alt_subject_id
+    ORDER BY h.hw_date DESC, l.period
+  `).all<Record<string, unknown>>();
+  return c.json({ ok: true, homework: (rows.results ?? []).map((r) => ({
+    id: r.id,
+    lessonId: r.lessonId,
+    hwDate: r.hwDate,
+    title: r.title,
+    day: r.day,
+    period: r.period,
+    startTime: r.startTime,
+    endTime: r.endTime,
+    subjectName: r.subjectName,
+    altSubjectName: r.altSubjectName,
+    attachmentCount: r.att ?? 0,
+  })) });
 });
 
 // ---------- Tasks (deadlines) ----------
