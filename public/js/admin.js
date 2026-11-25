@@ -70,9 +70,6 @@ function dateOfDayInFocus(d) {
 // برچسب شمسی هفته‌ی در حال مرور
 function focusWeekLabel() {
   const sat = state.focusSaturday ?? saturdayOf(tehranTodayISO());
-  const a = toJalali(new Date(sat + 'T00:00:00Z'));
-  const end = new Date(sat + 'T00:00:00Z'); end.setUTCDate(end.getUTCDate() + 6);
-  const b = toJalali(end);
   const cur = saturdayOf(tehranTodayISO());
   if (sat === cur) return 'هفته‌ی جاری';
   if (sat < cur) {
@@ -745,7 +742,6 @@ function renderLessonsTab() {
   updateWeekNav();
   const list = $('#lessonsList');
   list.textContent = '';
-  const weekSat = state.focusSaturday ?? saturdayOf(tehranTodayISO());
   let count = 0;
   for (let d = 0; d < 7; d++) {
     const lessons = state.scheduleDays[d] || [];

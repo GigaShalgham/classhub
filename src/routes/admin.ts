@@ -508,7 +508,9 @@ function parentExists(db: D1Database, type: string, id: number): Promise<boolean
 }
 
 adminRoutes.post('/attachments', requireAdmin(), async (c) => {
-  const rl = rateLimit(`upload:${(c.req.raw as { headers: Headers }).headers.get('CF-Connecting-IP') ?? 'x'}`, 20, 60_000);
+  // rate-limit بر اساس IP واقعی؛ در نبودش کلاینت-آیدی ادمین (کوکی/توکن)
+  const ip = c.req.header('CF-Connecting-IP') ?? clientIp(c.req.raw);
+  const rl = rateLimit(`upload:${ip}`, 20, 60_000);
   if (!rl.ok) return c.json({ ok: false, error: 'درخواست‌های بیش از حد.' }, 429, { 'Retry-After': String(rl.retryAfter) });
 
   const form = await c.req.raw.formData();

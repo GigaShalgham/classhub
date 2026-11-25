@@ -2927,6 +2927,9 @@ function lessonCard(lesson, dateMs) {
 const WINDOW_DAYS = 7;
 // جابه‌جایی دستی پنجره (گشت‌وگذار روزهای گذشته/آینده نسبت به روزِ تمرکز)
 let ttOffset = 0;
+// اسکرولِ اولیه فقط یک‌بار (در بوت) انجام می‌شود؛ پول ۳۰ثانیه‌ای نباید
+// اسکرول دستی کاربر را بی‌احترام برمی‌گرداند.
+let firstLoadDone = false;
 // بازه‌ی مرور با بازه‌ی API هم‌پوشان است: ۳ هفته گذشته تا ~۶ هفته آینده
 const TT_OFFSET_MIN = -21; // تا سه هفته گذشته (برای مرور تکالیف هفته‌های قبل)
 const TT_OFFSET_MAX = 45;  // تا شش هفته آینده
@@ -3774,8 +3777,10 @@ async function loadAll() {
   renderHandouts();
   renderNotifications();
   renderTabBadges();
-  // اسکرول به امروز بعد از آنکه layout ستون‌ها کامل شد
-  if (window.innerWidth < 1360) {
+  // اسکرول به امروز فقط در اولین لود (پس از آن layout ستون‌ها کامل شده است)؛
+  // در پول‌های بعدی اسکرول دستی کاربر دست‌نخورده می‌ماند.
+  if (!firstLoadDone && window.innerWidth < 1360) {
+    firstLoadDone = true;
     requestAnimationFrame(() => requestAnimationFrame(() => scrollToToday(false)));
   }
 
