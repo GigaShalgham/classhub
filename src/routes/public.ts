@@ -1,10 +1,10 @@
 // Public read-only API (students) — درس من
 
 import { Hono } from 'hono';
-import type { Env } from '../index';
-import type { Announcement, AttachmentMeta, Lesson, Task } from '../types';
-import { downloadHeaders } from '../attachments';
-import { tgConfig, tgFileUrl } from '../telegram';
+import type { Env } from '../index.ts';
+import type { Announcement, AttachmentMeta, Lesson, Task } from '../types.ts';
+import { downloadHeaders } from '../attachments.ts';
+import { tgConfig, tgFileUrl } from '../telegram.ts';
 
 const WEEK_DAYS = 7;
 

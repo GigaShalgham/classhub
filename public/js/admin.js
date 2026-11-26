@@ -505,6 +505,8 @@ async function refreshAll() {
   if (houts.status === 'fulfilled') state.handouts = houts.value.handouts ?? [];
   if (subjects.status === 'fulfilled') state.subjects = subjects.value.subjects;
   if (settings.status === 'fulfilled') state.settings = settings.value.settings;
+  // کلیدهای API سبک‌اند — در refresh اصلی نمی‌آیند؛ موقع بازکردن تب بار می‌شوند
+  if (!state.apiKeys) refreshApiKeys().catch(() => {});
   // بنر بعد از آماده‌شدن همه‌ی state (subjects/bells/lessons) ارزیابی می‌شود —
   // قبلاً subjects هنوز خالی بود و بنر هرگز پنهان نمی‌شد.
   updateSetupBanner();
@@ -1003,6 +1005,88 @@ function renderTasksTab() {
     );
     list.append(row);
   }
+}
+
+// ---------- API keys tab (کلیدهای بیرونی: ربات تلگرام و…) ----------
+const API_SCOPE_FA = { read: 'فقط خواندن', write: 'نوشتن' };
+
+function renderApiKeysTab() {
+  const list = $('#apiKeysList');
+  list.textContent = '';
+  if (!state.apiKeys?.length) {
+    list.append(el('p', { class: 'admin-note', text: 'هنوز کلیدی ساخته نشده است. برای وصل‌کردن ربات یا برنامه‌ی دیگر، بالای همین تب کلید بسازید.' }));
+    return;
+  }
+  for (const k of state.apiKeys) {
+    const scopeFa = k.scopes.map((s) => API_SCOPE_FA[s] ?? s).join(' + ');
+    const sub = [
+      `شناسه: ${faDigits(k.id)} · ${k.key_prefix}… · ${scopeFa}`,
+      k.requests ? `مصرف: ${faDigits(k.requests)} درخواست${k.last_used_at ? ' (آخرین: ' + formatJalaliDateTime(k.last_used_at) + ')' : ''}` : 'هنوز استفاده نشده',
+    ].filter(Boolean).join(' · ');
+    list.append(el('div', { class: 'admin-row', style: k.active ? '' : 'opacity:.55;' },
+      el('div', { class: 'admin-row__main' },
+        el('div', { class: 'admin-row__title', text: k.label + (k.active ? '' : ' (از کار افتاده)') }),
+        el('div', { class: 'admin-row__sub', text: sub })),
+      el('button', { class: 'btn btn--ghost btn--sm', type: 'button', onclick: () => toggleApiKey(k), text: k.active ? '⏸️' : '▶️', title: k.active ? 'از کار انداختن' : 'فعال‌کردن' }),
+      el('button', { class: 'btn btn--danger btn--sm', type: 'button', onclick: () => deleteApiKey(k), text: '🗑️', title: 'حذف کلید' }),
+    ));
+  }
+}
+
+async function refreshApiKeys() {
+  try {
+    const res = await api('/api/v1/keys');
+    state.apiKeys = res.keys ?? [];
+  } catch { state.apiKeys = []; }
+  renderApiKeysTab();
+}
+
+async function submitApiKeyForm(e) {
+  e.preventDefault();
+  const label = $('#apiKeyLabel').value.trim();
+  if (!label) { toast('نام کلید را بنویسید.', 'error'); return; }
+  const scopes = $('#apiKeyScopes').value.split(',');
+  try {
+    const res = await api('/api/v1/keys', { method: 'POST', body: { label, scopes } });
+    $('#apiKeyLabel').value = '';
+    const box = $('#apiKeyNew');
+    box.classList.remove('hidden');
+    box.textContent = '';
+    // کلید خام فقط همین یک‌بار نشان داده می‌شود — بعدش فقط هش در دیتابیس است
+    const input = el('input', { class: 'input', dir: 'ltr', readonly: '', value: res.key, style: 'font-family:monospace;font-size:12px;' });
+    input.onclick = () => input.select();
+    box.append(
+      el('p', { class: 'admin-note', text: '🎉 کلید ساخته شد! همین یک‌بار نمایش داده می‌شود — کپی‌اش کنید:' }),
+      input,
+      el('div', { class: 'btn-row' },
+        el('button', { class: 'btn btn--primary btn--sm', type: 'button', text: '📋 کپی', onclick: async () => {
+          try { await navigator.clipboard.writeText(res.key); toast('کلید کپی شد ✅', 'success'); }
+          catch { input.select(); document.execCommand('copy'); toast('کپی شد (قدیمی) ✅', 'success'); }
+        } }),
+        el('button', { class: 'btn btn--ghost btn--sm', type: 'button', text: 'بستن', onclick: () => { box.classList.add('hidden'); box.textContent = ''; } })),
+    );
+    toast('کلید API ساخته شد ✅', 'success');
+    await refreshApiKeys();
+  } catch (err2) {
+    toast(err2.message, 'error');
+  }
+}
+
+async function toggleApiKey(k) {
+  try {
+    await api(`/api/v1/keys/${k.id}/toggle`, { method: 'POST' });
+    await refreshApiKeys();
+  } catch (err) { toast(err.message, 'error'); }
+}
+
+async function deleteApiKey(k) {
+  const okDel = await confirmDialog(`کلید «${k.label}» حذف شود؟ برنامه‌ای که با آن وصل شده از کار می‌افتد.`);
+  if (!okDel) return;
+  try {
+    await api(`/api/v1/keys/${k.id}`, { method: 'DELETE' });
+    toast('کلید حذف شد.', 'success');
+    await refreshApiKeys();
+  } catch (err) { toast(err.message, 'error'); }
 }
 
 // ---------- announcements tab ----------
@@ -1640,6 +1724,8 @@ function switchTab(name) {
   for (const panel of document.querySelectorAll('.admin-panel')) {
     panel.classList.toggle('hidden', panel.id !== `tab-${name}`);
   }
+  // کلیدها هر بار موقع ورود به تب تازه می‌شوند (مصرف/آخرین استفاده)
+  if (name === 'apikeys') refreshApiKeys().catch(() => {});
 }
 
 // ---------- boot ----------
@@ -1702,6 +1788,7 @@ $('#taskReset').addEventListener('click', resetTaskForm);
 $('#annForm').addEventListener('submit', submitAnn);
 $('#annReset').addEventListener('click', resetAnnForm);
 $('#subjectForm').addEventListener('submit', submitSubject);
+$('#apiKeyForm').addEventListener('submit', submitApiKeyForm);
 $('#settingsForm').addEventListener('submit', submitSettings);
 $('#tgForm').addEventListener('submit', submitTgForm);
 $('#tgDiscover').addEventListener('click', tgDiscover);

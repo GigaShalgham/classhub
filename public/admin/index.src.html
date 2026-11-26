@@ -71,6 +71,7 @@
         <button class="admin-tab" data-tab="announcements" role="tab" aria-selected="false" type="button">📣 اطلاعیه‌ها</button>
         <button class="admin-tab" data-tab="handouts" role="tab" aria-selected="false" type="button">📚 جزوات و تمارین</button>
         <button class="admin-tab" data-tab="subjects" role="tab" aria-selected="false" type="button">🎨 درس‌ها</button>
+        <button class="admin-tab" data-tab="apikeys" role="tab" aria-selected="false" type="button">🔑 کلیدهای API</button>
         <button class="admin-tab" data-tab="settings" role="tab" aria-selected="false" type="button">⚙️ تنظیمات</button>
       </nav>
 
@@ -311,6 +312,40 @@
         <div class="admin-card">
           <h2 class="admin-card__title">🎨 درس‌های تعریف‌شده</h2>
           <div class="admin-list" id="subjectsList"></div>
+        </div>
+      </section>
+
+      <!-- ===== API keys tab ===== -->
+      <section class="admin-panel hidden" id="tab-apikeys" role="tabpanel">
+        <div class="admin-card">
+          <h2 class="admin-card__title">🔑 کلیدهای API (برای ربات/برنامه‌های بیرونی)</h2>
+          <p class="admin-note">
+            با کلید API می‌توانید برنامه‌ی کلاس، تکالیف و اطلاعیه‌ها را از هر برنامه‌ی دیگری بخوانید
+            (مثلاً ربات تلگرام) یا از بیرون مهلت/اطلاعیه ثبت کنید. کلید مثل گذرواژه است —
+            آن را با کسی که نمی‌شناسید به‌اشتراک نگذارید. ساخته که شد، فقط همین یک‌بار نشان داده می‌شود؛
+            کپی‌اش کنید و جایی امن نگه دارید.
+          </p>
+          <form id="apiKeyForm" novalidate>
+            <div class="field">
+              <label class="field__label" for="apiKeyLabel">نام کلید (مثلاً «ربات تلگرام»)</label>
+              <input class="input" id="apiKeyLabel" maxlength="60" placeholder="ربات تلگرام" autocomplete="off">
+            </div>
+            <div class="field">
+              <label class="field__label" for="apiKeyScopes">دسترسی</label>
+              <select class="select" id="apiKeyScopes">
+                <option value="read" selected>فقط خواندن (read)</option>
+                <option value="read,write">خواندن + نوشتن (read+write)</option>
+              </select>
+            </div>
+            <div class="btn-row">
+              <button class="btn btn--primary" type="submit">➕ ساخت کلید جدید</button>
+            </div>
+          </form>
+          <div id="apiKeyNew" class="hidden" style="margin-top:12px;"></div>
+        </div>
+        <div class="admin-card">
+          <h2 class="admin-card__title">کلیدهای فعال</h2>
+          <div class="admin-list" id="apiKeysList"></div>
         </div>
       </section>
 

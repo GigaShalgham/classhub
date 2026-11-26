@@ -6,9 +6,10 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
-import publicRoutes from './routes/public';
-import adminRoutes from './routes/admin';
-import { ValidationError } from './validation';
+import publicRoutes from './routes/public.ts';
+import adminRoutes from './routes/admin.ts';
+import v1Routes from './routes/v1.ts';
+import { ValidationError } from './validation.ts';
 
 export interface Env {
   DB: D1Database;
@@ -43,6 +44,7 @@ app.notFound((c) => {
 
 app.route('/api', publicRoutes);
 app.route('/api/admin', adminRoutes);
+app.route('/api/v1', v1Routes);
 
 app.get('/api/health', (c) => c.json({ ok: true, name: c.env.APP_NAME, time: new Date().toISOString() }));
 

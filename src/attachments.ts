@@ -3,7 +3,7 @@
 // (images/documents up to 1.5 MB, whitelist of safe types) are stored
 // as BLOB rows in the attachments table instead.
 
-import { ValidationError } from './validation';
+import { ValidationError } from './validation.ts';
 
 export const MAX_ATTACHMENT_BYTES = 1_500_000; // 1.5 MB
 export const MAX_TOTAL_ATTACHMENT_BYTES = 6_000_000; // per parent item

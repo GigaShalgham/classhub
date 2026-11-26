@@ -16,6 +16,21 @@ Deployed on **Cloudflare Workers** (single Worker serving both the static fronte
 - کش مرورگر فعال شد: فونت `max-age=31536000, immutable`، CSS/JS `max-age=86400` (قبلاً `max-age=0` — هر بازدید همه‌چیز از نو دانلود می‌شد!)
 - نتیجه: بارگذاری اول ~۱۱۶KB، بازدید بعدی فقط ~۲KB (HTML)
 
+### سیستم API عمومی `/api/v1` (۲۶ نوامبر ۲۰۲۶)
+برای وصل‌کردن هر برنامه‌ی بیرونی (مثلاً ربات تلگرام) به داده‌های کلاس:
+- **کلید API از پنل ادمین** (تب «🔑 کلیدهای API»): نام + اسکوپ (فقط خواندن یا خواندن+نوشتن)؛
+  کلید خام فقط یک‌بار نمایش داده می‌شود و در D1 فقط هش SHA-256‌اش می‌نشیند.
+- مسیرهای خواندن: `/api/v1/schedule`، `/tasks`، `/announcements`، `/homework?from&to`،
+  `/subjects`، `/settings`، `/handouts`، `/digest` (چکیده‌ی امروز+فردا — مخصوص ربات)،
+  `/telegram/status`. نوشتن: `POST /tasks`، `POST /announcements`، `POST /homework`،
+  `DELETE /tasks/:id`، `POST /tasks/:id/archive`.
+- احراز: هدر `X-API-Key: hubk_…` یا `Authorization: Bearer hubk_…`؛ کلیدِ بدون اسکوپِ
+  write روی نوشتن 403 می‌گیرد، غیرفعال/منقضی هم 403، ناموجود 401.
+- مدیریت کلیدها (`/api/v1/keys`) با نشست ادمین: ساخت/فهرست (با مصرف و آخرین استفاده)/
+  غیرفعال‌کردن/حذف.
+- تست: `test/apikeys.test.mjs` + `test/v1_routes.test.mjs` (10+5) و smoke لوکال
+  `scripts/verify_api_v1.mjs` (8/8) — همه سبز؛ روی production هم E2E کامل پاس شد.
+
 ### نسخه تک‌فایلی + API یکجا (۲۰ نوامبر ۲۰۲۶ — رفع «نصفه باز شدن»)
 علت واقعی نصفه‌ماندن صفحه روی اینترنت ضعیف نه DNS بود و نه حجم: **زنجیره‌ی ۱۰ درخواست**
 (html → css → js → دو import → ۴ درخواست API موازی) بدون هیچ retry — روی شبکه‌ای که پکت
@@ -174,6 +189,51 @@ Admin (session cookie or `Authorization: Bearer <token>`):
 `POST /api/admin/attachments` (multipart), `DELETE /api/admin/attachments/:id`,
 `POST /api/admin/subjects`, `PUT /api/admin/settings`.
 
+### 🔑 `/api/v1` — کلید API (برای ربات تلگرام و هر برنامه‌ی بیرونی)
+
+هر کلاینت بیرونی (ربات تلگرام، اسکریپت، اپ موبایل) با **کلید API** وصل می‌شود.
+کلید را از پنل ادمین → تب «🔑 کلیدهای API» بسازید؛ فقط همان یک‌بار نشان داده
+می‌شود (مثل توکن گیت‌هاب) و در دیتابیس فقط هش SHA-256 کلید نگه داشته می‌شود.
+
+ارسال کلید — دو شکل پذیرفته می‌شود:
+
+```bash
+curl -H "X-API-Key: hubk_…" https://school.gigaspaceturnip.workers.dev/api/v1/digest
+curl -H "Authorization: Bearer hubk_…" https://…/api/v1/tasks
+```
+
+| Endpoint | Scope | Description |
+| --- | --- | --- |
+| `GET /api/v1/schedule` | read | برنامه‌ی هفتگی + زنگ‌ها |
+| `GET /api/v1/tasks` | read | مهلت‌های فعال و گذشته |
+| `GET /api/v1/announcements[/:id]` | read | اطلاعیه‌ها |
+| `GET /api/v1/homework?from&to` | read | تکالیف تاریخ‌محور در بازه |
+| `GET /api/v1/digest` | read | **چکیده‌ی یک‌رضاختی برای ربات: امروز + فردا + مهلت‌ها** |
+| `GET /api/v1/subjects` · `/settings` · `/handouts` · `/telegram/status` | read | کاتالوگ‌ها |
+| `POST /api/v1/tasks` | write | ثبت مهلت جدید |
+| `POST /api/v1/announcements` | write | ثبت اطلاعیه |
+| `POST /api/v1/homework` | write | ثبت/به‌روزرسانی تکلیف (lesson_id + hw_date) |
+| `DELETE /api/v1/tasks/:id` · `POST /tasks/:id/archive` | write | حذف/بایگانی |
+| `GET/POST /api/v1/keys` · `POST /keys/:id/toggle` · `DELETE /keys/:id` | admin | مدیریت خود کلیدها (نشست ادمین) |
+
+- هر کلید یک `label` دارد، اسکوپ `read` یا `read,write`، و می‌توان غیرفعال (⏸️) یا حذف (🗑️) شد — مصرف (`requests`, `last_used_at`) هم دیده می‌شود.
+- کلیدِ فقط-read روی مسیرهای write خطای 403 می‌گیرد؛ کلید از کار افتاده/منقضی هم 403.
+- نرخ صدور کلید: ۱۰ در دقیقه (rate-limit).
+
+#### نمونه: ربات تلگرام «تکلیف امروز»
+
+```js
+// هر روز صبح: GET /api/v1/digest با X-API-Key، بعد sendMessage به چت کلاس
+const d = await (await fetch(`${SITE}/api/v1/digest`, { headers: { 'X-API-Key': KEY } })).json();
+const lines = [`📚 تکلیف امروز (${d.today}):`];
+for (const h of d.homeworkToday) lines.push(`• ${h.subjectName} — ${h.title}`);
+await fetch(`https://api.telegram.org/bot${BOT}/sendMessage`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ chat_id: CLASS_CHAT, text: lines.join('\n') }),
+});
+```
+
 ---
 
 ## 🛠️ Local development
@@ -272,6 +332,8 @@ Required repository secrets (Settings → Secrets and variables → Actions):
 
 ## 🧪 Testing
 
+- `test/apikeys.test.mjs` + `test/v1_routes.test.mjs` — سیستم کلید API: ساخت/هش/اسکوپ + سرتاسری مسیرهای `/api/v1` با دیتابیس ساختگی (node:test).
+- `scripts/verify_api_v1.mjs` — smoke لوکال کامل (wrangler dev): کلید بساز → بخوان → بنویس → غیرفعال → پاک.
 - `scripts/test_api.sh` — 50+ endpoint checks (public data, auth, CRUD, validation, uploads, security) against any running instance; point `BASE` at the deployed URL to smoke-test production.
 - `scripts/test_utils.mjs` — Jalali conversion anchors, countdown states, Persian digit formatting.
 - Manual UI checks: desktop 1440/1280, mobile 375 (timetable scroll, bottom sheet), keyboard navigation, reduced-motion.
