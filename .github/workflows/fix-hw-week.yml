@@ -1,0 +1,22 @@
+# One-off data fix #2 — تکالیفِ هفته‌ی ۱ تا ۴ آذر که باید ۸ تا ۱۲ آذر باشند
+# (ادمین آن‌ها را برای هفته‌ی پیشِ رو ثبت کرده بود؛ بیلدِ قدیمی تاریخ‌ها را
+# یک هفته عقب ذخیره کرد). همه‌ی تکالیفِ ۲۲–۲۵ نوامبر +۷ روز می‌شوند.
+# این ورک‌فلو پس از اجرا حذف می‌شود.
+name: One-off data fix (homework week 1-4 Azar)
+on:
+  workflow_dispatch:
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Shift homework 2026-11-22..25 by +7 days (guarded UPDATE + verify)
+        run: |
+          npx --yes wrangler@4 d1 execute school_class_db --remote --command "UPDATE homework SET hw_date = date(hw_date, '+7 day'), updated_at = datetime('now') WHERE hw_date BETWEEN '2026-11-22' AND '2026-11-25'"
+          npx --yes wrangler@4 d1 execute school_class_db --remote --command "SELECT id, lesson_id, hw_date, title FROM homework ORDER BY hw_date"
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
