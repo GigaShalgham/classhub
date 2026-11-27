@@ -54,30 +54,38 @@ function saturdayOf(dateISO) {
 
 // شنبه‌ی جاری/مبنا + n هفته
 function shiftSaturday(weeks) {
-  // مبنا وقتی هفته‌ای انتخاب نشده، «شنبه‌ی» هفته‌ی جاری است — نه خودِ امروز
+  // مبنا وقتی هفته‌ای انتخاب نشده، «شنبه‌ی» هفته‌ی تقویمیِ جاری است — نه خودِ امروز
   // (با امروزِ غیرشنبه، تاریخِ همه‌ی روزها ۶ روز جابه‌جا می‌شد)
-  const base = state.focusSaturday ?? currentWeekSaturday();
+  const base = state.focusSaturday ?? calendarSaturday();
   const d = new Date(base + 'T00:00:00Z');
   d.setUTCDate(d.getUTCDate() + weeks * 7);
   return d.toISOString().slice(0, 10);
 }
 
 /**
- * شنبه‌ی «هفته‌ی جاری» در پنل: هفته‌ای که روزِ تمرکز در آن است — امروز تا وقتی
- * زنگی از امروز باقی مانده، وگرنه اولین روزِ درسیِ بعد. پس پنجشنبه/جمعه و
- * عصرِ آخرین روزِ درسیِ هفته، «هفته‌ی جاری» = هفته‌ی بعد است و تکلیفی که
- * مدیر ثبت می‌کند برای روزِ پیشِ رو می‌افتد، نه برای روزِ گذشته‌ی همین هفته.
- * (همان قاعده‌ی صفحه‌ی دانش‌آموز؛ state.focusSaturday = null یعنی همین.)
+ * شنبه‌ی هفته‌ی تقویمیِ حاویِ امروزِ تهران — مرجعِ نمای و برچسب‌های پنل.
+ * مثل صفحه‌ی دانش‌آموز: «هفته‌ی جاری» همیشه همان هفته‌ای است که امروز در آن
+ * است. قاعده‌ی قبلی (پرشِ خودکار به هفته‌ی بعد در پنجشنبه/جمعه و بعدِ آخرین
+ * زنگ) تکالیفِ همین هفته را «هفته‌ی قبل» نشان می‌داد — باگِ گزارش‌شده.
  */
-function currentWeekSaturday() {
+function calendarSaturday() {
+  return saturdayOf(tehranTodayISO());
+}
+
+/**
+ * شنبه‌ی «هفته‌ی درسیِ فعال»: تا وقتی زنگی از امروز باقی مانده، همان هفته‌ی
+ * تقویمی؛ وگرنه هفته‌ی اولین روزِ درسیِ بعد. فقط برای راهنمای «هفته‌ی تمام
+ * شده» (weekHint) استفاده می‌شود — نمای و برچسب‌های پنل تقویم‌محورند.
+ */
+function activeSchoolSaturday() {
   const todayIdx = tehranDayIndex();
   const lastEnd = bellsOfDay(todayIdx).reduce((mx, b) => (b.end_time > mx ? b.end_time : mx), '');
-  if (lastEnd && tehranHHMM(Date.now()) < lastEnd) return saturdayOf(tehranTodayISO());
+  if (lastEnd && tehranHHMM(Date.now()) < lastEnd) return calendarSaturday();
   for (let k = 1; k <= 6; k++) {
     const idx = (todayIdx + k) % 7;
     if (periodsPerDay(idx) > 0) return saturdayOf(tehranDateISO(Date.now() + k * 86_400_000));
   }
-  return saturdayOf(tehranTodayISO());
+  return calendarSaturday();
 }
 
 // شمسیِ یک تاریخِ «YYYY-MM-DD» (میلادیِ تهران) — با اجزای UTC، مستقل از منطقه‌ی زمانی مرورگر
@@ -102,15 +110,15 @@ function focusWeekRangeLabel() {
 
 // تاریخِ روز d (0=شنبه) در هفته‌ی در حال مرور
 function dateOfDayInFocus(d) {
-  const base = new Date((state.focusSaturday ?? currentWeekSaturday()) + 'T00:00:00Z');
+  const base = new Date((state.focusSaturday ?? calendarSaturday()) + 'T00:00:00Z');
   base.setUTCDate(base.getUTCDate() + d);
   return base.toISOString().slice(0, 10);
 }
 
-// برچسب شمسی هفته‌ی در حال مرور
+// برچسب شمسی هفته‌ی در حال مرور — نسبت به هفته‌ی تقویمیِ جاری (calendarSaturday)
 function focusWeekLabel() {
-  const sat = state.focusSaturday ?? currentWeekSaturday();
-  const cur = currentWeekSaturday();
+  const sat = state.focusSaturday ?? calendarSaturday();
+  const cur = calendarSaturday();
   if (sat === cur) return 'هفته‌ی جاری';
   if (sat < cur) {
     const wk = Math.round((new Date(cur) - new Date(sat)) / (7 * 86_400_000));
@@ -828,15 +836,27 @@ function updateWeekNav() {
   label.textContent = `${focusWeekLabel()} · ${focusWeekRangeLabel()}`;
   const back = $('#weekPrev'), fwd = $('#weekNext'), today = $('#weekToday');
   if (!back || !fwd || !today) return;
-  const isCurrent = (state.focusSaturday ?? currentWeekSaturday()) === currentWeekSaturday();
+  const isCurrent = (state.focusSaturday ?? calendarSaturday()) === calendarSaturday();
   today.classList.toggle('hidden', isCurrent);
+  renderWeekHint();
   // روی هفته‌های خیلی دور (۲ ماه) قفل نمی‌کنیم — بازه‌ی مرئی API از ۳ هفته قبل تا ~۶ هفته بعد است
 }
 
 function setFocusWeek(sat) {
-  // null = هفته‌ی جاریِ پویا (با گذرِ زمان — مثلاً نیمه‌شبِ آخرین روزِ درسی — خودش عوض می‌شود)
-  state.focusSaturday = sat === currentWeekSaturday() ? null : sat;
+  // null = هفته‌ی جاریِ تقویمی (شنبه‌ی امروزِ تهران؛ با آمدنِ شنبه خودش عوض می‌شود)
+  state.focusSaturday = sat === calendarSaturday() ? null : sat;
   renderLessonsTab();
+}
+
+// راهنمای «هفته‌ی درسی تمام شده»: پنجشنبه/جمعه یا بعدِ آخرین زنگ، تکلیفِ جدید
+// طبیعتاً برای هفته‌ی بعد است؛ به‌جای پرشِ خودکار به هفته‌ی بعد (که تکالیفِ
+// همین هفته را «هفته‌ی قبل» نشان می‌داد) فقط یادآوری + دکمه‌ی میان‌بر می‌دهیم.
+function renderWeekHint() {
+  const hint = $('#weekHint');
+  if (!hint) return;
+  const schoolOver = activeSchoolSaturday() !== calendarSaturday();
+  const onCalendarWeek = (state.focusSaturday ?? calendarSaturday()) === calendarSaturday();
+  hint.classList.toggle('hidden', !(schoolOver && onCalendarWeek));
 }
 
 // ---------- homework editor ----------
@@ -1833,7 +1853,8 @@ $('#gridSave').addEventListener('click', saveGrid);
 $('#bellsSave').addEventListener('click', saveBells);
 $('#weekPrev')?.addEventListener('click', () => setFocusWeek(shiftSaturday(-1)));
 $('#weekNext')?.addEventListener('click', () => setFocusWeek(shiftSaturday(1)));
-$('#weekToday')?.addEventListener('click', () => setFocusWeek(currentWeekSaturday()));
+$('#weekToday')?.addEventListener('click', () => setFocusWeek(calendarSaturday()));
+$('#weekHintGo')?.addEventListener('click', () => setFocusWeek(shiftSaturday(1)));
 $('#bellsTemplate').addEventListener('click', bellsTemplate);
 $('#bellsReset').addEventListener('click', () => { bellsDraft = null; bellsDirty = false; renderBells(); });
 $('#taskForm').addEventListener('submit', submitTask);
