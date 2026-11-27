@@ -328,6 +328,13 @@ Required repository secrets (Settings → Secrets and variables → Actions):
 | `CLOUDFLARE_API_TOKEN` | token with *Workers Scripts:Edit* and *D1:Edit* |
 | `CLOUDFLARE_ACCOUNT_ID` | the Cloudflare account ID |
 
+### ⚠️ Migrations — only through `wrangler d1 migrations apply`
+
+Never apply a file from `migrations/` with `d1 execute --file` on the remote database. Wrangler tracks applied migrations in the `d1_migrations` table, so a migration applied by hand is invisible to it and CI runs it a second time. That is what broke **every** deploy from Nov 23–27, 2026: `0009_hw_dates.sql` had been applied by hand, CI failed on `ALTER TABLE homework ADD COLUMN hw_date` (duplicate column) and the *Deploy Worker* step never ran — five releases in a row, while the code on `main` looked fine.
+
+- If a migration *was* applied by hand, record it — only after confirming every effect of the file already exists in the production schema: `INSERT INTO d1_migrations (name) VALUES ('00XX_name.sql')`.
+- After every push to `main`, check **Actions**. A red ❌ means production did **not** change, whatever the local code says.
+
 ---
 
 ## 🧪 Testing
