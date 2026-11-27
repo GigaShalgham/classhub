@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import {
   toJalali, fromJalali, formatJalali, countdown, faDigits,
   iranDayIndex, formatJalaliDateTime, tehranYMD, tehranDayNumber,
-  rollingWindow, fortnightWindow, weekOffsetBounds, tehranDateISO, jalaliDateOnly, toJalaliParts,
+  rollingWindow, fortnightWindow, weekWindow, weekOffsetBounds, tehranDateISO, jalaliDateOnly, toJalaliParts,
   weekParity, isoDayNum, saturdayDayNumOf,
   tehranLocalDate, tehranDayIndex, todayJalali,
 } from '../public/js/utils.js';
@@ -180,18 +180,36 @@ test('fortnightWindow: جابه‌جایی هفته‌ای', () => {
 });
 
 test('weekOffsetBounds: پنجره هرگز بیرون از بازه‌ی تکالیفِ API نمی‌رود', () => {
-  // بازه‌ی واقعی API در روزِ گزارش: ۲۱ روز قبل تا ۴۵ روز بعد
+  // بازه‌ی واقعی API در روزِ گزارش: ۲۱ روز قبل تا ۴۵ روز بعد — پنجره تک‌هفته‌ای
   const b = weekOffsetBounds({ from: '2026-11-06', to: '2027-01-11' }, FRI_NOON);
-  assert.deepEqual(b, { min: -2, max: 5 });
+  assert.deepEqual(b, { min: -2, max: 6 });
   for (let k = b.min; k <= b.max; k++) {
-    const w = fortnightWindow(k, FRI_NOON);
-    assert.ok(w[0].dateISO >= '2026-11-06' && w[13].dateISO <= '2027-01-11', `k=${k}`);
+    const w = weekWindow(k, FRI_NOON);
+    assert.ok(w[0].dateISO >= '2026-11-06' && w[6].dateISO <= '2027-01-11', `k=${k}`);
   }
   // یک پله بیرون‌تر از هر طرف، بیرون از بازه است
-  assert.ok(fortnightWindow(b.min - 1, FRI_NOON)[0].dateISO < '2026-11-06');
-  assert.ok(fortnightWindow(b.max + 1, FRI_NOON)[13].dateISO > '2027-01-11');
+  assert.ok(weekWindow(b.min - 1, FRI_NOON)[0].dateISO < '2026-11-06');
+  assert.ok(weekWindow(b.max + 1, FRI_NOON)[6].dateISO > '2027-01-11');
   // بدون hwRange: محدوده‌ی محافظه‌کارانه
   assert.deepEqual(weekOffsetBounds(null, FRI_NOON), { min: -2, max: 4 });
+});
+
+test('weekWindow: پنجره‌ی تک‌هفته‌ای — شنبه تا جمعه‌ی همان هفته', () => {
+  // جمعه‌ی ۲۰۲۶-۱۱-۲۷ → هفته‌ی ۲۱ تا ۲۷ نوامبر
+  const win = weekWindow(0, FRI_NOON);
+  assert.equal(win.length, 7);
+  assert.equal(win[0].dateISO, '2026-11-21'); // شنبه
+  assert.equal(win[6].dateISO, '2026-11-27'); // جمعه
+  assert.equal(win[0].dayIdx, 0);
+  assert.equal(win[6].dayIdx, 6);
+  // هفته‌ی بعد: ۲۸ نوامبر تا ۴ دسامبر
+  const next = weekWindow(1, FRI_NOON);
+  assert.equal(next[0].dateISO, '2026-11-28');
+  assert.equal(next[6].dateISO, '2026-12-04');
+  // کلیدِ هر روز با شماره‌ی روزش هم‌خوان است (مستقل از منطقه‌ی زمانی)
+  for (const w of weekWindow(0, FRI_NOON)) {
+    assert.equal(tehranDateISO(w.dayNum * DAY), w.dateISO);
+  }
 });
 
 test('tehranDateISO: مرز نیمه‌شبِ تهران', () => {

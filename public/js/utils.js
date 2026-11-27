@@ -218,9 +218,32 @@ export function fortnightWindow(weekOffset = 0, now = Date.now()) {
 }
 
 /**
- * بازه‌ی مجاز weekOffset: کوچک‌ترین/بزرگ‌ترین مقداری که هر ۱۴ روزِ پنجره
- * داخل بازه‌ی تکالیفِ API (hwRange: {from,to} با «YYYY-MM-DD») بماند —
- * روزِ بیرون از آن بازه تکلیفش لود نشده و به‌اشتباه «خالی» دیده می‌شود.
+ * پنجره‌ی نمایشِ تک‌هفته‌ای: شنبه تا جمعه‌ی «هفته‌ی جاری + weekOffset» —
+ * هر اسلایدِ جدول فقط یک هفته است (به‌جای دو هفته در دو ردیفِ کنار هم).
+ */
+export function weekWindow(weekOffset = 0, now = Date.now()) {
+  const sat = currentSaturdayNum(now) + weekOffset * 7;
+  const out = [];
+  for (let i = 0; i < 7; i++) {
+    const dayNum = sat + i;
+    const dt = new Date(dayNum * 86_400_000);
+    const y = dt.getUTCFullYear();
+    const m = dt.getUTCMonth() + 1;
+    const d = dt.getUTCDate();
+    out.push({
+      date: new Date(y, m - 1, d, 12, 0, 0),
+      dayIdx: (dayNum + 5) % 7,
+      dayNum,
+      dateISO: `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`,
+    });
+  }
+  return out;
+}
+
+/**
+ * بازه‌ی مجاز weekOffset: کوچک‌ترین/بزرگ‌ترین مقداری که هر ۷ روزِ پنجره‌ی
+ * تک‌هفته‌ای داخل بازه‌ی تکالیفِ API (hwRange: {from,to} با «YYYY-MM-DD»)
+ * بماند — روزِ بیرون از آن بازه تکلیفش لود نشده و به‌اشتباه «خالی» دیده می‌شود.
  * بدون hwRange: محدوده‌ی محافظه‌کارانه‌ی ۲ هفته قبل تا ۴ هفته بعد.
  */
 export function weekOffsetBounds(hwRange, now = Date.now()) {
@@ -229,11 +252,11 @@ export function weekOffsetBounds(hwRange, now = Date.now()) {
   const to = isoDayNum(hwRange.to);
   const bounds = { min: 0, max: 0 };
   for (let k = -1; k > -30; k--) {
-    if (fortnightWindow(k, now)[0].dayNum < from) break;
+    if (weekWindow(k, now)[0].dayNum < from) break;
     bounds.min = k;
   }
   for (let k = 1; k < 30; k++) {
-    if (fortnightWindow(k, now)[13].dayNum > to) break;
+    if (weekWindow(k, now)[6].dayNum > to) break;
     bounds.max = k;
   }
   return bounds;

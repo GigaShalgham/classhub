@@ -478,8 +478,9 @@ h1, h2, h3, h4 { line-height: 1.5; }
   -webkit-mask-image: linear-gradient(to left, transparent 0, #000 26px, #000 100%);
 }
 
-/* دسکتاپ بزرگ: هر ۷ روز کنار هم — ۱۴ ستونِ دو هفته در دو ردیف می‌نشینند
-   (ردیف اول این هفته، ردیف دوم هفته‌ی بعد) */
+/* هر اسلاید یک هفته‌ی کامل (۷ روز) در یک ردیف — در سایز لپ‌تاپ و بزرگ‌تر
+   دیگر هفته‌ی بعد زیرِ این هفته نمی‌نشیند؛ دکمه‌های «هفته قبل/بعد»
+   اسلایدها را هفته‌به‌هفته عوض می‌کنند. */
 .tt-grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -2253,10 +2254,10 @@ h1, h2, h3, h4 { line-height: 1.5; }
       <div class="section__head">
         <h2 class="section__title"><span class="emoji" aria-hidden="true">🗓️</span> برنامه هفتگی</h2>
         <div class="tt-nav" role="group" aria-label="ناوبری هفته‌ها">
-          <button class="btn btn--ghost btn--sm" id="weekPrev" type="button" title="هفته‌ی قبل (این هفته + هفته‌ی قبل‌تر)">‹ هفته قبل</button>
-          <span class="tt-range" id="ttRange">این هفته + هفته‌ی بعد</span>
+          <button class="btn btn--ghost btn--sm" id="weekPrev" type="button" title="هفته‌ی قبل">‹ هفته قبل</button>
+          <span class="tt-range" id="ttRange">این هفته</span>
           <button class="btn btn--ghost btn--sm hidden" id="weekToday" type="button">برو به این هفته</button>
-          <button class="btn btn--ghost btn--sm" id="weekNext" type="button" title="هفته‌ی بعد (هفته‌ی بعد + دو هفته بعد)">هفته بعد ›</button>
+          <button class="btn btn--ghost btn--sm" id="weekNext" type="button" title="هفته‌ی بعد">هفته بعد ›</button>
         </div>
         <span class="section__note">به‌روزرسانی: <span id="updatedAt">…</span></span>
       </div>
@@ -2273,7 +2274,7 @@ h1, h2, h3, h4 { line-height: 1.5; }
     <section class="section panel" data-panel="schedule" aria-label="چکیده تکالیف">
       <div class="section__head">
         <h2 class="section__title"><span class="emoji" aria-hidden="true">📋</span> چکیده تکالیف</h2>
-        <span class="section__note">تکالیف این دو هفته و نزدیک‌ترین مهلت‌ها</span>
+        <span class="section__note">تکالیف این هفته و نزدیک‌ترین مهلت‌ها</span>
       </div>
       <div class="digest-list" id="digestList"></div>
     </section>
@@ -2551,9 +2552,32 @@ function fortnightWindow(weekOffset = 0, now = Date.now()) {
 }
 
 /**
- * بازه‌ی مجاز weekOffset: کوچک‌ترین/بزرگ‌ترین مقداری که هر ۱۴ روزِ پنجره
- * داخل بازه‌ی تکالیفِ API (hwRange: {from,to} با «YYYY-MM-DD») بماند —
- * روزِ بیرون از آن بازه تکلیفش لود نشده و به‌اشتباه «خالی» دیده می‌شود.
+ * پنجره‌ی نمایشِ تک‌هفته‌ای: شنبه تا جمعه‌ی «هفته‌ی جاری + weekOffset» —
+ * هر اسلایدِ جدول فقط یک هفته است (به‌جای دو هفته در دو ردیفِ کنار هم).
+ */
+function weekWindow(weekOffset = 0, now = Date.now()) {
+  const sat = currentSaturdayNum(now) + weekOffset * 7;
+  const out = [];
+  for (let i = 0; i < 7; i++) {
+    const dayNum = sat + i;
+    const dt = new Date(dayNum * 86_400_000);
+    const y = dt.getUTCFullYear();
+    const m = dt.getUTCMonth() + 1;
+    const d = dt.getUTCDate();
+    out.push({
+      date: new Date(y, m - 1, d, 12, 0, 0),
+      dayIdx: (dayNum + 5) % 7,
+      dayNum,
+      dateISO: `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`,
+    });
+  }
+  return out;
+}
+
+/**
+ * بازه‌ی مجاز weekOffset: کوچک‌ترین/بزرگ‌ترین مقداری که هر ۷ روزِ پنجره‌ی
+ * تک‌هفته‌ای داخل بازه‌ی تکالیفِ API (hwRange: {from,to} با «YYYY-MM-DD»)
+ * بماند — روزِ بیرون از آن بازه تکلیفش لود نشده و به‌اشتباه «خالی» دیده می‌شود.
  * بدون hwRange: محدوده‌ی محافظه‌کارانه‌ی ۲ هفته قبل تا ۴ هفته بعد.
  */
 function weekOffsetBounds(hwRange, now = Date.now()) {
@@ -2562,11 +2586,11 @@ function weekOffsetBounds(hwRange, now = Date.now()) {
   const to = isoDayNum(hwRange.to);
   const bounds = { min: 0, max: 0 };
   for (let k = -1; k > -30; k--) {
-    if (fortnightWindow(k, now)[0].dayNum < from) break;
+    if (weekWindow(k, now)[0].dayNum < from) break;
     bounds.min = k;
   }
   for (let k = 1; k < 30; k++) {
-    if (fortnightWindow(k, now)[13].dayNum > to) break;
+    if (weekWindow(k, now)[6].dayNum > to) break;
     bounds.max = k;
   }
   return bounds;
@@ -2946,7 +2970,7 @@ function renderHero() {
   const dayLessons = (d) => (state.days[d] ?? []).filter((l) => l.period <= maxPeriods(d));
   const focus = focusDay();
 
-  // آمار روی همان پنجره‌ی نمایش (دو هفته) — با چیزی که دانش‌آموز می‌بیند هم‌خوان
+  // آمار روی همان پنجره‌ی نمایش (یک هفته) — با چیزی که دانش‌آموز می‌بیند هم‌خوان
   let totalLessons = 0;
   let totalHw = 0;
   for (const { dayIdx, dateISO } of displayWindow()) {
@@ -2968,11 +2992,11 @@ function renderHero() {
   stats.append(el('div', { class: 'stat-chip' },
     el('span', { text: '📚' }),
     el('b', { text: faDigits(totalLessons) }),
-    ' درس در دو هفته'));
+    ' درس در این هفته'));
   stats.append(el('div', { class: 'stat-chip' },
     el('span', { text: '📝' }),
     el('b', { text: faDigits(totalHw) }),
-    ' تکلیف در دو هفته'));
+    ' تکلیف در این هفته'));
 
   // درس بعدی: امروزِ در جریان؛ وگرنه اولین زنگِ روزِ تمرکز
   let next = nextLessonToday();
@@ -3033,8 +3057,10 @@ function lessonCard(lesson, dateMs) {
   return card;
 }
 
-// پنجره‌ی نمایش: دو هفته‌ی کامل (این هفته + هفته‌ی بعد) — ttWeek آن را
-// هفته‌به‌هفته جابه‌جا می‌کند (۰ = همین دو هفته)
+// پنجره‌ی نمایش: یک هفته‌ی کامل (۷ روز) در هر اسلاید — با «هفته قبل/بعد»
+// هفته‌به‌هفته جابه‌جا می‌شود. قبلاً دو هفته در دو ردیف نشان داده می‌شد که
+// در سایز لپ‌تاپ فشرده بود؛ حالا هر اسلاید فقط یک هفته است و موبایل مثل
+// قبل اسکرول افقی روزهای همان هفته را دارد.
 let ttWeek = 0;
 // بازه‌ی مجاز ttWeek؛ بعد از اولین لود از hwRangeی که API می‌دهد دقیق می‌شود
 let ttWeekBounds = { min: -2, max: 4 };
@@ -3044,7 +3070,7 @@ let firstLoadDone = false;
 
 /** روزهای پنجره‌ی در حال نمایش: [{ date, dayIdx, dayNum, dateISO }] */
 function displayWindow() {
-  return fortnightWindow(ttWeek);
+  return weekWindow(ttWeek);
 }
 
 /** برچسب هفته‌ی یک ستون نسبت به هفته‌ی جاری (null = همین هفته) */
@@ -3065,10 +3091,10 @@ function clampWeek() {
 function renderTimetable() {
   const grid = $('#ttGrid');
   grid.textContent = '';
-  // پنجره از شنبه‌ی همین هفته شروع می‌شود و دو هفته را می‌گیرد: تکلیفِ ثبت‌شده
-  // برای هر روزِ این دو هفته دیده می‌شود — حتی پنجشنبه/جمعه و عصرِ بعد از
-  // آخرین زنگ که روزِ تمرکز «شنبه‌ی بعد» است. ستون‌ها در دو ردیفِ ۷تایی
-  // می‌نشینند (ردیف اول این هفته، ردیف دوم هفته‌ی بعد).
+  // پنجره از شنبه‌ی همین هفته شروع می‌شود و یک هفته (۷ روز) را می‌گیرد:
+  // تکلیفِ ثبت‌شده برای هر روزِ همین هفته دیده می‌شود — حتی پنجشنبه/جمعه
+  // و عصرِ بعد از آخرین زنگ که روزِ تمرکز «روزِ درسیِ بعد» است. هفته‌ی بعد
+  // اسلایدِ بعدی است، نه ردیفِ دومِ همین جدول.
   const focus = focusDay();
   const windowDays = displayWindow();
   const todayDayNum = tehranDayNumber();
@@ -3194,7 +3220,7 @@ function centerColumn(col, smooth = true) {
 }
 
 function scrollToDay(dayIdx, smooth = true) {
-  // هر روزِ هفته دو ستون دارد (این هفته / هفته‌ی بعد)؛ اولین ستون همان ردیف اول است
+  // هر روزِ هفته یک ستون دارد (پنجره تک‌هفته‌ای) — همان در مرکز دید می‌آید
   centerColumn(document.querySelector(`.day-col[data-day="${dayIdx}"]`), smooth);
 }
 
@@ -3223,12 +3249,13 @@ function updateWeekNav(focus) {
   if (next) next.disabled = ttWeek >= ttWeekBounds.max;
   const range = $('#ttRange');
   if (range) {
-    if (ttWeek === 0) {
-      range.textContent = 'این هفته + هفته‌ی بعد';
-    } else {
-      const win = displayWindow();
-      range.textContent = `${formatJalali(win[0].date, { withYear: false })} + ${formatJalali(win[7].date, { withYear: false })}`;
-    }
+    // برچسبِ اسلایدِ باز: نامِ هفته نسبت به امروز + بازه‌ی تاریخِ همان یک هفته
+    const win = displayWindow();
+    const label = ttWeek === 0 ? 'این هفته'
+      : ttWeek === 1 ? 'هفته‌ی بعد'
+        : ttWeek === -1 ? 'هفته‌ی قبل'
+          : ttWeek > 0 ? `${faDigits(ttWeek)} هفته بعد` : `${faDigits(-ttWeek)} هفته قبل`;
+    range.textContent = `${label} · ${formatJalali(win[0].date, { withYear: false })} تا ${formatJalali(win[6].date, { withYear: false })}`;
   }
   $('#weekToday')?.classList.toggle('hidden', ttWeek === 0);
   // صبح (هنوز کلاس داریم) → «برو به امروز»؛ عصر/آخر هفته → «برو به فردا» یا روز بعد
@@ -3438,7 +3465,7 @@ function hwDateLabel(dayNum, todayNum) {
 }
 
 /**
- * تکلیف‌های پنجره‌ی در حال نمایش (دو هفته)، مرتب: اول روزهای از امروز به بعد
+ * تکلیف‌های پنجره‌ی در حال نمایش (یک هفته)، مرتب: اول روزهای از امروز به بعد
  * (نزدیک‌ترین از بالا)، بعد روزهای گذشته‌ی همین هفته (تازه‌ترین از بالا).
  */
 function homeworkInRange() {
@@ -3466,7 +3493,7 @@ function renderDigest() {
   if (!list) return;
   list.textContent = '';
 
-  // ۱) تکلیف‌های ثبت‌شده‌ی همین دو هفته — روی هر ردیف، جزئیات همان درس در همان تاریخ باز می‌شود
+  // ۱) تکلیف‌های ثبت‌شده‌ی همین هفته — روی هر ردیف، جزئیات همان درس در همان تاریخ باز می‌شود
   const homework = homeworkInRange();
   for (const { lesson, hw, dayIdx, dayNum } of homework.slice(0, DIGEST_HW_MAX)) {
     const label = hwDateLabel(dayNum, tehranDayNumber());
@@ -3492,7 +3519,7 @@ function renderDigest() {
   // ۲) مهلت‌های فعال از قبل بر اساس نزدیکی مرتب‌اند؛ فقط ۶ مورد نخست
   const items = (state.tasks?.active ?? []).slice(0, 6);
   if (!homework.length && !items.length) {
-    list.append(el('div', { class: 'digest-empty', text: 'برای این دو هفته تکلیف یا مهلتی ثبت نشده — نفس بکش! 🌿' }));
+    list.append(el('div', { class: 'digest-empty', text: 'برای این هفته تکلیف یا مهلتی ثبت نشده — نفس بکش! 🌿' }));
     return;
   }
   for (const task of items) {
