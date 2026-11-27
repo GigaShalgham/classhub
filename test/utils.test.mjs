@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import {
   toJalali, fromJalali, formatJalali, countdown, faDigits,
   iranDayIndex, formatJalaliDateTime, tehranYMD, tehranDayNumber,
-  rollingWindow, jalaliDateOnly, toJalaliParts,
+  rollingWindow, weekAnchoredWindow, jalaliDateOnly, toJalaliParts,
   weekParity, isoDayNum, saturdayDayNumOf,
   tehranLocalDate, tehranDayIndex, todayJalali,
 } from '../public/js/utils.js';
@@ -113,6 +113,48 @@ test('rollingWindow: ۷ روز متوالی از امروزِ تهران، هر�
   assert.equal(j.jd, 27);
   assert.equal(j.jm, 8);
   assert.equal(j.jy, 1405);
+});
+
+// رگرسیون باگ «تکلیف ذخیره می‌شود ولی نمایش داده نمی‌شود»:
+// پنجره‌ی نمایش باید از «شنبه‌ی همین هفته» شروع شود تا تکالیفِ ثبت‌شده
+// برای روزهای ابتدای هفته (شنبه…دیروز) در صفحه دیده شوند.
+test('weekAnchoredWindow: از شنبه‌ی همین هفته شروع می‌شود (رگرسیون نمایش تکلیف)', () => {
+  // چهارشنبه 2026-11-18 → شنبه‌ی همان هفته = 2026-11-14
+  const now = Date.UTC(2026, 10, 18, 10, 0);
+  const win = weekAnchoredWindow(7, now);
+  // طول = ۷ + ۴ روز گذشته‌ی هفته (شنبه تا سه‌شنبه، قبلِ چهارشنبه) = ۱۱
+  assert.equal(win.length, 7 + 4);
+  // اولین روز = شنبه (dayIdx=0) و تاریخش 2026-11-14
+  assert.equal(win[0].dayIdx, 0);
+  assert.equal(win[0].date.toISOString().slice(0, 10), '2026-11-14');
+  // ترتیب روزها از شنبه پیوسته: 0,1,2,3,4,5,6,0,1,2,3
+  assert.deepEqual(win.map((w) => w.dayIdx), [0, 1, 2, 3, 4, 5, 6, 0, 1, 2, 3]);
+  // تاریخ‌ها صعودی و پیوسته‌اند
+  for (let i = 1; i < win.length; i++) {
+    const diff = (win[i].date - win[i - 1].date) / 86_400_000;
+    assert.equal(diff, 1, `روز ${i} فاصله ${diff} دارد`);
+  }
+  // «امروزِ» چهارشنبه (2026-11-18) داخل پنجره است — اندیس ۴
+  assert.equal(win[4].date.toISOString().slice(0, 10), '2026-11-18');
+});
+
+test('weekAnchoredWindow: خودِ شنبه → همان پنجره‌ی ۷ روزه', () => {
+  // 2026-11-14 = شنبه (dow=6)
+  const now = Date.UTC(2026, 10, 14, 10, 0);
+  const win = weekAnchoredWindow(7, now);
+  assert.equal(win.length, 7);
+  assert.equal(win[0].date.toISOString().slice(0, 10), '2026-11-14');
+  assert.deepEqual(win.map((w) => w.dayIdx), [0, 1, 2, 3, 4, 5, 6]);
+});
+
+test('weekAnchoredWindow: جمعه (آخر هفته) → تمام هفته از شنبه', () => {
+  // 2026-11-20 = جمعه؛ پنجره = شنبه ۱۴ تا جمعه ۲۰ (۷ روز کامل همین هفته)
+  const now = Date.UTC(2026, 10, 20, 10, 0);
+  const win = weekAnchoredWindow(7, now);
+  assert.equal(win.length, 13); // ۷ + ۶ روز گذشته‌ی هفته
+  assert.equal(win[0].date.toISOString().slice(0, 10), '2026-11-14');
+  assert.equal(win[6].date.toISOString().slice(0, 10), '2026-11-20'); // جمعه امروز
+  assert.equal(win[12].date.toISOString().slice(0, 10), '2026-11-26'); // پنجشنبه بعد
 });
 
 test('rollingWindow: نیمه‌شب تهران درست شروع می‌شود', () => {

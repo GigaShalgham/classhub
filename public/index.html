@@ -2455,6 +2455,18 @@ function rollingWindow(n, now = Date.now()) {
   return out;
 }
 
+/**
+ * پنجره‌ی هفته‌محور n روزه: از «شنبه‌ی همین هفته‌ی تهران» شروع می‌شود.
+ * تکالیفِ ثبت‌شده برای روزهای ابتدای هفته (شنبه/دوشنبه/… تا دیروز) هم
+ * دیده می‌شوند — هم‌پوشانی کامل با پنجره‌ی پنل ادمین که هفته را شنبه‌محور
+ * می‌بیند. خروجی مثل rollingWindow: آرایه‌ای از { date, dayIdx }.
+ */
+function weekAnchoredWindow(n, now = Date.now()) {
+  const t = tehranDayNumber(now);
+  const back = (t + 5) % 7; // شنبه ⇔ dayNum % 7 === 2
+  return rollingWindow(n + back, now - back * 86_400_000);
+}
+
 /** Format a Jalali date like «۱۸ آبان ۱۴۰۵». */
 function formatJalali(date, opts = {}) {
   const { jy, jm, jd } = toJalali(date);
@@ -2833,8 +2845,8 @@ function renderHero() {
   const dayLessons = (d) => (state.days[d] ?? []).filter((l) => l.period <= maxPeriods(d));
   const focus = focusDay();
 
-  // آمار روی پنجره غلتان (۷ روز از روزِ تمرکز)، نه هفته تقویمی
-  const win = rollingWindow(7, Date.now() + focus.offset * 86_400_000);
+  // آمار روی همان پنجره‌ی نمایش (هفته‌محور) — با چیزی که دانش‌آموز می‌بیند هم‌خوان
+  const win = weekAnchoredWindow(WINDOW_DAYS, Date.now() + focus.offset * 86_400_000);
   const seen = new Set();
   let totalLessons = 0;
   let totalHw = 0;
@@ -2842,7 +2854,7 @@ function renderHero() {
     if (seen.has(date.toDateString())) continue;
     seen.add(date.toDateString());
     totalLessons += dayLessons(dayIdx).length;
-    totalHw += dayLessons(dayIdx).filter((l) => l.homework).length;
+    totalHw += dayLessons(dayIdx).filter((l) => l.homework || Object.keys(l.hwByDate ?? {}).length).length;
   }
   const stats = $('#heroStats');
   stats.textContent = '';
@@ -2937,10 +2949,12 @@ const TT_OFFSET_MAX = 45;  // تا شش هفته آینده
 function renderTimetable() {
   const grid = $('#ttGrid');
   grid.textContent = '';
-  // پنجره از روزِ تمرکز (+ جابه‌جاییِ دستی کاربر) شروع می‌شود:
-  // عصرِ بعدازمدرسه اولین ستون «فردا» است؛ با «روز قبل» می‌توان به گذشته هم برگشت.
+  // پنجره از «شنبه‌ی هفته‌ی روزِ تمرکز» شروع می‌شود (+ جابه‌جاییِ دستی کاربر):
+  // تکلیف‌های ثبت‌شده برای روزهای ابتدای همین هفته دیده می‌شوند و ستونِ
+  // روزِ تمرکز (امروزِ در جریان / فردا) با اسکرول اولیه در دید می‌ماند.
+  // عصرِ بعدازمدرسه روزِ تمرکز «فردا» است؛ روزهای قبلِ آن هم مرئی‌اند.
   const focus = focusDay();
-  const windowDays = rollingWindow(WINDOW_DAYS, Date.now() + (focus.offset + ttOffset) * 86_400_000);
+  const windowDays = weekAnchoredWindow(WINDOW_DAYS, Date.now() + (focus.offset + ttOffset) * 86_400_000);
   const todayDayNum = tehranDayNumber();
   let anyLessons = false;
   updateDayNav(focus);
@@ -3058,10 +3072,13 @@ function scrollToDay(dayIdx, dateKey, smooth = true) {
 }
 
 function scrollToToday(smooth = true) {
-  // بازگشت به روزِ تمرکز (اولین ستون پنجره): صبح «امروز»، عصر «فردا»
+  // بازگشت به روزِ تمرکز (ستونِ امروز/فردا — نه اولین ستون پنجره که شنبه است)
   const scroll = $('#ttScroll');
   if (!scroll) return;
-  const col = scroll.querySelector('.day-col');
+  const focus = focusDay();
+  const todayDayNum = tehranDayNumber(Date.now() + (focus.offset + ttOffset) * 86_400_000);
+  const dateKey = new Date(todayDayNum * 86_400_000).toISOString().slice(0, 10);
+  const col = scroll.querySelector(`.day-col[data-date="${dateKey}"]`) ?? scroll.querySelector('.day-col');
   if (!col) return;
   const rect = col.getBoundingClientRect();
   const sRect = scroll.getBoundingClientRect();

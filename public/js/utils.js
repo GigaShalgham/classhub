@@ -178,6 +178,18 @@ export function rollingWindow(n, now = Date.now()) {
   return out;
 }
 
+/**
+ * پنجره‌ی هفته‌محور n روزه: از «شنبه‌ی همین هفته‌ی تهران» شروع می‌شود.
+ * تکالیفِ ثبت‌شده برای روزهای ابتدای هفته (شنبه/دوشنبه/… تا دیروز) هم
+ * دیده می‌شوند — هم‌پوشانی کامل با پنجره‌ی پنل ادمین که هفته را شنبه‌محور
+ * می‌بیند. خروجی مثل rollingWindow: آرایه‌ای از { date, dayIdx }.
+ */
+export function weekAnchoredWindow(n, now = Date.now()) {
+  const t = tehranDayNumber(now);
+  const back = (t + 5) % 7; // شنبه ⇔ dayNum % 7 === 2
+  return rollingWindow(n + back, now - back * 86_400_000);
+}
+
 /** Format a Jalali date like «۱۸ آبان ۱۴۰۵». */
 export function formatJalali(date, opts = {}) {
   const { jy, jm, jd } = toJalali(date);
