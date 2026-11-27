@@ -41,7 +41,7 @@
   <main class="container">
     <div class="page-hero" id="pageHero">
       <h1 class="page-hero__title">برنامه هفتگی کلاس</h1>
-      <p class="page-hero__sub" id="heroSub">برای دیدن جزئیات تکلیف، روی هر درس بزنید</p>
+      <p class="page-hero__sub" id="heroSub">برنامه و تکالیفِ این هفته و هفته‌ی بعد؛ برای دیدن جزئیات هر درس روی آن بزنید</p>
       <div class="hero-stats" id="heroStats"></div>
     </div>
 
@@ -55,10 +55,11 @@
     <section class="section panel" data-panel="schedule" id="panel-schedule" aria-label="برنامه هفتگی" role="tabpanel">
       <div class="section__head">
         <h2 class="section__title"><span class="emoji" aria-hidden="true">🗓️</span> برنامه هفتگی</h2>
-        <div class="tt-nav" role="group" aria-label="ناوبری روزها">
-          <button class="btn btn--ghost btn--sm" id="dayPrev" type="button" title="یک روز به عقب">‹ روز قبل</button>
-          <button class="btn btn--ghost btn--sm" id="todayBtn" type="button">برو به فردا</button>
-          <button class="btn btn--ghost btn--sm" id="dayNext" type="button" title="یک روز به جلو">روز بعد ›</button>
+        <div class="tt-nav" role="group" aria-label="ناوبری هفته‌ها">
+          <button class="btn btn--ghost btn--sm" id="weekPrev" type="button" title="هفته‌ی قبل (این هفته + هفته‌ی قبل‌تر)">‹ هفته قبل</button>
+          <span class="tt-range" id="ttRange">این هفته + هفته‌ی بعد</span>
+          <button class="btn btn--ghost btn--sm hidden" id="weekToday" type="button">برو به این هفته</button>
+          <button class="btn btn--ghost btn--sm" id="weekNext" type="button" title="هفته‌ی بعد (هفته‌ی بعد + دو هفته بعد)">هفته بعد ›</button>
         </div>
         <span class="section__note">به‌روزرسانی: <span id="updatedAt">…</span></span>
       </div>
@@ -75,7 +76,7 @@
     <section class="section panel" data-panel="schedule" aria-label="چکیده تکالیف">
       <div class="section__head">
         <h2 class="section__title"><span class="emoji" aria-hidden="true">📋</span> چکیده تکالیف</h2>
-        <span class="section__note">نزدیک‌ترین مهلت‌ها از بالا</span>
+        <span class="section__note">تکالیف این دو هفته و نزدیک‌ترین مهلت‌ها</span>
       </div>
       <div class="digest-list" id="digestList"></div>
     </section>

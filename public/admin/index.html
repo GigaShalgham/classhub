@@ -477,11 +477,13 @@ h1, h2, h3, h4 { line-height: 1.5; }
   -webkit-mask-image: linear-gradient(to left, transparent 0, #000 26px, #000 100%);
 }
 
-/* دسکتاپ بزرگ: هر ۷ روز کنار هم */
+/* دسکتاپ بزرگ: هر ۷ روز کنار هم — ۱۴ ستونِ دو هفته در دو ردیف می‌نشینند
+   (ردیف اول این هفته، ردیف دوم هفته‌ی بعد) */
 .tt-grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: clamp(10px, 1.2vw, 16px);
+  row-gap: clamp(22px, 2.4vw, 34px);
   min-width: 100%;
 }
 
@@ -620,6 +622,48 @@ h1, h2, h3, h4 { line-height: 1.5; }
   padding: 3px 11px;
   border-radius: 999px;
   box-shadow: var(--shadow-xs);
+}
+
+/* برچسب «هفته‌ی بعد / قبل» روی ستون‌های هفته‌های غیرجاری */
+.day-col__week-tag {
+  background: var(--surface-3);
+  color: var(--sub);
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* نزدیک‌ترین روزِ درسیِ بعدی (عصرِ بعدازمدرسه / آخر هفته) */
+.day-col--focus { border-color: rgba(138, 111, 184, 0.5); }
+.day-col__focus-tag {
+  background: var(--lavender);
+  color: var(--lavender-deep);
+  font-size: 10.5px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* هفته‌های بعدی کمی رنگِ آبی دارند و هفته‌های گذشته کم‌رنگ‌اند */
+.day-col--future {
+  background:
+    linear-gradient(180deg, rgba(217, 228, 242, 0.3), rgba(255, 255, 255, 0) 170px),
+    var(--surface);
+}
+.day-col--past { background: var(--surface-2); border-style: dashed; }
+
+/* برچسب بازه‌ی دو هفته در نوار ناوبری */
+.tt-range {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--lavender-deep);
+  white-space: nowrap;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--lavender);
 }
 
 /* ---------- کارت درس ---------- */
@@ -923,6 +967,8 @@ h1, h2, h3, h4 { line-height: 1.5; }
 .digest-row:hover { border-color: var(--lavender-deep); }
 .digest-row:active { transform: scale(0.99); }
 .digest-row--high { border-inline-start: 3px solid var(--pink-deep); }
+/* ردیف تکلیفِ درس (نه مهلت): نوار آبی، تا از مهلت‌ها جدا دیده شود */
+.digest-row--hw { border-inline-start: 3px solid var(--lavender-deep); }
 .digest-row__dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
 .digest-row__icon { font-size: 17px; flex-shrink: 0; }
 .digest-row__title {
@@ -937,6 +983,11 @@ h1, h2, h3, h4 { line-height: 1.5; }
 .dl-tomorrow { background: var(--cream); color: var(--cream-deep); }
 .dl-soon { background: var(--lavender); color: var(--lavender-deep); }
 .dl-later { background: var(--surface-3); color: var(--sub); }
+.dl-past { background: var(--surface-3); color: var(--sub); }
+.digest-note {
+  align-self: center; color: var(--sub); font-size: var(--fs-xs);
+  padding: 2px 10px;
+}
 .digest-empty {
   padding: 16px; text-align: center; color: var(--sub);
   background: var(--surface); border: 1px dashed var(--border-strong); border-radius: 14px;
@@ -2259,6 +2310,9 @@ h1, h2, h3, h4 { line-height: 1.5; }
           <p class="field__hint" style="margin-top:-10px;">
             درس هر خانه را از فهرست انتخاب کنید — ساعت‌ها خودکار از تب «🔔 زنگ‌ها» گرفته می‌شوند. برای خالی‌کردن یک خانه «—» را انتخاب کنید. اگر زنگی هفته‌به‌هفته بین دو درس می‌چرخد (مثل هندسه/دفاعی)، درس دوم را از فهرست «🔄 گردشی» همان خانه انتخاب کنید.
           </p>
+          <p class="field__hint" style="margin-top:-6px;">
+            📝 دکمه‌ی سبز یعنی برای آن روز تکلیف ثبت شده. تاریخِ واقعیِ هر روز کنار نامش آمده: خانه‌ها مربوط به <b>همان هفته‌ای</b> هستند که بالا انتخاب شده (در روزهای بدون کلاس و بعد از پایان زنگ‌ها، «هفته‌ی جاری» = هفته‌ی پیشِ رو).
+          </p>
           <div class="setup-banner hidden" id="setupBanner" role="region" aria-label="راه‌اندازی اولیه"></div>
           <div class="tt-wrap admin-tt-wrap">
             <div class="tt-scroll admin-tt-scroll">
@@ -2276,7 +2330,7 @@ h1, h2, h3, h4 { line-height: 1.5; }
 
         <div class="admin-card">
           <h2 class="admin-card__title">📝 تکالیف ثبت‌شده</h2>
-          <p class="field__hint" style="margin-top:-8px;">برای ویرایش تکلیف هر درس، در جدول بالا روی دکمه 📝 همان خانه بزنید.</p>
+          <p class="field__hint" style="margin-top:-8px;">تکالیفِ <span id="hwWeekNote">هفته‌ی جاری</span> — برای ویرایش هرکدام، در جدول بالا روی دکمه 📝 همان خانه بزنید.</p>
           <div class="admin-list" id="lessonsList"></div>
         </div>
       </section>
@@ -2833,16 +2887,65 @@ function rollingWindow(n, now = Date.now()) {
   return out;
 }
 
-/**
- * پنجره‌ی هفته‌محور n روزه: از «شنبه‌ی همین هفته‌ی تهران» شروع می‌شود.
- * تکالیفِ ثبت‌شده برای روزهای ابتدای هفته (شنبه/دوشنبه/… تا دیروز) هم
- * دیده می‌شوند — هم‌پوشانی کامل با پنجره‌ی پنل ادمین که هفته را شنبه‌محور
- * می‌بیند. خروجی مثل rollingWindow: آرایه‌ای از { date, dayIdx }.
- */
-function weekAnchoredWindow(n, now = Date.now()) {
+/** تاریخِ تهران «YYYY-MM-DD» یک لحظه — همان کلیدی که تکلیف‌ها با آن ذخیره می‌شوند */
+function tehranDateISO(ms) {
+  const dt = new Date(tehranDayNumber(ms) * 86_400_000);
+  return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth() + 1).padStart(2, '0')}-${String(dt.getUTCDate()).padStart(2, '0')}`;
+}
+
+/** شنبه‌ی هفته‌ی جاریِ تهران به شکل شماره‌ی روز (dayNum) */
+function currentSaturdayNum(now) {
   const t = tehranDayNumber(now);
-  const back = (t + 5) % 7; // شنبه ⇔ dayNum % 7 === 2
-  return rollingWindow(n + back, now - back * 86_400_000);
+  return t - ((t + 5) % 7); // شنبه ⇔ dayNum % 7 === 2
+}
+
+/**
+ * پنجره‌ی نمایش دانش‌آموز: دو هفته‌ی کامل (۱۴ روز، شنبه تا جمعه) از شنبه‌ی
+ * «هفته‌ی جاری + weekOffset». با weekOffset=0 همیشه «این هفته + هفته‌ی بعد»
+ * است؛ روزِ تمرکز (امروز، فردا یا اولین روزِ درسیِ بعد) هرگز بیرون از آن
+ * نیست، پس تکلیفِ ثبت‌شده برای هر روزِ این دو هفته دیده می‌شود.
+ * هر آیتم: { date (نونِ محلی برای نمایش), dayIdx (شنبه=۰), dayNum, dateISO }
+ * — dayNum/dateISO مستقل از منطقه‌ی زمانی مرورگرند.
+ */
+function fortnightWindow(weekOffset = 0, now = Date.now()) {
+  const sat = currentSaturdayNum(now) + weekOffset * 7;
+  const out = [];
+  for (let i = 0; i < 14; i++) {
+    const dayNum = sat + i;
+    const dt = new Date(dayNum * 86_400_000);
+    const y = dt.getUTCFullYear();
+    const m = dt.getUTCMonth() + 1;
+    const d = dt.getUTCDate();
+    out.push({
+      date: new Date(y, m - 1, d, 12, 0, 0),
+      dayIdx: (dayNum + 5) % 7,
+      dayNum,
+      dateISO: `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`,
+    });
+  }
+  return out;
+}
+
+/**
+ * بازه‌ی مجاز weekOffset: کوچک‌ترین/بزرگ‌ترین مقداری که هر ۱۴ روزِ پنجره
+ * داخل بازه‌ی تکالیفِ API (hwRange: {from,to} با «YYYY-MM-DD») بماند —
+ * روزِ بیرون از آن بازه تکلیفش لود نشده و به‌اشتباه «خالی» دیده می‌شود.
+ * بدون hwRange: محدوده‌ی محافظه‌کارانه‌ی ۲ هفته قبل تا ۴ هفته بعد.
+ */
+function weekOffsetBounds(hwRange, now = Date.now()) {
+  if (!hwRange?.from || !hwRange?.to) return { min: -2, max: 4 };
+  const from = isoDayNum(hwRange.from);
+  const to = isoDayNum(hwRange.to);
+  const bounds = { min: 0, max: 0 };
+  for (let k = -1; k > -30; k--) {
+    if (fortnightWindow(k, now)[0].dayNum < from) break;
+    bounds.min = k;
+  }
+  for (let k = 1; k < 30; k++) {
+    if (fortnightWindow(k, now)[13].dayNum > to) break;
+    bounds.max = k;
+  }
+  return bounds;
 }
 
 /** Format a Jalali date like «۱۸ آبان ۱۴۰۵». */
@@ -3236,23 +3339,63 @@ function saturdayOf(dateISO) {
 
 // شنبه‌ی جاری/مبنا + n هفته
 function shiftSaturday(weeks) {
-  const base = state.focusSaturday ?? tehranTodayISO();
+  // مبنا وقتی هفته‌ای انتخاب نشده، «شنبه‌ی» هفته‌ی جاری است — نه خودِ امروز
+  // (با امروزِ غیرشنبه، تاریخِ همه‌ی روزها ۶ روز جابه‌جا می‌شد)
+  const base = state.focusSaturday ?? currentWeekSaturday();
   const d = new Date(base + 'T00:00:00Z');
   d.setUTCDate(d.getUTCDate() + weeks * 7);
   return d.toISOString().slice(0, 10);
 }
 
+/**
+ * شنبه‌ی «هفته‌ی جاری» در پنل: هفته‌ای که روزِ تمرکز در آن است — امروز تا وقتی
+ * زنگی از امروز باقی مانده، وگرنه اولین روزِ درسیِ بعد. پس پنجشنبه/جمعه و
+ * عصرِ آخرین روزِ درسیِ هفته، «هفته‌ی جاری» = هفته‌ی بعد است و تکلیفی که
+ * مدیر ثبت می‌کند برای روزِ پیشِ رو می‌افتد، نه برای روزِ گذشته‌ی همین هفته.
+ * (همان قاعده‌ی صفحه‌ی دانش‌آموز؛ state.focusSaturday = null یعنی همین.)
+ */
+function currentWeekSaturday() {
+  const todayIdx = tehranDayIndex();
+  const lastEnd = bellsOfDay(todayIdx).reduce((mx, b) => (b.end_time > mx ? b.end_time : mx), '');
+  if (lastEnd && tehranHHMM(Date.now()) < lastEnd) return saturdayOf(tehranTodayISO());
+  for (let k = 1; k <= 6; k++) {
+    const idx = (todayIdx + k) % 7;
+    if (periodsPerDay(idx) > 0) return saturdayOf(tehranDateISO(Date.now() + k * 86_400_000));
+  }
+  return saturdayOf(tehranTodayISO());
+}
+
+// شمسیِ یک تاریخِ «YYYY-MM-DD» (میلادیِ تهران) — با اجزای UTC، مستقل از منطقه‌ی زمانی مرورگر
+function jalaliOfISO(dateISO) {
+  const dt = new Date(dateISO + 'T00:00:00Z');
+  return toJalaliParts(dt.getUTCFullYear(), dt.getUTCMonth() + 1, dt.getUTCDate());
+}
+
+// «YYYY-MM-DD» + n روز
+function shiftDateISO(dateISO, days) {
+  const d = new Date(dateISO + 'T00:00:00Z');
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+// «۷ آذر تا ۱۳ آذر» — بازه‌ی هفته‌ای که گرید برایش باز است
+function focusWeekRangeLabel() {
+  const a = jalaliOfISO(dateOfDayInFocus(0));
+  const b = jalaliOfISO(dateOfDayInFocus(6));
+  return `${faDigits(a.jd)} ${JALALI_MONTHS[a.jm - 1]} تا ${faDigits(b.jd)} ${JALALI_MONTHS[b.jm - 1]}`;
+}
+
 // تاریخِ روز d (0=شنبه) در هفته‌ی در حال مرور
 function dateOfDayInFocus(d) {
-  const base = new Date((state.focusSaturday ?? saturdayOf(tehranTodayISO())) + 'T00:00:00Z');
+  const base = new Date((state.focusSaturday ?? currentWeekSaturday()) + 'T00:00:00Z');
   base.setUTCDate(base.getUTCDate() + d);
   return base.toISOString().slice(0, 10);
 }
 
 // برچسب شمسی هفته‌ی در حال مرور
 function focusWeekLabel() {
-  const sat = state.focusSaturday ?? saturdayOf(tehranTodayISO());
-  const cur = saturdayOf(tehranTodayISO());
+  const sat = state.focusSaturday ?? currentWeekSaturday();
+  const cur = currentWeekSaturday();
   if (sat === cur) return 'هفته‌ی جاری';
   if (sat < cur) {
     const wk = Math.round((new Date(cur) - new Date(sat)) / (7 * 86_400_000));
@@ -3744,12 +3887,14 @@ function renderGrid() {
   }
   head.append(hr);
 
-  // سلول‌ها از داده سرور
+  // سلول‌ها از داده سرور — نشانگر 📝 از تکلیفِ همان روز در هفته‌ی در حال مرور
   grid.cells = {};
   for (let d = 0; d < 7; d++) {
+    const hwDate = dateOfDayInFocus(d);
     for (const l of state.scheduleDays[d] || []) {
       grid.cells[gridKey(d, l.period)] = {
-        lessonId: l.id, subjectId: l.subject_id, altSubjectId: l.alt_subject_id ?? null, hwSet: !!l.homework,
+        lessonId: l.id, subjectId: l.subject_id, altSubjectId: l.alt_subject_id ?? null,
+        hwSet: Boolean(l.hwByDate?.[hwDate]),
       };
     }
   }
@@ -3762,12 +3907,19 @@ function renderGrid() {
       text: 'هنوز زنگی ساخته نشده است. از تب «🔔 زنگ‌ها» ساختار روزهای کلاس را بسازید.',
     })));
   }
+  const todayISO = tehranTodayISO();
   for (const d of days) {
     const dayBells = bellsOfDay(d);
+    const dayISO = dateOfDayInFocus(d);
+    const j = jalaliOfISO(dayISO);
+    // تاریخِ واقعیِ این روز در هفته‌ی در حال مرور، تا معلوم باشد تکلیف برای کدام تاریخ ثبت می‌شود
+    const when = [`${faDigits(j.jd)} ${JALALI_MONTHS[j.jm - 1]}`];
+    if (dayISO === todayISO) when.push('امروز');
+    if (dayBells.length) when.push(`تا ${dayBells[dayBells.length - 1].end_time}`);
     const tr = el('tr', { class: 'grid-row' });
     tr.append(el('td', { class: 'grid-row__day' },
       WEEK_DAY_NAMES[d],
-      el('small', { text: dayBells.length ? `تا ${dayBells[dayBells.length - 1].end_time}` : '' })));
+      el('small', { text: when.join(' · ') })));
     for (const b of dayBells) {
       tr.append(gridCellEl(d, b.period));
     }
@@ -3924,6 +4076,8 @@ function renderLessonsTab() {
   fillSelects();
   renderGrid();
   updateWeekNav();
+  const weekNote = $('#hwWeekNote');
+  if (weekNote) weekNote.textContent = `${focusWeekLabel()} (${focusWeekRangeLabel()})`;
   const list = $('#lessonsList');
   list.textContent = '';
   let count = 0;
@@ -3955,16 +4109,18 @@ function renderLessonsTab() {
 function updateWeekNav() {
   const label = $('#weekLabel');
   if (!label) return;
-  label.textContent = focusWeekLabel();
+  // کنار نامِ هفته، تاریخِ واقعی‌اش هم می‌آید: «هفته‌ی جاری · ۷ آذر تا ۱۳ آذر»
+  label.textContent = `${focusWeekLabel()} · ${focusWeekRangeLabel()}`;
   const back = $('#weekPrev'), fwd = $('#weekNext'), today = $('#weekToday');
   if (!back || !fwd || !today) return;
-  const isCurrent = (state.focusSaturday ?? saturdayOf(tehranTodayISO())) === saturdayOf(tehranTodayISO());
+  const isCurrent = (state.focusSaturday ?? currentWeekSaturday()) === currentWeekSaturday();
   today.classList.toggle('hidden', isCurrent);
   // روی هفته‌های خیلی دور (۲ ماه) قفل نمی‌کنیم — بازه‌ی مرئی API از ۳ هفته قبل تا ~۶ هفته بعد است
 }
 
 function setFocusWeek(sat) {
-  state.focusSaturday = sat;
+  // null = هفته‌ی جاریِ پویا (با گذرِ زمان — مثلاً نیمه‌شبِ آخرین روزِ درسی — خودش عوض می‌شود)
+  state.focusSaturday = sat === currentWeekSaturday() ? null : sat;
   renderLessonsTab();
 }
 
@@ -3973,7 +4129,7 @@ async function openHwEditor(lesson, hwDate = tehranTodayISO()) {
   state.hwLessonId = lesson.id;
   state.hwDate = hwDate;
   state.pendingUploads = [];
-  const j = toJalali(new Date(hwDate + 'T00:00:00Z'));
+  const j = jalaliOfISO(hwDate);
   $('#hwTitle').textContent = `تکلیف: ${subjectEmoji(lesson.subject_name)} ${lesson.subject_name} (${WEEK_DAY_NAMES[lesson.day]}، زنگ ${faDigits(lesson.period)} — ${faDigits(j.jd)} ${JALALI_MONTHS[j.jm - 1]} ${faDigits(j.jy)})`;
   $('#hwTitleInput').value = '';
   $('#hwDesc').value = '';
@@ -4962,7 +5118,7 @@ $('#gridSave').addEventListener('click', saveGrid);
 $('#bellsSave').addEventListener('click', saveBells);
 $('#weekPrev')?.addEventListener('click', () => setFocusWeek(shiftSaturday(-1)));
 $('#weekNext')?.addEventListener('click', () => setFocusWeek(shiftSaturday(1)));
-$('#weekToday')?.addEventListener('click', () => setFocusWeek(saturdayOf(tehranTodayISO())));
+$('#weekToday')?.addEventListener('click', () => setFocusWeek(currentWeekSaturday()));
 $('#bellsTemplate').addEventListener('click', bellsTemplate);
 $('#bellsReset').addEventListener('click', () => { bellsDraft = null; bellsDirty = false; renderBells(); });
 $('#taskForm').addEventListener('submit', submitTask);

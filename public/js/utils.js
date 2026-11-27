@@ -178,16 +178,65 @@ export function rollingWindow(n, now = Date.now()) {
   return out;
 }
 
-/**
- * پنجره‌ی هفته‌محور n روزه: از «شنبه‌ی همین هفته‌ی تهران» شروع می‌شود.
- * تکالیفِ ثبت‌شده برای روزهای ابتدای هفته (شنبه/دوشنبه/… تا دیروز) هم
- * دیده می‌شوند — هم‌پوشانی کامل با پنجره‌ی پنل ادمین که هفته را شنبه‌محور
- * می‌بیند. خروجی مثل rollingWindow: آرایه‌ای از { date, dayIdx }.
- */
-export function weekAnchoredWindow(n, now = Date.now()) {
+/** تاریخِ تهران «YYYY-MM-DD» یک لحظه — همان کلیدی که تکلیف‌ها با آن ذخیره می‌شوند */
+export function tehranDateISO(ms) {
+  const dt = new Date(tehranDayNumber(ms) * 86_400_000);
+  return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth() + 1).padStart(2, '0')}-${String(dt.getUTCDate()).padStart(2, '0')}`;
+}
+
+/** شنبه‌ی هفته‌ی جاریِ تهران به شکل شماره‌ی روز (dayNum) */
+function currentSaturdayNum(now) {
   const t = tehranDayNumber(now);
-  const back = (t + 5) % 7; // شنبه ⇔ dayNum % 7 === 2
-  return rollingWindow(n + back, now - back * 86_400_000);
+  return t - ((t + 5) % 7); // شنبه ⇔ dayNum % 7 === 2
+}
+
+/**
+ * پنجره‌ی نمایش دانش‌آموز: دو هفته‌ی کامل (۱۴ روز، شنبه تا جمعه) از شنبه‌ی
+ * «هفته‌ی جاری + weekOffset». با weekOffset=0 همیشه «این هفته + هفته‌ی بعد»
+ * است؛ روزِ تمرکز (امروز، فردا یا اولین روزِ درسیِ بعد) هرگز بیرون از آن
+ * نیست، پس تکلیفِ ثبت‌شده برای هر روزِ این دو هفته دیده می‌شود.
+ * هر آیتم: { date (نونِ محلی برای نمایش), dayIdx (شنبه=۰), dayNum, dateISO }
+ * — dayNum/dateISO مستقل از منطقه‌ی زمانی مرورگرند.
+ */
+export function fortnightWindow(weekOffset = 0, now = Date.now()) {
+  const sat = currentSaturdayNum(now) + weekOffset * 7;
+  const out = [];
+  for (let i = 0; i < 14; i++) {
+    const dayNum = sat + i;
+    const dt = new Date(dayNum * 86_400_000);
+    const y = dt.getUTCFullYear();
+    const m = dt.getUTCMonth() + 1;
+    const d = dt.getUTCDate();
+    out.push({
+      date: new Date(y, m - 1, d, 12, 0, 0),
+      dayIdx: (dayNum + 5) % 7,
+      dayNum,
+      dateISO: `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`,
+    });
+  }
+  return out;
+}
+
+/**
+ * بازه‌ی مجاز weekOffset: کوچک‌ترین/بزرگ‌ترین مقداری که هر ۱۴ روزِ پنجره
+ * داخل بازه‌ی تکالیفِ API (hwRange: {from,to} با «YYYY-MM-DD») بماند —
+ * روزِ بیرون از آن بازه تکلیفش لود نشده و به‌اشتباه «خالی» دیده می‌شود.
+ * بدون hwRange: محدوده‌ی محافظه‌کارانه‌ی ۲ هفته قبل تا ۴ هفته بعد.
+ */
+export function weekOffsetBounds(hwRange, now = Date.now()) {
+  if (!hwRange?.from || !hwRange?.to) return { min: -2, max: 4 };
+  const from = isoDayNum(hwRange.from);
+  const to = isoDayNum(hwRange.to);
+  const bounds = { min: 0, max: 0 };
+  for (let k = -1; k > -30; k--) {
+    if (fortnightWindow(k, now)[0].dayNum < from) break;
+    bounds.min = k;
+  }
+  for (let k = 1; k < 30; k++) {
+    if (fortnightWindow(k, now)[13].dayNum > to) break;
+    bounds.max = k;
+  }
+  return bounds;
 }
 
 /** Format a Jalali date like «۱۸ آبان ۱۴۰۵». */

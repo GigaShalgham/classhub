@@ -478,11 +478,13 @@ h1, h2, h3, h4 { line-height: 1.5; }
   -webkit-mask-image: linear-gradient(to left, transparent 0, #000 26px, #000 100%);
 }
 
-/* دسکتاپ بزرگ: هر ۷ روز کنار هم */
+/* دسکتاپ بزرگ: هر ۷ روز کنار هم — ۱۴ ستونِ دو هفته در دو ردیف می‌نشینند
+   (ردیف اول این هفته، ردیف دوم هفته‌ی بعد) */
 .tt-grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: clamp(10px, 1.2vw, 16px);
+  row-gap: clamp(22px, 2.4vw, 34px);
   min-width: 100%;
 }
 
@@ -621,6 +623,48 @@ h1, h2, h3, h4 { line-height: 1.5; }
   padding: 3px 11px;
   border-radius: 999px;
   box-shadow: var(--shadow-xs);
+}
+
+/* برچسب «هفته‌ی بعد / قبل» روی ستون‌های هفته‌های غیرجاری */
+.day-col__week-tag {
+  background: var(--surface-3);
+  color: var(--sub);
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* نزدیک‌ترین روزِ درسیِ بعدی (عصرِ بعدازمدرسه / آخر هفته) */
+.day-col--focus { border-color: rgba(138, 111, 184, 0.5); }
+.day-col__focus-tag {
+  background: var(--lavender);
+  color: var(--lavender-deep);
+  font-size: 10.5px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* هفته‌های بعدی کمی رنگِ آبی دارند و هفته‌های گذشته کم‌رنگ‌اند */
+.day-col--future {
+  background:
+    linear-gradient(180deg, rgba(217, 228, 242, 0.3), rgba(255, 255, 255, 0) 170px),
+    var(--surface);
+}
+.day-col--past { background: var(--surface-2); border-style: dashed; }
+
+/* برچسب بازه‌ی دو هفته در نوار ناوبری */
+.tt-range {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--lavender-deep);
+  white-space: nowrap;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--lavender);
 }
 
 /* ---------- کارت درس ---------- */
@@ -924,6 +968,8 @@ h1, h2, h3, h4 { line-height: 1.5; }
 .digest-row:hover { border-color: var(--lavender-deep); }
 .digest-row:active { transform: scale(0.99); }
 .digest-row--high { border-inline-start: 3px solid var(--pink-deep); }
+/* ردیف تکلیفِ درس (نه مهلت): نوار آبی، تا از مهلت‌ها جدا دیده شود */
+.digest-row--hw { border-inline-start: 3px solid var(--lavender-deep); }
 .digest-row__dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
 .digest-row__icon { font-size: 17px; flex-shrink: 0; }
 .digest-row__title {
@@ -938,6 +984,11 @@ h1, h2, h3, h4 { line-height: 1.5; }
 .dl-tomorrow { background: var(--cream); color: var(--cream-deep); }
 .dl-soon { background: var(--lavender); color: var(--lavender-deep); }
 .dl-later { background: var(--surface-3); color: var(--sub); }
+.dl-past { background: var(--surface-3); color: var(--sub); }
+.digest-note {
+  align-self: center; color: var(--sub); font-size: var(--fs-xs);
+  padding: 2px 10px;
+}
 .digest-empty {
   padding: 16px; text-align: center; color: var(--sub);
   background: var(--surface); border: 1px dashed var(--border-strong); border-radius: 14px;
@@ -2183,7 +2234,7 @@ h1, h2, h3, h4 { line-height: 1.5; }
   <main class="container">
     <div class="page-hero" id="pageHero">
       <h1 class="page-hero__title">برنامه هفتگی کلاس</h1>
-      <p class="page-hero__sub" id="heroSub">برای دیدن جزئیات تکلیف، روی هر درس بزنید</p>
+      <p class="page-hero__sub" id="heroSub">برنامه و تکالیفِ این هفته و هفته‌ی بعد؛ برای دیدن جزئیات هر درس روی آن بزنید</p>
       <div class="hero-stats" id="heroStats"></div>
     </div>
 
@@ -2197,10 +2248,11 @@ h1, h2, h3, h4 { line-height: 1.5; }
     <section class="section panel" data-panel="schedule" id="panel-schedule" aria-label="برنامه هفتگی" role="tabpanel">
       <div class="section__head">
         <h2 class="section__title"><span class="emoji" aria-hidden="true">🗓️</span> برنامه هفتگی</h2>
-        <div class="tt-nav" role="group" aria-label="ناوبری روزها">
-          <button class="btn btn--ghost btn--sm" id="dayPrev" type="button" title="یک روز به عقب">‹ روز قبل</button>
-          <button class="btn btn--ghost btn--sm" id="todayBtn" type="button">برو به فردا</button>
-          <button class="btn btn--ghost btn--sm" id="dayNext" type="button" title="یک روز به جلو">روز بعد ›</button>
+        <div class="tt-nav" role="group" aria-label="ناوبری هفته‌ها">
+          <button class="btn btn--ghost btn--sm" id="weekPrev" type="button" title="هفته‌ی قبل (این هفته + هفته‌ی قبل‌تر)">‹ هفته قبل</button>
+          <span class="tt-range" id="ttRange">این هفته + هفته‌ی بعد</span>
+          <button class="btn btn--ghost btn--sm hidden" id="weekToday" type="button">برو به این هفته</button>
+          <button class="btn btn--ghost btn--sm" id="weekNext" type="button" title="هفته‌ی بعد (هفته‌ی بعد + دو هفته بعد)">هفته بعد ›</button>
         </div>
         <span class="section__note">به‌روزرسانی: <span id="updatedAt">…</span></span>
       </div>
@@ -2217,7 +2269,7 @@ h1, h2, h3, h4 { line-height: 1.5; }
     <section class="section panel" data-panel="schedule" aria-label="چکیده تکالیف">
       <div class="section__head">
         <h2 class="section__title"><span class="emoji" aria-hidden="true">📋</span> چکیده تکالیف</h2>
-        <span class="section__note">نزدیک‌ترین مهلت‌ها از بالا</span>
+        <span class="section__note">تکالیف این دو هفته و نزدیک‌ترین مهلت‌ها</span>
       </div>
       <div class="digest-list" id="digestList"></div>
     </section>
@@ -2455,16 +2507,65 @@ function rollingWindow(n, now = Date.now()) {
   return out;
 }
 
-/**
- * پنجره‌ی هفته‌محور n روزه: از «شنبه‌ی همین هفته‌ی تهران» شروع می‌شود.
- * تکالیفِ ثبت‌شده برای روزهای ابتدای هفته (شنبه/دوشنبه/… تا دیروز) هم
- * دیده می‌شوند — هم‌پوشانی کامل با پنجره‌ی پنل ادمین که هفته را شنبه‌محور
- * می‌بیند. خروجی مثل rollingWindow: آرایه‌ای از { date, dayIdx }.
- */
-function weekAnchoredWindow(n, now = Date.now()) {
+/** تاریخِ تهران «YYYY-MM-DD» یک لحظه — همان کلیدی که تکلیف‌ها با آن ذخیره می‌شوند */
+function tehranDateISO(ms) {
+  const dt = new Date(tehranDayNumber(ms) * 86_400_000);
+  return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth() + 1).padStart(2, '0')}-${String(dt.getUTCDate()).padStart(2, '0')}`;
+}
+
+/** شنبه‌ی هفته‌ی جاریِ تهران به شکل شماره‌ی روز (dayNum) */
+function currentSaturdayNum(now) {
   const t = tehranDayNumber(now);
-  const back = (t + 5) % 7; // شنبه ⇔ dayNum % 7 === 2
-  return rollingWindow(n + back, now - back * 86_400_000);
+  return t - ((t + 5) % 7); // شنبه ⇔ dayNum % 7 === 2
+}
+
+/**
+ * پنجره‌ی نمایش دانش‌آموز: دو هفته‌ی کامل (۱۴ روز، شنبه تا جمعه) از شنبه‌ی
+ * «هفته‌ی جاری + weekOffset». با weekOffset=0 همیشه «این هفته + هفته‌ی بعد»
+ * است؛ روزِ تمرکز (امروز، فردا یا اولین روزِ درسیِ بعد) هرگز بیرون از آن
+ * نیست، پس تکلیفِ ثبت‌شده برای هر روزِ این دو هفته دیده می‌شود.
+ * هر آیتم: { date (نونِ محلی برای نمایش), dayIdx (شنبه=۰), dayNum, dateISO }
+ * — dayNum/dateISO مستقل از منطقه‌ی زمانی مرورگرند.
+ */
+function fortnightWindow(weekOffset = 0, now = Date.now()) {
+  const sat = currentSaturdayNum(now) + weekOffset * 7;
+  const out = [];
+  for (let i = 0; i < 14; i++) {
+    const dayNum = sat + i;
+    const dt = new Date(dayNum * 86_400_000);
+    const y = dt.getUTCFullYear();
+    const m = dt.getUTCMonth() + 1;
+    const d = dt.getUTCDate();
+    out.push({
+      date: new Date(y, m - 1, d, 12, 0, 0),
+      dayIdx: (dayNum + 5) % 7,
+      dayNum,
+      dateISO: `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`,
+    });
+  }
+  return out;
+}
+
+/**
+ * بازه‌ی مجاز weekOffset: کوچک‌ترین/بزرگ‌ترین مقداری که هر ۱۴ روزِ پنجره
+ * داخل بازه‌ی تکالیفِ API (hwRange: {from,to} با «YYYY-MM-DD») بماند —
+ * روزِ بیرون از آن بازه تکلیفش لود نشده و به‌اشتباه «خالی» دیده می‌شود.
+ * بدون hwRange: محدوده‌ی محافظه‌کارانه‌ی ۲ هفته قبل تا ۴ هفته بعد.
+ */
+function weekOffsetBounds(hwRange, now = Date.now()) {
+  if (!hwRange?.from || !hwRange?.to) return { min: -2, max: 4 };
+  const from = isoDayNum(hwRange.from);
+  const to = isoDayNum(hwRange.to);
+  const bounds = { min: 0, max: 0 };
+  for (let k = -1; k > -30; k--) {
+    if (fortnightWindow(k, now)[0].dayNum < from) break;
+    bounds.min = k;
+  }
+  for (let k = 1; k < 30; k++) {
+    if (fortnightWindow(k, now)[13].dayNum > to) break;
+    bounds.max = k;
+  }
+  return bounds;
 }
 
 /** Format a Jalali date like «۱۸ آبان ۱۴۰۵». */
@@ -2604,11 +2705,6 @@ function periodTimes(day, period) {
 
 const $ = (sel) => document.querySelector(sel);
 
-// تاریخِ (به وقت تهران) یک timestamp به شکل YYYY-MM-DD
-function tehranDateISO(ms) {
-  return new Date(ms + 3.5 * 3600_000).toISOString().slice(0, 10);
-}
-
 // ایموجی اختصاصی هر درس (با نام درس تطبیق می‌شود)
 const SUBJECT_EMOJI = [
   ['کارگاه', '🔧'], ['ریاضی', '📐'], ['هندسه', '📐'], ['فیزیک', '🧲'], ['شیمی', '⚗️'],
@@ -2653,6 +2749,7 @@ const state = {
   tasks: { active: [], expired: [] },
   announcements: [],
   settings: {},
+  hwRange: null, // بازه‌ی تاریخ‌هایی که تکلیفشان از API لود شده: { from, to }
 };
 
 // ---------- API (مقاوم به شبکه ضعیف و فیلترینگ) ----------
@@ -2845,16 +2942,13 @@ function renderHero() {
   const dayLessons = (d) => (state.days[d] ?? []).filter((l) => l.period <= maxPeriods(d));
   const focus = focusDay();
 
-  // آمار روی همان پنجره‌ی نمایش (هفته‌محور) — با چیزی که دانش‌آموز می‌بیند هم‌خوان
-  const win = weekAnchoredWindow(WINDOW_DAYS, Date.now() + focus.offset * 86_400_000);
-  const seen = new Set();
+  // آمار روی همان پنجره‌ی نمایش (دو هفته) — با چیزی که دانش‌آموز می‌بیند هم‌خوان
   let totalLessons = 0;
   let totalHw = 0;
-  for (const { dayIdx, date } of win) {
-    if (seen.has(date.toDateString())) continue;
-    seen.add(date.toDateString());
-    totalLessons += dayLessons(dayIdx).length;
-    totalHw += dayLessons(dayIdx).filter((l) => l.homework || Object.keys(l.hwByDate ?? {}).length).length;
+  for (const { dayIdx, dateISO } of displayWindow()) {
+    const lessons = dayLessons(dayIdx);
+    totalLessons += lessons.length;
+    totalHw += lessons.filter((l) => l.hwByDate?.[dateISO]).length;
   }
   const stats = $('#heroStats');
   stats.textContent = '';
@@ -2870,11 +2964,11 @@ function renderHero() {
   stats.append(el('div', { class: 'stat-chip' },
     el('span', { text: '📚' }),
     el('b', { text: faDigits(totalLessons) }),
-    ' درس در ۷ روز آینده'));
+    ' درس در دو هفته'));
   stats.append(el('div', { class: 'stat-chip' },
     el('span', { text: '📝' }),
     el('b', { text: faDigits(totalHw) }),
-    ' تکلیف ثبت‌شده'));
+    ' تکلیف در دو هفته'));
 
   // درس بعدی: امروزِ در جریان؛ وگرنه اولین زنگِ روزِ تمرکز
   let next = nextLessonToday();
@@ -2935,45 +3029,74 @@ function lessonCard(lesson, dateMs) {
   return card;
 }
 
-// پنجره نمایش: تعداد روزهای نشان‌داده‌شده (از روزِ تمرکز به بعد)
-const WINDOW_DAYS = 7;
-// جابه‌جایی دستی پنجره (گشت‌وگذار روزهای گذشته/آینده نسبت به روزِ تمرکز)
-let ttOffset = 0;
+// پنجره‌ی نمایش: دو هفته‌ی کامل (این هفته + هفته‌ی بعد) — ttWeek آن را
+// هفته‌به‌هفته جابه‌جا می‌کند (۰ = همین دو هفته)
+let ttWeek = 0;
+// بازه‌ی مجاز ttWeek؛ بعد از اولین لود از hwRangeی که API می‌دهد دقیق می‌شود
+let ttWeekBounds = { min: -2, max: 4 };
 // اسکرولِ اولیه فقط یک‌بار (در بوت) انجام می‌شود؛ پول ۳۰ثانیه‌ای نباید
 // اسکرول دستی کاربر را بی‌احترام برمی‌گرداند.
 let firstLoadDone = false;
-// بازه‌ی مرور با بازه‌ی API هم‌پوشان است: ۳ هفته گذشته تا ~۶ هفته آینده
-const TT_OFFSET_MIN = -21; // تا سه هفته گذشته (برای مرور تکالیف هفته‌های قبل)
-const TT_OFFSET_MAX = 45;  // تا شش هفته آینده
+
+/** روزهای پنجره‌ی در حال نمایش: [{ date, dayIdx, dayNum, dateISO }] */
+function displayWindow() {
+  return fortnightWindow(ttWeek);
+}
+
+/** برچسب هفته‌ی یک ستون نسبت به هفته‌ی جاری (null = همین هفته) */
+function weekTag(rel) {
+  const text = rel === 0 ? null
+    : rel === 1 ? 'هفته‌ی بعد'
+      : rel === -1 ? 'هفته‌ی قبل'
+        : rel > 0 ? `${faDigits(rel)} هفته بعد` : `${faDigits(-rel)} هفته قبل`;
+  return text ? el('span', { class: 'day-col__week-tag', text }) : null;
+}
+
+/** نگه‌داشتن ttWeek داخل بازه‌ی تکالیفِ لودشده */
+function clampWeek() {
+  ttWeekBounds = weekOffsetBounds(state.hwRange);
+  ttWeek = Math.max(ttWeekBounds.min, Math.min(ttWeekBounds.max, ttWeek));
+}
 
 function renderTimetable() {
   const grid = $('#ttGrid');
   grid.textContent = '';
-  // پنجره از «شنبه‌ی هفته‌ی روزِ تمرکز» شروع می‌شود (+ جابه‌جاییِ دستی کاربر):
-  // تکلیف‌های ثبت‌شده برای روزهای ابتدای همین هفته دیده می‌شوند و ستونِ
-  // روزِ تمرکز (امروزِ در جریان / فردا) با اسکرول اولیه در دید می‌ماند.
-  // عصرِ بعدازمدرسه روزِ تمرکز «فردا» است؛ روزهای قبلِ آن هم مرئی‌اند.
+  // پنجره از شنبه‌ی همین هفته شروع می‌شود و دو هفته را می‌گیرد: تکلیفِ ثبت‌شده
+  // برای هر روزِ این دو هفته دیده می‌شود — حتی پنجشنبه/جمعه و عصرِ بعد از
+  // آخرین زنگ که روزِ تمرکز «شنبه‌ی بعد» است. ستون‌ها در دو ردیفِ ۷تایی
+  // می‌نشینند (ردیف اول این هفته، ردیف دوم هفته‌ی بعد).
   const focus = focusDay();
-  const windowDays = weekAnchoredWindow(WINDOW_DAYS, Date.now() + (focus.offset + ttOffset) * 86_400_000);
+  const windowDays = displayWindow();
   const todayDayNum = tehranDayNumber();
+  const focusDayNum = todayDayNum + focus.offset;
+  const thisSat = todayDayNum - ((todayDayNum + 5) % 7);
   let anyLessons = false;
-  updateDayNav(focus);
+  updateWeekNav(focus);
 
-  for (const { date, dayIdx } of windowDays) {
-    const dateMs = date.getTime();
-    // مقایسه با شماره‌ی روزِ تهران — مستقل از منطقه‌ی زمانی مرورگر (VPN)
-    const isToday = tehranDayNumber(dateMs) === todayDayNum;
+  windowDays.forEach(({ date, dayIdx, dayNum, dateISO }) => {
+    // شماره‌ی روزِ تهران — مستقل از منطقه‌ی زمانی مرورگر (VPN)
+    const isToday = dayNum === todayDayNum;
+    const isFocus = !isToday && dayNum === focusDayNum;
     const lessons = state.days[dayIdx] || [];
     anyLessons = anyLessons || lessons.length > 0;
+    // شماره‌ی هفته‌ی این ستون نسبت به هفته‌ی جاری (روزِ هفته = شنبه‌ی همان هفته)
+    const weekRel = (dayNum - dayIdx - thisSat) / 7;
     const col = el('div', {
-      class: `day-col${isToday ? ' day-col--today' : ''}`,
+      class: 'day-col'
+        + (weekRel > 0 ? ' day-col--future' : weekRel < 0 ? ' day-col--past' : '')
+        + (isToday ? ' day-col--today' : '') + (isFocus ? ' day-col--focus' : ''),
       'data-day': dayIdx,
-      'data-date': date.toISOString().slice(0, 10),
+      'data-daynum': dayNum,
+      'data-date': dateISO,
       'aria-label': `روز ${WEEK_DAY_NAMES[dayIdx]}`,
     });
+    // برچسب ستون: امروز / نزدیک‌ترین روزِ درسی / هفته‌ی قبل یا بعد (ولی هفته‌ی جاری بدون برچسب)
+    const tag = isToday ? el('span', { class: 'day-col__today-tag', text: 'امروز' })
+      : isFocus ? el('span', { class: 'day-col__focus-tag', text: 'روز بعد' })
+        : weekTag(weekRel);
     const head = el('div', { class: 'day-col__head' },
       el('span', { class: 'day-col__name', text: WEEK_DAY_NAMES[dayIdx] }),
-      isToday ? el('span', { class: 'day-col__today-tag', text: 'امروز' }) : null,
+      tag,
     );
     head.append(el('span', { class: 'day-col__date', text: formatJalali(date, { withYear: false }) }));
     col.append(head);
@@ -2987,33 +3110,34 @@ function renderTimetable() {
     } else {
       // فقط زنگ‌های مجاز روز (دوشنبه ۳ زنگ) — اضافه‌ها نادیده گرفته می‌شوند
       const maxP = periodsPerDay(dayIdx) || 12;
+      // dateMs = نیمه‌شبِ UTC همان تاریخِ تهران: کلید تکلیف و پاریتی گردش از آن بیرون می‌آید
+      const dateMs = dayNum * 86_400_000;
       for (const lesson of lessons.filter((l) => l.period <= maxP)) col.append(lessonCard(lesson, dateMs));
     }
     grid.append(col);
-  }
+  });
 
   if (!anyLessons) {
     $('#heroSub').textContent = 'هنوز برنامه‌ای ثبت نشده است؛ به‌زودی توسط سرِ کلاس تکمیل می‌شود.';
   }
   $('#updatedAt').textContent = faDigits(tehranHHMM(Date.now()));
-  renderDots(windowDays, todayDayNum);
+  renderDots(todayDayNum);
   updateScrollState();
 }
 
 // ---------- نقطه‌های راهنما و فلش‌ها ----------
-function renderDots(windowDays, todayDayNum) {
+function renderDots(todayDayNum) {
   const dots = $('#ttDots');
   dots.textContent = '';
-  for (const { date, dayIdx } of windowDays) {
-    // همان مقایسه‌ی تهران‌محور ستون‌ها (null = روز تمرکز فرداست و «امروز» نداریم)
-    const isToday = todayDayNum !== null && tehranDayNumber(date.getTime()) === todayDayNum;
+  // هفت نقطه = هفت روزِ هفته (هر ستون دو ردیف دارد: این هفته روی هفته‌ی بعد)
+  const todayIdx = (todayDayNum + 5) % 7;
+  for (let dayIdx = 0; dayIdx < 7; dayIdx++) {
     dots.append(el('button', {
-      class: `tt-dot${isToday ? ' tt-dot--today' : ''}`,
+      class: `tt-dot${dayIdx === todayIdx ? ' tt-dot--today' : ''}`,
       type: 'button',
       'data-day': dayIdx,
-      'data-date': date.toISOString().slice(0, 10),
       'aria-label': WEEK_DAY_NAMES[dayIdx],
-      onclick: () => scrollToDay(dayIdx, date.toISOString().slice(0, 10)),
+      onclick: () => scrollToDay(dayIdx),
     }));
   }
   updateDots();
@@ -3032,9 +3156,8 @@ function updateDots() {
     if (dist < closestDist) { closestDist = dist; closest = col; }
   }
   const closestDay = closest?.dataset.day ?? '0';
-  const closestDate = closest?.dataset.date ?? '';
   for (const dot of document.querySelectorAll('.tt-dot')) {
-    dot.classList.toggle('tt-dot--active', dot.dataset.day === closestDay && dot.dataset.date === closestDate);
+    dot.classList.toggle('tt-dot--active', dot.dataset.day === closestDay);
   }
 }
 
@@ -3054,15 +3177,10 @@ function updateScrollState() {
   $('#ttNext').disabled = atEnd;
 }
 
-function scrollToDay(dayIdx, dateKey, smooth = true) {
+/** اسکرول افقی تا ستونِ داده‌شده در وسطِ دید بیفتد (قابل‌اعتماد در RTL) */
+function centerColumn(col, smooth = true) {
   const scroll = $('#ttScroll');
-  const sel = dateKey
-    ? `.day-col[data-day="${dayIdx}"][data-date="${dateKey}"]`
-    : `.day-col[data-day="${dayIdx}"]`;
-  const col = document.querySelector(sel);
   if (!col || !scroll) return;
-  // با getBoundingClientRect (قابل‌اعتماد در RTL): ستون باید به وسط دید بیاید.
-  // در RTL مقادیر scrollLeft از 0 (راست) تا منفی (چپ) می‌رود.
   // delta = فاصله ستون از مرکز (مثبت: ستون سمت راست است)؛
   // اسکرول لازم همان delta است (اگر ستون راست‌تر است، به چپ یعنی منفی می‌رویم).
   const rect = col.getBoundingClientRect();
@@ -3071,38 +3189,46 @@ function scrollToDay(dayIdx, dateKey, smooth = true) {
   scroll.scrollBy({ left: delta, behavior: smooth ? 'smooth' : 'auto' });
 }
 
-function scrollToToday(smooth = true) {
-  // بازگشت به روزِ تمرکز (ستونِ امروز/فردا — نه اولین ستون پنجره که شنبه است)
-  const scroll = $('#ttScroll');
-  if (!scroll) return;
-  const focus = focusDay();
-  const todayDayNum = tehranDayNumber(Date.now() + (focus.offset + ttOffset) * 86_400_000);
-  const dateKey = new Date(todayDayNum * 86_400_000).toISOString().slice(0, 10);
-  const col = scroll.querySelector(`.day-col[data-date="${dateKey}"]`) ?? scroll.querySelector('.day-col');
-  if (!col) return;
-  const rect = col.getBoundingClientRect();
-  const sRect = scroll.getBoundingClientRect();
-  const delta = (rect.left + rect.width / 2) - (sRect.left + scroll.clientWidth / 2);
-  scroll.scrollBy({ left: delta, behavior: smooth ? 'smooth' : 'auto' });
+function scrollToDay(dayIdx, smooth = true) {
+  // هر روزِ هفته دو ستون دارد (این هفته / هفته‌ی بعد)؛ اولین ستون همان ردیف اول است
+  centerColumn(document.querySelector(`.day-col[data-day="${dayIdx}"]`), smooth);
 }
 
-/** جابه‌جایی پنجره‌ی روزها (−۱ روز / +۱ روز) و رندر مجدد */
-function shiftWindow(delta) {
-  ttOffset = Math.max(TT_OFFSET_MIN, Math.min(TT_OFFSET_MAX, ttOffset + delta));
+function scrollToToday(smooth = true) {
+  // بازگشت به روزِ تمرکز (ستونِ امروز/فردا — نه اولین ستون پنجره که شنبه است)
+  const focus = focusDay();
+  const focusNum = tehranDayNumber() + focus.offset;
+  const col = document.querySelector(`.day-col[data-daynum="${focusNum}"]`)
+    ?? document.querySelector(`.day-col[data-daynum="${tehranDayNumber()}"]`)
+    ?? document.querySelector('.day-col');
+  centerColumn(col, smooth);
+}
+
+/** جابه‌جایی پنجره یک هفته (−۱ / +۱) و رندر مجدد */
+function shiftWeek(delta) {
+  ttWeek = Math.max(ttWeekBounds.min, Math.min(ttWeekBounds.max, ttWeek + delta));
   renderTimetable();
   scrollToToday(false);
 }
 
-/** دکمه‌های ناوبری روز + برچسبِ دکمه‌ی «برو به …» بر اساس روز تمرکز */
-function updateDayNav(focus) {
-  const prev = $('#dayPrev');
-  const next = $('#dayNext');
-  if (prev) prev.disabled = ttOffset <= TT_OFFSET_MIN;
-  if (next) next.disabled = ttOffset >= TT_OFFSET_MAX;
+/** دکمه‌های ناوبری هفته + برچسب بازه + برچسبِ دکمه‌ی «برو به …» بر اساس روزِ تمرکز */
+function updateWeekNav(focus) {
+  const prev = $('#weekPrev');
+  const next = $('#weekNext');
+  if (prev) prev.disabled = ttWeek <= ttWeekBounds.min;
+  if (next) next.disabled = ttWeek >= ttWeekBounds.max;
+  const range = $('#ttRange');
+  if (range) {
+    if (ttWeek === 0) {
+      range.textContent = 'این هفته + هفته‌ی بعد';
+    } else {
+      const win = displayWindow();
+      range.textContent = `${formatJalali(win[0].date, { withYear: false })} + ${formatJalali(win[7].date, { withYear: false })}`;
+    }
+  }
+  $('#weekToday')?.classList.toggle('hidden', ttWeek === 0);
   // صبح (هنوز کلاس داریم) → «برو به امروز»؛ عصر/آخر هفته → «برو به فردا» یا روز بعد
   const goLabel = focus.offset === 0 ? 'برو به امروز' : focus.offset === 1 ? 'برو به فردا' : `برو به ${WEEK_DAY_NAMES[focus.dayIdx]}`;
-  const todayBtn = $('#todayBtn');
-  if (todayBtn) todayBtn.textContent = goLabel;
   const fabLabel = $('#fabTodayLabel');
   if (fabLabel) fabLabel.textContent = goLabel;
 }
@@ -3296,14 +3422,73 @@ function dueLabelFa(dueAt) {
   return { text: formatJalali(new Date(dueMs), { withYear: false }), cls: 'dl-later' };
 }
 
+/** برچسب نسبیِ تاریخِ تکلیف: امروز / فردا / n روز مانده / دیروز / n روز پیش */
+function hwDateLabel(dayNum, todayNum) {
+  const diff = dayNum - todayNum;
+  if (diff === 0) return { text: 'امروز', cls: 'dl-today' };
+  if (diff === 1) return { text: 'فردا', cls: 'dl-tomorrow' };
+  if (diff === 2) return { text: 'پس‌فردا', cls: 'dl-tomorrow' };
+  if (diff > 2) return { text: `${faDigits(diff)} روز مانده`, cls: 'dl-soon' };
+  if (diff === -1) return { text: 'دیروز', cls: 'dl-past' };
+  return { text: `${faDigits(-diff)} روز پیش`, cls: 'dl-past' };
+}
+
+/**
+ * تکلیف‌های پنجره‌ی در حال نمایش (دو هفته)، مرتب: اول روزهای از امروز به بعد
+ * (نزدیک‌ترین از بالا)، بعد روزهای گذشته‌ی همین هفته (تازه‌ترین از بالا).
+ */
+function homeworkInRange() {
+  const todayNum = tehranDayNumber();
+  const out = [];
+  for (const { dayIdx, dayNum, dateISO } of displayWindow()) {
+    const maxP = periodsPerDay(dayIdx) || 12;
+    for (const lesson of state.days[dayIdx] ?? []) {
+      if (lesson.period > maxP) continue;
+      const hw = lesson.hwByDate?.[dateISO];
+      if (hw) out.push({ lesson, hw, dayIdx, dayNum, dateISO });
+    }
+  }
+  // گذشته: کلید ۵۰۰ + فاصله (تازه‌ترین اول)؛ آینده: کلید = فاصله
+  const key = (d) => (d.dayNum >= todayNum ? d.dayNum - todayNum : 500 + (todayNum - d.dayNum));
+  out.sort((a, b) => key(a) - key(b));
+  return out;
+}
+
+// بیشینه‌ی تکلیف‌هایی که در چکیده لیست می‌شود (بقیه در خود جدول دیده می‌شوند)
+const DIGEST_HW_MAX = 8;
+
 function renderDigest() {
   const list = $('#digestList');
   if (!list) return;
   list.textContent = '';
-  // مهلت‌های فعال از قبل بر اساس نزدیکی مرتب‌اند؛ فقط ۶ مورد نخست
+
+  // ۱) تکلیف‌های ثبت‌شده‌ی همین دو هفته — روی هر ردیف، جزئیات همان درس در همان تاریخ باز می‌شود
+  const homework = homeworkInRange();
+  for (const { lesson, hw, dayIdx, dayNum } of homework.slice(0, DIGEST_HW_MAX)) {
+    const label = hwDateLabel(dayNum, tehranDayNumber());
+    const subj = resolveSubject(lesson, dayNum * 86_400_000);
+    list.append(el('button', {
+      class: 'digest-row digest-row--hw',
+      type: 'button',
+      onclick: () => openLesson(lesson.id, dayNum * 86_400_000),
+      title: hw.title,
+    },
+    el('span', { class: 'digest-row__icon', text: '📝', 'aria-hidden': 'true' }),
+    el('span', { class: 'digest-row__title', text: `${subjectEmoji(subj.subject_name)} ${subj.subject_name} — ${hw.title}` }),
+    el('span', { class: `digest-row__label ${label.cls}`, text: `${WEEK_DAY_NAMES[dayIdx]} · ${label.text}` }),
+    ));
+  }
+  if (homework.length > DIGEST_HW_MAX) {
+    list.append(el('div', {
+      class: 'digest-note',
+      text: `و ${faDigits(homework.length - DIGEST_HW_MAX)} تکلیف دیگر در جدول برنامه`,
+    }));
+  }
+
+  // ۲) مهلت‌های فعال از قبل بر اساس نزدیکی مرتب‌اند؛ فقط ۶ مورد نخست
   const items = (state.tasks?.active ?? []).slice(0, 6);
-  if (!items.length) {
-    list.append(el('div', { class: 'digest-empty', text: 'مهلت نزدیکی نداریم — نفس بکش! 🌿' }));
+  if (!homework.length && !items.length) {
+    list.append(el('div', { class: 'digest-empty', text: 'برای این دو هفته تکلیف یا مهلتی ثبت نشده — نفس بکش! 🌿' }));
     return;
   }
   for (const task of items) {
@@ -3356,7 +3541,11 @@ function tabFreshCounts() {
   const counts = { schedule: 0, tasks: 0, handouts: 0, announcements: 0 };
   for (const lessons of state.days ?? []) {
     for (const l of lessons ?? []) {
-      const ts = Math.max(Date.parse(l.updated_at ?? '') || 0, Date.parse(l.homework?.updated_at ?? '') || 0);
+      // تکلیف‌ها تاریخ‌محورند (hwByDate): تازه‌بودنِ هر کدام هم حساب می‌شود
+      let ts = Math.max(Date.parse(l.updated_at ?? '') || 0, Date.parse(l.homework?.updated_at ?? '') || 0);
+      for (const hw of Object.values(l.hwByDate ?? {})) {
+        ts = Math.max(ts, Date.parse(hw.updated_at ?? '') || 0);
+      }
       if (ts > (seen.schedule ?? 0)) counts.schedule += 1;
     }
   }
@@ -3711,7 +3900,7 @@ function setupFab() {
   window.addEventListener('scroll', onScroll, { passive: true });
   fab.addEventListener('click', () => {
     if (activeTab !== 'schedule') switchTab('schedule', { scroll: false });
-    if (ttOffset !== 0) { ttOffset = 0; renderTimetable(); }
+    if (ttWeek !== 0) { ttWeek = 0; renderTimetable(); }
     scrollToToday();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
@@ -3784,6 +3973,8 @@ async function loadAll() {
   state.announcements = data.announcements ?? [];
   state.handouts = data.handouts ?? [];
   state.settings = data.settings ?? {};
+  state.hwRange = data.hwRange ?? null;
+  clampWeek();
 
   renderHeader();
   renderHero();
@@ -3794,7 +3985,7 @@ async function loadAll() {
   renderHandouts();
   renderNotifications();
   renderTabBadges();
-  // اسکرول به امروز فقط در اولین لود (پس از آن layout ستون‌ها کامل شده است)؛
+  // اسکرول به روزِ تمرکز فقط در اولین لود (پس از آن layout ستون‌ها کامل شده است)؛
   // در پول‌های بعدی اسکرول دستی کاربر دست‌نخورده می‌ماند.
   if (!firstLoadDone && window.innerWidth < 1360) {
     firstLoadDone = true;
@@ -3814,6 +4005,8 @@ async function loadAll() {
       state.announcements = fresh.announcements ?? state.announcements;
       state.handouts = fresh.handouts ?? state.handouts;
       state.settings = fresh.settings ?? state.settings;
+      state.hwRange = fresh.hwRange ?? state.hwRange;
+      clampWeek();
       renderHeader(); renderHero(); renderTimetable(); renderDigest(); renderTasks(); renderAnnouncements(); renderHandouts(); renderNotifications(); renderTabBadges();
     }).catch(() => {
       // مسیر زنده بسته بود — فقط یادداشت کوچک «نسخه‌ی آفلاین» می‌ماند
@@ -3834,9 +4027,9 @@ $('#detailClose').addEventListener('click', () => closeOverlay($('#detailOverlay
 $('#detailOverlay').addEventListener('mousedown', (e) => {
   if (e.target === $('#detailOverlay')) closeOverlay($('#detailOverlay'));
 });
-$('#todayBtn').addEventListener('click', () => { ttOffset = 0; renderTimetable(); scrollToToday(); });
-$('#dayPrev').addEventListener('click', () => shiftWindow(-1));
-$('#dayNext').addEventListener('click', () => shiftWindow(1));
+$('#weekToday').addEventListener('click', () => { ttWeek = 0; renderTimetable(); scrollToToday(); });
+$('#weekPrev').addEventListener('click', () => shiftWeek(-1));
+$('#weekNext').addEventListener('click', () => shiftWeek(1));
 $('#notifBtn').addEventListener('click', () => toggleNotif());
 $('#ttPrev').addEventListener('click', () => {
   const scroll = $('#ttScroll');

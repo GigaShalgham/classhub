@@ -1,5 +1,5 @@
 // درس من — admin panel logic
-import { faDigits, formatJalali, formatJalaliDateTime, countdown, WEEK_DAY_NAMES, KIND_LABELS, KIND_ICONS, JALALI_MONTHS, toJalali, fromJalali, iranDayIndex, rollingWindow, weekParity, tehranLocalDate, todayJalali } from './utils.js'
+import { faDigits, formatJalali, formatJalaliDateTime, countdown, WEEK_DAY_NAMES, KIND_LABELS, KIND_ICONS, JALALI_MONTHS, toJalali, toJalaliParts, fromJalali, iranDayIndex, rollingWindow, weekParity, tehranLocalDate, todayJalali, tehranDayIndex, tehranHHMM, tehranDateISO } from './utils.js'
 import { createJalaliField } from './jdate.js';
 import { periodsPerDay, periodTimes, setBells, getBells, classDays, bellsOfDay } from './schedule.js';
 
@@ -54,23 +54,63 @@ function saturdayOf(dateISO) {
 
 // شنبه‌ی جاری/مبنا + n هفته
 function shiftSaturday(weeks) {
-  const base = state.focusSaturday ?? tehranTodayISO();
+  // مبنا وقتی هفته‌ای انتخاب نشده، «شنبه‌ی» هفته‌ی جاری است — نه خودِ امروز
+  // (با امروزِ غیرشنبه، تاریخِ همه‌ی روزها ۶ روز جابه‌جا می‌شد)
+  const base = state.focusSaturday ?? currentWeekSaturday();
   const d = new Date(base + 'T00:00:00Z');
   d.setUTCDate(d.getUTCDate() + weeks * 7);
   return d.toISOString().slice(0, 10);
 }
 
+/**
+ * شنبه‌ی «هفته‌ی جاری» در پنل: هفته‌ای که روزِ تمرکز در آن است — امروز تا وقتی
+ * زنگی از امروز باقی مانده، وگرنه اولین روزِ درسیِ بعد. پس پنجشنبه/جمعه و
+ * عصرِ آخرین روزِ درسیِ هفته، «هفته‌ی جاری» = هفته‌ی بعد است و تکلیفی که
+ * مدیر ثبت می‌کند برای روزِ پیشِ رو می‌افتد، نه برای روزِ گذشته‌ی همین هفته.
+ * (همان قاعده‌ی صفحه‌ی دانش‌آموز؛ state.focusSaturday = null یعنی همین.)
+ */
+function currentWeekSaturday() {
+  const todayIdx = tehranDayIndex();
+  const lastEnd = bellsOfDay(todayIdx).reduce((mx, b) => (b.end_time > mx ? b.end_time : mx), '');
+  if (lastEnd && tehranHHMM(Date.now()) < lastEnd) return saturdayOf(tehranTodayISO());
+  for (let k = 1; k <= 6; k++) {
+    const idx = (todayIdx + k) % 7;
+    if (periodsPerDay(idx) > 0) return saturdayOf(tehranDateISO(Date.now() + k * 86_400_000));
+  }
+  return saturdayOf(tehranTodayISO());
+}
+
+// شمسیِ یک تاریخِ «YYYY-MM-DD» (میلادیِ تهران) — با اجزای UTC، مستقل از منطقه‌ی زمانی مرورگر
+function jalaliOfISO(dateISO) {
+  const dt = new Date(dateISO + 'T00:00:00Z');
+  return toJalaliParts(dt.getUTCFullYear(), dt.getUTCMonth() + 1, dt.getUTCDate());
+}
+
+// «YYYY-MM-DD» + n روز
+function shiftDateISO(dateISO, days) {
+  const d = new Date(dateISO + 'T00:00:00Z');
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+// «۷ آذر تا ۱۳ آذر» — بازه‌ی هفته‌ای که گرید برایش باز است
+function focusWeekRangeLabel() {
+  const a = jalaliOfISO(dateOfDayInFocus(0));
+  const b = jalaliOfISO(dateOfDayInFocus(6));
+  return `${faDigits(a.jd)} ${JALALI_MONTHS[a.jm - 1]} تا ${faDigits(b.jd)} ${JALALI_MONTHS[b.jm - 1]}`;
+}
+
 // تاریخِ روز d (0=شنبه) در هفته‌ی در حال مرور
 function dateOfDayInFocus(d) {
-  const base = new Date((state.focusSaturday ?? saturdayOf(tehranTodayISO())) + 'T00:00:00Z');
+  const base = new Date((state.focusSaturday ?? currentWeekSaturday()) + 'T00:00:00Z');
   base.setUTCDate(base.getUTCDate() + d);
   return base.toISOString().slice(0, 10);
 }
 
 // برچسب شمسی هفته‌ی در حال مرور
 function focusWeekLabel() {
-  const sat = state.focusSaturday ?? saturdayOf(tehranTodayISO());
-  const cur = saturdayOf(tehranTodayISO());
+  const sat = state.focusSaturday ?? currentWeekSaturday();
+  const cur = currentWeekSaturday();
   if (sat === cur) return 'هفته‌ی جاری';
   if (sat < cur) {
     const wk = Math.round((new Date(cur) - new Date(sat)) / (7 * 86_400_000));
@@ -562,12 +602,14 @@ function renderGrid() {
   }
   head.append(hr);
 
-  // سلول‌ها از داده سرور
+  // سلول‌ها از داده سرور — نشانگر 📝 از تکلیفِ همان روز در هفته‌ی در حال مرور
   grid.cells = {};
   for (let d = 0; d < 7; d++) {
+    const hwDate = dateOfDayInFocus(d);
     for (const l of state.scheduleDays[d] || []) {
       grid.cells[gridKey(d, l.period)] = {
-        lessonId: l.id, subjectId: l.subject_id, altSubjectId: l.alt_subject_id ?? null, hwSet: !!l.homework,
+        lessonId: l.id, subjectId: l.subject_id, altSubjectId: l.alt_subject_id ?? null,
+        hwSet: Boolean(l.hwByDate?.[hwDate]),
       };
     }
   }
@@ -580,12 +622,19 @@ function renderGrid() {
       text: 'هنوز زنگی ساخته نشده است. از تب «🔔 زنگ‌ها» ساختار روزهای کلاس را بسازید.',
     })));
   }
+  const todayISO = tehranTodayISO();
   for (const d of days) {
     const dayBells = bellsOfDay(d);
+    const dayISO = dateOfDayInFocus(d);
+    const j = jalaliOfISO(dayISO);
+    // تاریخِ واقعیِ این روز در هفته‌ی در حال مرور، تا معلوم باشد تکلیف برای کدام تاریخ ثبت می‌شود
+    const when = [`${faDigits(j.jd)} ${JALALI_MONTHS[j.jm - 1]}`];
+    if (dayISO === todayISO) when.push('امروز');
+    if (dayBells.length) when.push(`تا ${dayBells[dayBells.length - 1].end_time}`);
     const tr = el('tr', { class: 'grid-row' });
     tr.append(el('td', { class: 'grid-row__day' },
       WEEK_DAY_NAMES[d],
-      el('small', { text: dayBells.length ? `تا ${dayBells[dayBells.length - 1].end_time}` : '' })));
+      el('small', { text: when.join(' · ') })));
     for (const b of dayBells) {
       tr.append(gridCellEl(d, b.period));
     }
@@ -742,6 +791,8 @@ function renderLessonsTab() {
   fillSelects();
   renderGrid();
   updateWeekNav();
+  const weekNote = $('#hwWeekNote');
+  if (weekNote) weekNote.textContent = `${focusWeekLabel()} (${focusWeekRangeLabel()})`;
   const list = $('#lessonsList');
   list.textContent = '';
   let count = 0;
@@ -773,16 +824,18 @@ function renderLessonsTab() {
 function updateWeekNav() {
   const label = $('#weekLabel');
   if (!label) return;
-  label.textContent = focusWeekLabel();
+  // کنار نامِ هفته، تاریخِ واقعی‌اش هم می‌آید: «هفته‌ی جاری · ۷ آذر تا ۱۳ آذر»
+  label.textContent = `${focusWeekLabel()} · ${focusWeekRangeLabel()}`;
   const back = $('#weekPrev'), fwd = $('#weekNext'), today = $('#weekToday');
   if (!back || !fwd || !today) return;
-  const isCurrent = (state.focusSaturday ?? saturdayOf(tehranTodayISO())) === saturdayOf(tehranTodayISO());
+  const isCurrent = (state.focusSaturday ?? currentWeekSaturday()) === currentWeekSaturday();
   today.classList.toggle('hidden', isCurrent);
   // روی هفته‌های خیلی دور (۲ ماه) قفل نمی‌کنیم — بازه‌ی مرئی API از ۳ هفته قبل تا ~۶ هفته بعد است
 }
 
 function setFocusWeek(sat) {
-  state.focusSaturday = sat;
+  // null = هفته‌ی جاریِ پویا (با گذرِ زمان — مثلاً نیمه‌شبِ آخرین روزِ درسی — خودش عوض می‌شود)
+  state.focusSaturday = sat === currentWeekSaturday() ? null : sat;
   renderLessonsTab();
 }
 
@@ -791,7 +844,7 @@ async function openHwEditor(lesson, hwDate = tehranTodayISO()) {
   state.hwLessonId = lesson.id;
   state.hwDate = hwDate;
   state.pendingUploads = [];
-  const j = toJalali(new Date(hwDate + 'T00:00:00Z'));
+  const j = jalaliOfISO(hwDate);
   $('#hwTitle').textContent = `تکلیف: ${subjectEmoji(lesson.subject_name)} ${lesson.subject_name} (${WEEK_DAY_NAMES[lesson.day]}، زنگ ${faDigits(lesson.period)} — ${faDigits(j.jd)} ${JALALI_MONTHS[j.jm - 1]} ${faDigits(j.jy)})`;
   $('#hwTitleInput').value = '';
   $('#hwDesc').value = '';
@@ -1780,7 +1833,7 @@ $('#gridSave').addEventListener('click', saveGrid);
 $('#bellsSave').addEventListener('click', saveBells);
 $('#weekPrev')?.addEventListener('click', () => setFocusWeek(shiftSaturday(-1)));
 $('#weekNext')?.addEventListener('click', () => setFocusWeek(shiftSaturday(1)));
-$('#weekToday')?.addEventListener('click', () => setFocusWeek(saturdayOf(tehranTodayISO())));
+$('#weekToday')?.addEventListener('click', () => setFocusWeek(currentWeekSaturday()));
 $('#bellsTemplate').addEventListener('click', bellsTemplate);
 $('#bellsReset').addEventListener('click', () => { bellsDraft = null; bellsDirty = false; renderBells(); });
 $('#taskForm').addEventListener('submit', submitTask);

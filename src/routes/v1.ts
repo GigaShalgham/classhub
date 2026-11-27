@@ -235,7 +235,9 @@ v1.post('/tasks', async (c) => {
     'INSERT INTO tasks (kind, title, subject_id, description, due_at, priority) VALUES (?, ?, ?, ?, ?, ?)',
   ).bind(kind, title, subjectId, description, dueAt, priority).run();
   return c.json({ ok: true, id: r.meta.last_row_id }, 201);
-});v1.post('/announcements', async (c) => {
+});
+
+v1.post('/announcements', async (c) => {
   const gate = await requireScope(c, 'write');
   if (!gate.ok) return gate.res;
   const body = await readJson(c.req.raw);

@@ -465,11 +465,13 @@ h1, h2, h3, h4 { line-height: 1.5; }
   -webkit-mask-image: linear-gradient(to left, transparent 0, #000 26px, #000 100%);
 }
 
-/* دسکتاپ بزرگ: هر ۷ روز کنار هم */
+/* دسکتاپ بزرگ: هر ۷ روز کنار هم — ۱۴ ستونِ دو هفته در دو ردیف می‌نشینند
+   (ردیف اول این هفته، ردیف دوم هفته‌ی بعد) */
 .tt-grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: clamp(10px, 1.2vw, 16px);
+  row-gap: clamp(22px, 2.4vw, 34px);
   min-width: 100%;
 }
 
@@ -608,6 +610,48 @@ h1, h2, h3, h4 { line-height: 1.5; }
   padding: 3px 11px;
   border-radius: 999px;
   box-shadow: var(--shadow-xs);
+}
+
+/* برچسب «هفته‌ی بعد / قبل» روی ستون‌های هفته‌های غیرجاری */
+.day-col__week-tag {
+  background: var(--surface-3);
+  color: var(--sub);
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* نزدیک‌ترین روزِ درسیِ بعدی (عصرِ بعدازمدرسه / آخر هفته) */
+.day-col--focus { border-color: rgba(138, 111, 184, 0.5); }
+.day-col__focus-tag {
+  background: var(--lavender);
+  color: var(--lavender-deep);
+  font-size: 10.5px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* هفته‌های بعدی کمی رنگِ آبی دارند و هفته‌های گذشته کم‌رنگ‌اند */
+.day-col--future {
+  background:
+    linear-gradient(180deg, rgba(217, 228, 242, 0.3), rgba(255, 255, 255, 0) 170px),
+    var(--surface);
+}
+.day-col--past { background: var(--surface-2); border-style: dashed; }
+
+/* برچسب بازه‌ی دو هفته در نوار ناوبری */
+.tt-range {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--lavender-deep);
+  white-space: nowrap;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--lavender);
 }
 
 /* ---------- کارت درس ---------- */
@@ -911,6 +955,8 @@ h1, h2, h3, h4 { line-height: 1.5; }
 .digest-row:hover { border-color: var(--lavender-deep); }
 .digest-row:active { transform: scale(0.99); }
 .digest-row--high { border-inline-start: 3px solid var(--pink-deep); }
+/* ردیف تکلیفِ درس (نه مهلت): نوار آبی، تا از مهلت‌ها جدا دیده شود */
+.digest-row--hw { border-inline-start: 3px solid var(--lavender-deep); }
 .digest-row__dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
 .digest-row__icon { font-size: 17px; flex-shrink: 0; }
 .digest-row__title {
@@ -925,6 +971,11 @@ h1, h2, h3, h4 { line-height: 1.5; }
 .dl-tomorrow { background: var(--cream); color: var(--cream-deep); }
 .dl-soon { background: var(--lavender); color: var(--lavender-deep); }
 .dl-later { background: var(--surface-3); color: var(--sub); }
+.dl-past { background: var(--surface-3); color: var(--sub); }
+.digest-note {
+  align-self: center; color: var(--sub); font-size: var(--fs-xs);
+  padding: 2px 10px;
+}
 .digest-empty {
   padding: 16px; text-align: center; color: var(--sub);
   background: var(--surface); border: 1px dashed var(--border-strong); border-radius: 14px;
