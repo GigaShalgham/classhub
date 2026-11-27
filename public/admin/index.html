@@ -571,6 +571,7 @@ h1, h2, h3, h4 { line-height: 1.5; }
 .stat-tile {
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
   gap: 8px;
   min-width: 0;
   padding: 12px 14px;
@@ -606,6 +607,7 @@ h1, h2, h3, h4 { line-height: 1.5; }
 
 .stat-tile__value {
   display: inline-flex;
+  flex-wrap: wrap;
   align-items: baseline;
   gap: 5px;
   min-width: 0;
@@ -2854,7 +2856,7 @@ h1, h2, h3, h4 { line-height: 1.5; }
 .hw-date-past { color: var(--danger); font-weight: 800; }
 
 /* ---------- ورود ---------- */
-.admin-enter { min-height: 76vh; display: grid; place-items: center; padding: 24px 0; }
+.admin-enter { min-height: max(420px, calc(100dvh - var(--header-h, 64px) - 48px)); display: grid; place-items: center; padding: 24px 0; }
 
 .login-card {
   position: relative;
@@ -3280,7 +3282,7 @@ h1, h2, h3, h4 { line-height: 1.5; }
     <!-- login / bootstrap view -->
     <div class="admin-enter" id="loginView">
       <div class="login-card">
-        <div class="login-card__logo" aria-hidden="true"><svg class="i"><use href="#i-key"/></svg></div>
+        <div class="login-card__logo" aria-hidden="true"><svg class="i"><use href="#i-lock"/></svg></div>
         <h1 class="login-card__title">ورود مدیر کلاس</h1>
         <p class="login-card__sub" id="loginSub">این بخش مخصوص سرِ کلاس است</p>
         <form id="loginForm" novalidate>
