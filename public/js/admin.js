@@ -1862,10 +1862,23 @@ function switchTab(name) {
   }
   // کلیدها هر بار موقع ورود به تب تازه می‌شوند (مصرف/آخرین استفاده)
   if (name === 'apikeys') refreshApiKeys().catch(() => {});
+  // در صفحه‌های باریک، نوارِ تب افقی اسکرول می‌کند؛ زبانه‌ی فعال کامل دیده شود
+  // (فقط جابه‌جاییِ افقیِ خودِ نوار: block 'nearest' صفحه را عمودی نمی‌برد)
+  const active = document.querySelector(`.admin-tab[data-tab="${name}"]`);
+  if (active) active.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
 }
 
 // ---------- boot ----------
+/** ارتفاعِ واقعیِ هدر را به CSS بدهد تا نوارِ تبِ چسبان دقیقاً زیرش بنشیند
+    (مثل صفحه‌ی دانش‌آموز؛ توکن --header-min مستقل است تا حلقه نسازد) */
+function syncHeaderHeight() {
+  const h = document.querySelector('.site-header')?.offsetHeight || 64;
+  document.documentElement.style.setProperty('--header-h', `${h}px`);
+}
+
 async function boot() {
+  syncHeaderHeight();
+  window.addEventListener('resize', syncHeaderHeight);
   $('#brandDate').textContent = formatJalali(tehranLocalDate(), { withWeekday: true });
   initMirrorOriginPicker();
   // روی آینه، دکمه‌ی 🏠 باید به صفحه‌ی دانش‌آموزِ خودِ آینه برگردد نه /

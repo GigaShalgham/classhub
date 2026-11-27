@@ -3,21 +3,23 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#FCFAFD">
+  <meta name="theme-color" content="#F4F6FA">
   <meta name="description" content="درس من — برنامه هفتگی، تکالیف، مهلت‌ها و اطلاعیه‌های کلاس">
   <title>درس من | برنامه هفتگی کلاس</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%2322385C'/><text x='50' y='72' font-size='56' text-anchor='middle'>📚</text></svg>">
   <link rel="preload" href="/fonts/Vazirmatn-Regular.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/fonts/Vazirmatn-SemiBold.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/fonts/Estedad-ExtraBold.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
+  <!--#ICONS-->
+
   <header class="site-header">
     <div class="site-header__inner">
       <div class="brand">
-        <div class="brand__logo" aria-hidden="true">📚</div>
-        <div>
+        <div class="brand__logo" aria-hidden="true"><svg class="i"><use href="#i-book"/></svg></div>
+        <div class="brand__text">
           <div class="brand__name" id="brandName">درس من</div>
           <div class="brand__date">
             <span id="brandDate">…</span>
@@ -25,108 +27,154 @@
           </div>
         </div>
       </div>
-      <div class="header-spacer"></div>
-      <div class="welcome-bubble" id="welcomeBubble">امروز هم روز خوبی داشته باشیم!</div>
       <div class="header-actions">
-        <button class="icon-btn" id="notifBtn" aria-label="اعلان‌ها" aria-haspopup="true" aria-expanded="false">
-          🔔
+        <button class="icon-btn" id="notifBtn" type="button" aria-label="اعلان‌ها" aria-haspopup="true" aria-expanded="false">
+          <svg class="i"><use href="#i-bell"/></svg>
           <span class="icon-btn__badge hidden" id="notifBadge">۰</span>
         </button>
-        <div class="notifications-panel hidden" id="notifPanel" role="menu" aria-label="اعلان‌های مهم"></div>
-        <a class="icon-btn" href="/admin" id="adminLink" aria-label="ورود مدیر کلاس" title="ورود مدیر کلاس">⚙️</a>
+        <div class="notifications-panel hidden" id="notifPanel" role="dialog" aria-label="اعلان‌های مهم"></div>
+        <a class="icon-btn" href="/admin" id="adminLink" aria-label="ورود مدیر کلاس" title="ورود مدیر کلاس"><svg class="i"><use href="#i-settings"/></svg></a>
       </div>
     </div>
   </header>
 
   <main class="container">
-    <div class="page-hero" id="pageHero">
-      <div class="page-hero__sheen" aria-hidden="true"></div>
-      <h1 class="page-hero__title">برنامه هفتگی کلاس</h1>
-      <p class="page-hero__sub" id="heroSub">برنامه و تکالیفِ این هفته را با دکمه‌های «هفته قبل / هفته بعد» مرور کنید؛ برای دیدن جزئیات هر درس روی آن بزنید</p>
+    <div class="page-hero page-hero--dark" id="pageHero">
+      <div class="hero-copy">
+        <p class="page-hero__eyebrow" id="heroEyebrow"><svg class="i"><use href="#i-sun"/></svg><span class="page-hero__eyebrow-text" id="heroEyebrowText">به کلاس خوش آمدید</span></p>
+        <h1 class="page-hero__title">برنامه هفتگی کلاس</h1>
+        <p class="page-hero__sub" id="heroSub">برنامه و تکالیفِ هر هفته را با «هفته قبل / هفته بعد» مرور کنید؛ برای جزئیات هر درس روی کارتش بزنید.</p>
+      </div>
       <div class="hero-stats" id="heroStats"></div>
     </div>
 
+    <div class="tabs-sentinel" id="tabsSentinel" aria-hidden="true"></div>
     <nav class="std-tabs" id="stdTabs" role="tablist" aria-label="بخش‌های صفحه">
-      <button class="std-tab std-tab--active" data-tab="schedule" role="tab" aria-selected="true" type="button">🗓️ برنامه</button>
-      <button class="std-tab" data-tab="tasks" role="tab" aria-selected="false" type="button">⏳ مهلت‌ها</button>
-      <button class="std-tab" data-tab="handouts" role="tab" aria-selected="false" type="button">📚 جزوات و تمارین</button>
-      <button class="std-tab" data-tab="announcements" role="tab" aria-selected="false" type="button">📣 اطلاعیه‌ها</button>
+      <div class="seg">
+        <button class="std-tab std-tab--active" data-tab="schedule" role="tab" aria-selected="true" aria-controls="panel-schedule" id="tab-schedule" type="button">
+          <svg class="i"><use href="#i-calendar"/></svg>
+          <span class="std-tab__text">برنامه</span>
+        </button>
+        <button class="std-tab" data-tab="tasks" role="tab" aria-selected="false" aria-controls="panel-tasks" id="tab-tasks" tabindex="-1" type="button">
+          <svg class="i"><use href="#i-hourglass"/></svg>
+          <span class="std-tab__text">مهلت‌ها</span>
+        </button>
+        <button class="std-tab" data-tab="handouts" role="tab" aria-selected="false" aria-controls="panel-handouts" id="tab-handouts" tabindex="-1" type="button">
+          <svg class="i"><use href="#i-book"/></svg>
+          <span class="std-tab__text std-tab__text--full">جزوات و تمارین</span>
+          <span class="std-tab__text std-tab__text--short">جزوات</span>
+        </button>
+        <button class="std-tab" data-tab="announcements" role="tab" aria-selected="false" aria-controls="panel-announcements" id="tab-announcements" tabindex="-1" type="button">
+          <svg class="i"><use href="#i-megaphone"/></svg>
+          <span class="std-tab__text">اطلاعیه‌ها</span>
+        </button>
+      </div>
     </nav>
 
-    <section class="section panel" data-panel="schedule" id="panel-schedule" aria-label="برنامه هفتگی" role="tabpanel">
+    <section class="section panel" data-panel="schedule" id="panel-schedule" role="tabpanel" aria-labelledby="tab-schedule">
       <div class="section__head">
-        <h2 class="section__title"><span class="emoji" aria-hidden="true">🗓️</span> برنامه هفتگی</h2>
-        <div class="tt-nav" role="group" aria-label="ناوبری هفته‌ها">
-          <button class="btn btn--ghost btn--sm" id="weekPrev" type="button" title="هفته‌ی قبل">‹ هفته قبل</button>
-          <span class="tt-range" id="ttRange">این هفته</span>
-          <button class="btn btn--ghost btn--sm hidden" id="weekToday" type="button">برو به این هفته</button>
-          <button class="btn btn--ghost btn--sm" id="weekNext" type="button" title="هفته‌ی بعد">هفته بعد ›</button>
+        <div class="section__heading">
+          <span class="section__icon" aria-hidden="true"><svg class="i"><use href="#i-calendar"/></svg></span>
+          <div class="section__titles">
+            <h2 class="section__title">برنامه هفتگی</h2>
+            <p class="section__meta"><svg class="i"><use href="#i-refresh"/></svg>به‌روزرسانی: <span id="updatedAt">…</span></p>
+          </div>
         </div>
-        <span class="section__note">به‌روزرسانی: <span id="updatedAt">…</span></span>
+        <div class="tt-nav" role="group" aria-label="ناوبری هفته‌ها">
+          <div class="tt-nav__group">
+            <button class="icon-btn icon-btn--sm" id="weekPrev" type="button" title="هفته‌ی قبل" aria-label="هفته‌ی قبل"><svg class="i"><use href="#i-chevron-right"/></svg></button>
+            <span class="tt-range" id="ttRange" aria-live="polite"><b class="tt-range__label" id="ttRangeLabel">این هفته</b><span class="tt-range__dates" id="ttRangeDates"></span></span>
+            <button class="icon-btn icon-btn--sm" id="weekNext" type="button" title="هفته‌ی بعد" aria-label="هفته‌ی بعد"><svg class="i"><use href="#i-chevron-left"/></svg></button>
+          </div>
+          <button class="pill-btn hidden" id="weekToday" type="button"><svg class="i"><use href="#i-target"/></svg><span id="weekTodayLabel">برو به این هفته</span></button>
+        </div>
       </div>
       <div class="tt-wrap" id="ttWrap">
-        <button class="tt-arrow tt-arrow--prev" id="ttPrev" type="button" aria-label="روزهای قبلی">‹</button>
+        <div class="day-strip" id="ttDots" role="group" aria-label="پیمایش روزهای هفته"></div>
         <div class="tt-scroll" id="ttScroll" tabindex="0" role="region" aria-label="جدول هفتگی — برای مرور روزها به چپ و راست بکشید">
           <div class="tt-grid" id="ttGrid"></div>
         </div>
-        <button class="tt-arrow tt-arrow--next" id="ttNext" type="button" aria-label="روزهای بعدی">›</button>
-        <div class="tt-dots" id="ttDots" role="tablist" aria-label="پیمایش روزها"></div>
       </div>
     </section>
 
-    <section class="section panel" data-panel="schedule" aria-label="چکیده تکالیف">
+    <section class="section panel" data-panel="schedule" aria-labelledby="digestTitle">
       <div class="section__head">
-        <h2 class="section__title"><span class="emoji" aria-hidden="true">📋</span> چکیده تکالیف</h2>
-        <span class="section__note">تکالیف این هفته و نزدیک‌ترین مهلت‌ها</span>
+        <div class="section__heading">
+          <span class="section__icon section__icon--mint" aria-hidden="true"><svg class="i"><use href="#i-clipboard"/></svg></span>
+          <div class="section__titles">
+            <h2 class="section__title" id="digestTitle">چکیده تکالیف</h2>
+            <p class="section__meta" id="digestMeta">تکالیفِ این هفته و نزدیک‌ترین مهلت‌ها</p>
+          </div>
+        </div>
       </div>
-      <div class="digest-list" id="digestList"></div>
+      <div class="digest" id="digestList"></div>
     </section>
 
-    <section class="section panel hidden" data-panel="tasks" id="panel-tasks" aria-label="مهلت‌ها و تکالیف زمان‌دار" role="tabpanel">
+    <section class="section panel hidden" data-panel="tasks" id="panel-tasks" role="tabpanel" aria-labelledby="tab-tasks">
       <div class="section__head">
-        <h2 class="section__title"><span class="emoji" aria-hidden="true">⏳</span> مهلت‌ها و تکالیف زمان‌دار</h2>
-        <span class="section__note">مرتب‌شده بر اساس نزدیک‌ترین مهلت</span>
+        <div class="section__heading">
+          <span class="section__icon section__icon--cream" aria-hidden="true"><svg class="i"><use href="#i-hourglass"/></svg></span>
+          <div class="section__titles">
+            <h2 class="section__title">مهلت‌ها</h2>
+            <p class="section__meta">تکالیف زمان‌دار، امتحان و آزمونک — مرتب‌شده بر اساس نزدیک‌ترین مهلت</p>
+          </div>
+        </div>
       </div>
       <div class="tasks-grid" id="tasksGrid"></div>
-      <div class="btn-row" style="margin-top: 14px;">
-        <button class="btn btn--ghost btn--sm" id="showExpiredBtn" type="button">آرشیو موارد گذشته</button>
-      </div>
-      <div class="tasks-grid" id="expiredGrid" style="margin-top: 14px; display: none;"></div>
+      <button class="archive-toggle hidden" id="showExpiredBtn" type="button" aria-expanded="false" aria-controls="expiredGrid">
+        <svg class="i"><use href="#i-archive"/></svg>
+        <span id="showExpiredLabel">آرشیو موارد گذشته</span>
+        <span class="archive-toggle__count" id="expiredCount"></span>
+        <svg class="i i--chev"><use href="#i-chevron-down"/></svg>
+      </button>
+      <div class="tasks-grid tasks-grid--archive" id="expiredGrid" style="display: none;"></div>
     </section>
 
-    <section class="section panel hidden" data-panel="handouts" id="panel-handouts" aria-label="جزوات و تمارین" role="tabpanel">
+    <section class="section panel hidden" data-panel="handouts" id="panel-handouts" role="tabpanel" aria-labelledby="tab-handouts">
       <div class="section__head">
-        <h2 class="section__title"><span class="emoji" aria-hidden="true">📚</span> جزوات و تمارین</h2>
+        <div class="section__heading">
+          <span class="section__icon section__icon--green" aria-hidden="true"><svg class="i"><use href="#i-book"/></svg></span>
+          <div class="section__titles">
+            <h2 class="section__title">جزوات و تمارین</h2>
+            <p class="section__meta">جزوه‌ها، پاسخنامه‌ها و فایل‌های تمرین</p>
+          </div>
+        </div>
       </div>
       <div class="handout-list" id="handoutList"></div>
     </section>
 
-    <section class="section panel hidden" data-panel="announcements" id="panel-announcements" aria-label="اطلاعیه‌ها" role="tabpanel">
+    <section class="section panel hidden" data-panel="announcements" id="panel-announcements" role="tabpanel" aria-labelledby="tab-announcements">
       <div class="section__head">
-        <h2 class="section__title"><span class="emoji" aria-hidden="true">📣</span> اطلاعیه‌ها</h2>
+        <div class="section__heading">
+          <span class="section__icon section__icon--pink" aria-hidden="true"><svg class="i"><use href="#i-megaphone"/></svg></span>
+          <div class="section__titles">
+            <h2 class="section__title">اطلاعیه‌ها</h2>
+            <p class="section__meta">جدیدترین اطلاعیه‌های سرِ کلاس در بالا</p>
+          </div>
+        </div>
       </div>
       <div class="ann-list" id="annList"></div>
     </section>
   </main>
 
   <footer class="site-footer">
-    <div class="site-footer__hearts" aria-hidden="true">🌸 📚 🌸</div>
-    <div id="footerName">درس من</div>
+    <div class="site-footer__name" id="footerName">درس من</div>
     <p class="site-footer__note" id="footerNote">با علاقه، توسط سرِ کلاس نگهداری می‌شود.</p>
   </footer>
 
-  <!-- دکمه شناور «برو به امروز» -->
+  <!-- دکمه شناور «برو به امروز/فردا» (فقط در نمای اسکرولی) -->
   <button class="fab-today" id="fabToday" type="button">
-    <span aria-hidden="true">📌</span> <span id="fabTodayLabel">برو به فردا</span>
+    <svg class="i"><use href="#i-target"/></svg>
+    <span id="fabTodayLabel">برو به فردا</span>
   </button>
 
-  <!-- پنل جزئیات: کنار صفحه در دسکتاپ، بات‌شیت در موبایل -->
-  <div class="overlay" id="detailOverlay" role="dialog" aria-modal="true" aria-labelledby="detailTitle" hidden>
+  <!-- پنل جزئیات: کارت شناور کنار صفحه در دسکتاپ، بات‌شیت در موبایل -->
+  <div class="overlay overlay--side" id="detailOverlay" role="dialog" aria-modal="true" aria-labelledby="detailTitle" hidden>
     <div class="sheet" id="detailSheet">
       <div class="sheet__grip" id="detailGrip" aria-hidden="true"></div>
       <div class="sheet__head">
         <h2 class="sheet__title" id="detailTitle">جزئیات درس</h2>
-        <button class="sheet__close" id="detailClose" aria-label="بستن">✕</button>
+        <button class="sheet__close" id="detailClose" type="button" aria-label="بستن"><svg class="i"><use href="#i-x"/></svg></button>
       </div>
       <div class="sheet__body" id="detailBody"></div>
     </div>

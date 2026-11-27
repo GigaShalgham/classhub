@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#FCFAFD">
+  <meta name="theme-color" content="#F4F6FA">
   <meta name="robots" content="noindex, nofollow">
   <title>مدیریت کلاس | درس من</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚙️</text></svg>">
@@ -12,19 +12,20 @@
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
+  <!--#ICONS-->
   <header class="site-header">
     <div class="site-header__inner">
       <div class="brand">
-        <div class="brand__logo" aria-hidden="true">⚙️</div>
-        <div>
+        <div class="brand__logo" aria-hidden="true"><svg class="i"><use href="#i-lock"/></svg></div>
+        <div class="brand__text">
           <div class="brand__name">پنل مدیریت کلاس</div>
           <div class="brand__date" id="brandDate">…</div>
         </div>
       </div>
       <div class="header-spacer"></div>
       <div class="header-actions">
-        <a class="icon-btn" href="/" id="homeLink" aria-label="بازگشت به سایت کلاس" title="بازگشت به سایت کلاس">🏠</a>
-        <button class="icon-btn" id="logoutBtn" aria-label="خروج" title="خروج">🚪</button>
+        <a class="icon-btn" href="/" id="homeLink" aria-label="بازگشت به سایت کلاس" title="بازگشت به سایت کلاس"><svg class="i"><use href="#i-home"/></svg></a>
+        <button class="icon-btn" id="logoutBtn" aria-label="خروج" title="خروج"><svg class="i"><use href="#i-log-out"/></svg></button>
       </div>
     </div>
   </header>
@@ -33,17 +34,17 @@
     <!-- login / bootstrap view -->
     <div class="admin-enter" id="loginView">
       <div class="login-card">
-        <div class="login-card__logo" aria-hidden="true">🔑</div>
+        <div class="login-card__logo" aria-hidden="true"><svg class="i"><use href="#i-key"/></svg></div>
         <h1 class="login-card__title">ورود مدیر کلاس</h1>
         <p class="login-card__sub" id="loginSub">این بخش مخصوص سرِ کلاس است</p>
         <form id="loginForm" novalidate>
           <div class="field">
             <label class="field__label" for="loginUser">نام کاربری</label>
-            <input class="input" id="loginUser" autocomplete="username" required>
+            <input class="input" id="loginUser" autocomplete="username" placeholder="نام کاربری" required>
           </div>
           <div class="field">
             <label class="field__label" for="loginPass">گذرواژه</label>
-            <input class="input" id="loginPass" type="password" autocomplete="current-password" required>
+            <input class="input" id="loginPass" type="password" autocomplete="current-password" placeholder="••••••••" required>
           </div>
           <div class="btn-row">
             <button class="btn btn--primary" type="submit" id="loginSubmit" style="flex:1;">ورود</button>
@@ -56,23 +57,23 @@
     <!-- admin dashboard -->
     <div id="adminView" class="hidden">
       <div class="page-hero">
-        <h1 class="page-hero__title">🛠️ مدیریت درس من</h1>
+        <h1 class="page-hero__title"><svg class="i"><use href="#i-sliders"/></svg>مدیریت درس من</h1>
         <p class="page-hero__sub">خوش آمدید، <span id="adminName">مدیر</span>! اینجا می‌توانید برنامه، تکالیف، مهلت‌ها و اطلاعیه‌ها را ویرایش کنید.</p>
         <div class="hero-stats">
-          <div class="stat-chip"><span>💡</span> تغییرات بلافاصله برای کل کلاس نمایش داده می‌شود</div>
+          <div class="stat-chip"><svg class="i"><use href="#i-zap"/></svg>تغییرات بلافاصله برای کل کلاس نمایش داده می‌شود</div>
         </div>
       </div>
 
       <nav class="admin-tabs" id="adminTabs" role="tablist" aria-label="بخش‌های مدیریت">
-        <button class="admin-tab admin-tab--active" data-tab="lessons" role="tab" aria-selected="true" type="button">🗓️ برنامه و تکالیف</button>
-        <button class="admin-tab" data-tab="bells" role="tab" aria-selected="false" type="button">🔔 زنگ‌ها</button>
-        <button class="admin-tab" data-tab="calendar" role="tab" aria-selected="false" type="button">📅 تقویم ماهانه</button>
-        <button class="admin-tab" data-tab="tasks" role="tab" aria-selected="false" type="button">⏳ مهلت‌ها</button>
-        <button class="admin-tab" data-tab="announcements" role="tab" aria-selected="false" type="button">📣 اطلاعیه‌ها</button>
-        <button class="admin-tab" data-tab="handouts" role="tab" aria-selected="false" type="button">📚 جزوات و تمارین</button>
-        <button class="admin-tab" data-tab="subjects" role="tab" aria-selected="false" type="button">🎨 درس‌ها</button>
-        <button class="admin-tab" data-tab="apikeys" role="tab" aria-selected="false" type="button">🔑 کلیدهای API</button>
-        <button class="admin-tab" data-tab="settings" role="tab" aria-selected="false" type="button">⚙️ تنظیمات</button>
+        <button class="admin-tab admin-tab--active" data-tab="lessons" role="tab" aria-selected="true" type="button"><svg class="i"><use href="#i-calendar"/></svg>برنامه و تکالیف</button>
+        <button class="admin-tab" data-tab="bells" role="tab" aria-selected="false" type="button"><svg class="i"><use href="#i-bell"/></svg>زنگ‌ها</button>
+        <button class="admin-tab" data-tab="calendar" role="tab" aria-selected="false" type="button"><svg class="i"><use href="#i-grid"/></svg>تقویم ماهانه</button>
+        <button class="admin-tab" data-tab="tasks" role="tab" aria-selected="false" type="button"><svg class="i"><use href="#i-hourglass"/></svg>مهلت‌ها</button>
+        <button class="admin-tab" data-tab="announcements" role="tab" aria-selected="false" type="button"><svg class="i"><use href="#i-megaphone"/></svg>اطلاعیه‌ها</button>
+        <button class="admin-tab" data-tab="handouts" role="tab" aria-selected="false" type="button"><svg class="i"><use href="#i-book"/></svg>جزوات و تمارین</button>
+        <button class="admin-tab" data-tab="subjects" role="tab" aria-selected="false" type="button"><svg class="i"><use href="#i-layers"/></svg>درس‌ها</button>
+        <button class="admin-tab" data-tab="apikeys" role="tab" aria-selected="false" type="button"><svg class="i"><use href="#i-key"/></svg>کلیدهای API</button>
+        <button class="admin-tab" data-tab="settings" role="tab" aria-selected="false" type="button"><svg class="i"><use href="#i-settings"/></svg>تنظیمات</button>
       </nav>
 
       <!-- ===== Calendar tab ===== -->
@@ -483,7 +484,7 @@
   </div>
 
   <!-- confirm dialog -->
-  <div class="overlay" id="confirmOverlay" role="dialog" aria-modal="true" aria-labelledby="confirmTitle" hidden>
+  <div class="overlay overlay--dialog" id="confirmOverlay" role="dialog" aria-modal="true" aria-labelledby="confirmTitle" hidden>
     <div class="sheet confirm-dialog">
       <div class="sheet__head" style="border-bottom:none;">
         <h2 class="sheet__title" id="confirmTitle" style="font-size:16px;">تأیید عملیات</h2>
@@ -499,7 +500,7 @@
   </div>
 
   <!-- ===== نوار پیشرفت بارگذاری فایل ===== -->
-  <div class="overlay" id="uploadOverlay" role="dialog" aria-modal="true" aria-labelledby="uploadTitle" hidden>
+  <div class="overlay overlay--dialog" id="uploadOverlay" role="dialog" aria-modal="true" aria-labelledby="uploadTitle" hidden>
     <div class="sheet upload-box">
       <div class="upload-box__icon" aria-hidden="true">⬆️</div>
       <h2 class="sheet__title" id="uploadTitle" style="font-size:16px;">در حال بارگذاری فایل…</h2>

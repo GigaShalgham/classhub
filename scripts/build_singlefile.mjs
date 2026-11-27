@@ -16,6 +16,10 @@ import { fileURLToPath } from 'node:url';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const pub = join(root, 'public');
 
+// مجموعه‌ی آیکون‌های خطی مشترک (symbol/sprite) — با نشانه‌ی <!--#ICONS--> در
+// سورسِ هر دو صفحه جای می‌گیرد تا آیکون‌ها بدون درخواست اضافه inline باشند.
+const icons = readFileSync(join(pub, 'inc', 'icons.html'), 'utf8').trim();
+
 // حذف import/export برای باندل به‌صورت اسکریپت کلاسیک (بدون ماژول).
 // این فایل‌ها فقط import ساده‌ی نام‌ها دارند (default export ندارند).
 function stripModuleSyntax(src) {
@@ -37,8 +41,10 @@ function bundle(srcPath, outPath, scriptTagRe, jsFiles) {
   }
   const out = html
     .replace(/<link rel="stylesheet" href="\/css\/style\.css">/, () => `<style>\n${css}\n</style>`)
+    .replace('<!--#ICONS-->', () => icons)
     .replace(scriptTagRe, () => `<script>\n${js}\n</script>`);
   if (out === html) throw new Error(`no substitution made for ${srcPath}`);
+  if (out.includes('<!--#ICONS-->')) throw new Error(`icons marker not substituted in built ${srcPath}`);
   if (/<link[^>]+style\.css/.test(out) || /<script[^>]+src=/.test(out)) {
     throw new Error(`leftover external tag references in built ${srcPath}`);
   }

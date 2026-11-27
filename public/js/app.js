@@ -1,8 +1,8 @@
-// درس من — اپلیکیشن دانش‌آموزی (نسخه ۳)
+// درس من — اپلیکیشن دانش‌آموزی (نسخه ۵)
 import {
-  faDigits, formatJalali, formatJalaliDateTime, faTime, countdown,
-  WEEK_DAY_NAMES, iranDayIndex, KIND_LABELS, KIND_ICONS, PRIORITY_LABELS,
-  tehranHHMM, weekWindow, weekOffsetBounds, tehranDateISO, weekParity, tehranDayIndex, tehranDayNumber, tehranLocalDate,
+  faDigits, formatJalali, formatJalaliDateTime, jalaliDateOnly, faTime, countdown,
+  WEEK_DAY_NAMES, JALALI_MONTHS, iranDayIndex, KIND_LABELS, PRIORITY_LABELS,
+  tehranHHMM, toJalaliParts, weekWindow, weekOffsetBounds, tehranDateISO, weekParity, tehranDayIndex, tehranDayNumber, tehranLocalDate,
 } from './utils.js';
 import { periodsPerDay, periodTimes, setBells, getBells } from './schedule.js';
 
@@ -165,6 +165,65 @@ function el(tag, attrs = {}, ...children) {
   return node;
 }
 
+// ---------- آیکون‌های خطی ----------
+// آیکون از مجموعه‌ی <symbol> بالای صفحه — یک زبان بصری یکدست به‌جای ایموجی‌های رابط.
+// (ایموجی فقط برای «درس‌ها» می‌ماند: نمادِ محتوایی که دانش‌آموز با آن درس را می‌شناسد.)
+const SVG_NS = 'http://www.w3.org/2000/svg';
+function icon(name, cls = '') {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('class', cls ? `i ${cls}` : 'i');
+  svg.setAttribute('aria-hidden', 'true');
+  const use = document.createElementNS(SVG_NS, 'use');
+  use.setAttribute('href', `#i-${name}`);
+  svg.append(use);
+  return svg;
+}
+
+/** آیکون هر نوع مهلت (پروژه، تحقیق، ارائه، امتحان، آزمونک، تحویل) */
+const KIND_ICON_NAMES = {
+  project: 'layers', research: 'search', presentation: 'mic', exam: 'file', quiz: 'zap', submission: 'download',
+};
+const kindIcon = (kind) => icon(KIND_ICON_NAMES[kind] || 'bookmark');
+
+/** آیکون نوع فایل بر اساس MIME (جزوه‌ها و پیوست‌ها) */
+function fileIconName(mime) {
+  const m = (mime || '').toLowerCase();
+  if (m.startsWith('image/')) return 'image';
+  if (m === 'application/pdf') return 'file';
+  if (m.startsWith('video/')) return 'film';
+  if (m.startsWith('audio/')) return 'music';
+  if (m.includes('zip') || m.includes('rar') || m.includes('7z') || m.includes('compressed')) return 'archive';
+  return 'book';
+}
+
+/** سربرگِ یک بلوک در پنل جزئیات: آیکون خطی + برچسب */
+function detailBlockTitle(iconName, text) {
+  return el('p', { class: 'detail-block__title' },
+    el('span', { class: 'detail-block__icon' }, icon(iconName)),
+    el('span', { text }));
+}
+
+/** درس‌های مجازِ یک روزِ هفته: فقط زنگ‌هایی که در برنامه‌ی زنگ‌های آن روز هست
+    (دوشنبه ۳ زنگ). روزی که زنگی ندارد، بدون درس است. */
+function dayLessonsOf(dayIdx) {
+  const maxP = periodsPerDay(dayIdx);
+  return maxP ? (state.days[dayIdx] ?? []).filter((l) => l.period <= maxP) : [];
+}
+
+/** اجزای تاریخ شمسی از «YYYY-MM-DD» (تاریخِ تقویمِ تهران) — مستقل از منطقه‌ی
+    زمانی مرورگر: تاریخِ هفته از API به شکل رشته است و نباید با ساعتِ محلی
+    (که در منطقه‌های غربی یک روز جابه‌جا می‌شود) خوانده شود. */
+function jalaliPartsOfISO(iso) {
+  const [gy, gm, gd] = iso.split('-').map(Number);
+  return toJalaliParts(gy, gm, gd);
+}
+
+/** «۷ آذر» برای یک تاریخِ تقویمِ تهران («YYYY-MM-DD») */
+function dayLabel(iso, { withYear = false } = {}) {
+  const { jy, jm, jd } = jalaliPartsOfISO(iso);
+  return `${faDigits(jd)} ${JALALI_MONTHS[jm - 1]}${withYear ? ` ${faDigits(jy)}` : ''}`;
+}
+
 function toast(msg, type = 'info') {
   const t = el('div', { class: `toast toast--${type}`, text: msg });
   $('#toastRegion').append(t);
@@ -225,10 +284,13 @@ function renderHeader() {
   $('#brandDate').textContent = formatJalali(tehranLocalDate(), { withWeekday: true });
   const name = state.settings.class_name || 'درس من';
   $('#brandName').textContent = name;
+  $('#brandName').title = name;
   $('#footerName').textContent = name;
   document.title = `${name} | برنامه هفتگی کلاس`;
-  const wm = state.settings.welcome_message;
-  if (wm) $('#welcomeBubble').textContent = wm;
+  // پیام خوش‌آمدِ سرِ کلاس: بالای هیرو (نه یک حباب جدا در هدر)
+  const wm = (state.settings.welcome_message || '').trim();
+  $('#heroEyebrowText').textContent = wm || 'به کلاس خوش آمدید';
+  $('#heroEyebrow').title = wm;
   const note = state.settings.admin_note;
   if (note) $('#footerNote').textContent = note;
   tickClock();
@@ -239,55 +301,82 @@ function tickClock() {
   $('#brandClock').textContent = faDigits(tehranHHMM(Date.now()));
 }
 
+/** نامِ هفته نسبت به هفته‌ی جاریِ تقویم: این هفته / هفته‌ی بعد / ۲ هفته بعد … */
+function weekLabel(offset) {
+  if (offset === 0) return 'این هفته';
+  if (offset === 1) return 'هفته‌ی بعد';
+  if (offset === -1) return 'هفته‌ی قبل';
+  return offset > 0 ? `${faDigits(offset)} هفته بعد` : `${faDigits(-offset)} هفته قبل`;
+}
+
+/** کاشی آمارِ هیرو: عدد درشت + واحد، و یک برچسب زیرش. برچسبِ کوتاه روی موبایل
+    (عرض کاشی کم است) و برچسب کامل روی بقیه‌ی سایزها دیده می‌شود. */
+function statTile({ iconName, value, unit = '', label, labelShort = label }) {
+  return el('div', { class: 'stat-tile' },
+    el('span', { class: 'stat-tile__top' },
+      el('span', { class: 'stat-tile__icon' }, icon(iconName)),
+      el('span', { class: 'stat-tile__value' },
+        el('b', { text: value }),
+        unit ? el('span', { class: 'stat-tile__unit', text: unit }) : null)),
+    el('span', { class: 'stat-tile__label' },
+      el('span', { class: 'stat-tile__full', text: label }),
+      el('span', { class: 'stat-tile__short', text: labelShort })));
+}
+
 // ---------- هیرو ----------
+// انیمیشنِ ورودِ کاشی‌ها فقط در نخستین رندر اجرا می‌شود؛ رندرهای بعدی
+// (پولِ ۳۰ ثانیه‌ای، جابه‌جایی هفته) نباید دوباره «جا زدن» را تکرار کنند
+let heroEntered = false;
+
 function renderHero() {
-  const maxPeriods = (d) => periodsPerDay(d) || 12;
-  const dayLessons = (d) => (state.days[d] ?? []).filter((l) => l.period <= maxPeriods(d));
   const focus = focusDay();
+  const enter = !heroEntered;
+  heroEntered = true;
 
   // آمار روی همان پنجره‌ی نمایش (یک هفته) — با چیزی که دانش‌آموز می‌بیند هم‌خوان
   let totalLessons = 0;
   let totalHw = 0;
   for (const { dayIdx, dateISO } of displayWindow()) {
-    const lessons = dayLessons(dayIdx);
+    const lessons = dayLessonsOf(dayIdx);
     totalLessons += lessons.length;
     totalHw += lessons.filter((l) => l.hwByDate?.[dateISO]).length;
   }
   const stats = $('#heroStats');
   stats.textContent = '';
+  stats.classList.toggle('hero-stats--enter', enter);
 
-  // ترکیز روی روزِ به‌دست‌آمده: امروز (هنوز کلاس داریم)، فردا، یا روز درسی بعد
+  // تمرکز روی روزِ به‌دست‌آمده: امروز (هنوز کلاس داریم)، فردا، یا روز درسی بعد
   const dayName = WEEK_DAY_NAMES[focus.dayIdx];
-  const focusLabel = focus.offset === 0 ? `امروز (${dayName})` : focus.offset === 1 ? `فردا (${dayName})` : `${dayName} (${faDigits(focus.offset)} روز دیگر)`;
-  stats.append(el('div', { class: 'stat-chip' },
-    el('span', { text: focus.offset === 0 ? '🗓️' : '🌙' }),
-    `${focusLabel}، `,
-    el('b', { text: faDigits(focus.lessons.length) }),
-    ' زنگ'));
-  stats.append(el('div', { class: 'stat-chip' },
-    el('span', { text: '📚' }),
-    el('b', { text: faDigits(totalLessons) }),
-    ' درس در این هفته'));
-  stats.append(el('div', { class: 'stat-chip' },
-    el('span', { text: '📝' }),
-    el('b', { text: faDigits(totalHw) }),
-    ' تکلیف در این هفته'));
+  const when = focus.offset === 0 ? 'امروز' : focus.offset === 1 ? 'فردا' : `${faDigits(focus.offset)} روز دیگر`;
+  const weekName = weekLabel(ttWeek);
+  stats.append(statTile({
+    iconName: focus.offset === 0 ? 'sun' : 'calendar',
+    value: faDigits(focus.lessons.length),
+    unit: 'زنگ',
+    label: `${when}، ${dayName}`,
+    labelShort: when,
+  }));
+  stats.append(statTile({ iconName: 'book', value: faDigits(totalLessons), unit: 'درس', label: weekName }));
+  stats.append(statTile({ iconName: 'edit', value: faDigits(totalHw), unit: 'تکلیف', label: weekName }));
 
-  // درس بعدی: امروزِ در جریان؛ وگرنه اولین زنگِ روزِ تمرکز
+  // درس بعدی: امروزِ در جریان؛ وگرنه اولین زنگِ روزِ تمرکز.
+  // واحدِ این کاشی «کی» است (درس بعدی / اولین زنگ / فردا / نامِ روز) و برچسبش
+  // فقط نامِ درس — تا در کاشیِ باریک هم بدون «…» جا شود.
   let next = nextLessonToday();
-  let nextPrefix = 'درس بعدی';
+  let nextWhen = 'درس بعدی';
   if (!next && focus.lessons.length) {
     const first = [...focus.lessons].sort((a, b) => a.period - b.period)[0];
     const subj = resolveSubject(first, Date.now() + focus.offset * 86_400_000);
     next = { ...first, subject_name: subj.subject_name };
-    nextPrefix = focus.offset === 0 ? 'اولین زنگ' : 'اولین زنگ فردا';
+    nextWhen = focus.offset === 0 ? 'اولین زنگ' : focus.offset === 1 ? 'فردا' : dayName;
   }
   if (next) {
-    stats.append(el('div', { class: 'stat-chip' },
-      el('span', { text: '⏰' }),
-      `${nextPrefix}: `,
-      el('b', { text: `${subjectEmoji(next.subject_name)} ${next.subject_name}` }),
-      ` (${faTime(next.start_time)})`));
+    stats.append(statTile({
+      iconName: 'clock',
+      value: faTime(next.start_time),
+      unit: nextWhen,
+      label: `${subjectEmoji(next.subject_name)} ${next.subject_name}`,
+    }));
   }
 }
 
@@ -296,39 +385,37 @@ function lessonCard(lesson, dateMs) {
   const subj = resolveSubject(lesson, dateMs);
   // تکلیفِ همان تاریخِ همین زنگ — نه همه‌ی هفته‌ها (تفکیک هفته‌ها)
   const hw = lesson.hwByDate?.[tehranDateISO(dateMs)] ?? null;
+  // ساعت از زنگِ پیکربندی‌شده می‌آید (منبع حقیقت)؛ فقط اگر نبود، از ردیف درس
+  const bt = periodTimes(lesson.day, lesson.period) ?? [lesson.start_time, lesson.end_time];
+  const files = Number(lesson.attachment_count) || 0;
+  const period = `زنگ ${faDigits(lesson.period)}`;
   const card = el('button', {
     class: `lesson-card sub-${subj.color_key}`,
     type: 'button',
     onclick: () => openLesson(lesson.id, dateMs),
-    'aria-label': `${subj.subject_name}، زنگ ${faDigits(lesson.period)}، ${faTime(lesson.start_time)} تا ${faTime(lesson.end_time)}${hw ? `، تکلیف: ${hw.title}` : ''}`,
+    title: `${subj.subject_name} · ${period}${hw ? ` · تکلیف: ${hw.title}` : ''}`,
+    'aria-label': `${subj.subject_name}، ${period}، ${faTime(bt[0])} تا ${faTime(bt[1])}${hw ? `، تکلیف: ${hw.title}` : '، تکلیفی ثبت نشده'}`,
   });
-
-  const top = el('div', { class: 'lesson-card__top' },
-    el('span', { class: 'lesson-card__period', text: faDigits(lesson.period), 'aria-hidden': 'true' }),
-    el('span', { class: 'lesson-card__emoji', text: subjectEmoji(subj.subject_name), 'aria-hidden': 'true' }),
-    el('span', { class: 'lesson-card__subject', text: subj.subject_name }),
-    (() => {
-      // ساعت از زنگِ پیکربندی‌شده می‌آید (منبع حقیقت)؛ فقط اگر نبود، از ردیف درس
-      const bt = periodTimes(lesson.day, lesson.period) ?? [lesson.start_time, lesson.end_time];
-      return el('span', { class: 'lesson-card__time', text: `${faTime(bt[0])}–${faTime(bt[1])}` });
-    })(),
+  card.append(
+    el('span', { class: 'lesson-card__head' },
+      el('span', { class: 'lesson-card__emoji', text: subjectEmoji(subj.subject_name), 'aria-hidden': 'true' }),
+      el('span', { class: 'lesson-card__subject', text: subj.subject_name }),
+      // شمار پیوست‌ها، کنار نام درس (نه یک ردیف جدا که پایین کارت‌ها را نامیزان می‌کرد)
+      files
+        ? el('span', { class: 'lesson-card__files' }, icon('paperclip'), el('span', { text: faDigits(files) }))
+        : null),
+    el('span', { class: 'lesson-card__meta' },
+      el('span', { class: 'lesson-card__period', text: period }),
+      // دو زمان جدا تا در چیدمان راست‌به‌چپ همیشه «شروع – پایان» از راست خوانده شود
+      el('span', { class: 'lesson-card__time' },
+        el('span', { text: faTime(bt[0]) }),
+        el('span', { class: 'lesson-card__dash', text: '–' }),
+        el('span', { text: faTime(bt[1]) }))),
+    hw
+      ? el('span', { class: 'lesson-card__hw', title: hw.title }, icon('edit'), el('span', { class: 'lesson-card__hw-text', text: hw.title }))
+      : el('span', { class: 'lesson-card__hw lesson-card__hw--none' },
+        icon('check'), el('span', { class: 'lesson-card__hw-text', text: 'تکلیفی ثبت نشده' })),
   );
-  card.append(top);
-
-  if (hw) {
-    const hwLine = el('div', { class: 'lesson-card__hw' },
-      el('span', { text: `📝 ${hw.title}` }),
-    );
-    card.append(hwLine);
-  } else {
-    card.append(el('div', { class: 'lesson-card__hw lesson-card__hw--none', text: 'تکلیفی ثبت نشده' }));
-  }
-  if (lesson.attachment_count > 0) {
-    card.append(el('span', {
-      class: 'attach-chip', text: `📎 ${faDigits(lesson.attachment_count)}`,
-      style: 'margin-top:6px;align-self:flex-start;',
-    }));
-  }
   return card;
 }
 
@@ -362,15 +449,6 @@ function focusWeekOffset() {
   return Math.floor((todayNum + focusDay().offset - thisSat) / 7);
 }
 
-/** برچسب هفته‌ی یک ستون نسبت به هفته‌ی جاری (null = همین هفته) */
-function weekTag(rel) {
-  const text = rel === 0 ? null
-    : rel === 1 ? 'هفته‌ی بعد'
-      : rel === -1 ? 'هفته‌ی قبل'
-        : rel > 0 ? `${faDigits(rel)} هفته بعد` : `${faDigits(-rel)} هفته قبل`;
-  return text ? el('span', { class: 'day-col__week-tag', text }) : null;
-}
-
 /** نگه‌داشتن ttWeek داخل بازه‌ی تکالیفِ لودشده — فقط در اولین لود به
     هفته‌ی روزِ تمرکز می‌رود (پنجشنبه/جمعه → اسلایدِ هفته‌ی بعد). */
 let booted = false;
@@ -383,6 +461,9 @@ function clampWeek() {
   ttWeek = Math.max(ttWeekBounds.min, Math.min(ttWeekBounds.max, ttWeek));
 }
 
+// متنِ پیش‌فرضِ زیرِ عنوان هیرو (برای وقتی که برنامهِ خالیِ آینه بعداً پر می‌شود)
+let heroSubDefault = null;
+
 function renderTimetable() {
   const grid = $('#ttGrid');
   grid.textContent = '';
@@ -394,96 +475,113 @@ function renderTimetable() {
   const windowDays = displayWindow();
   const todayDayNum = tehranDayNumber();
   const focusDayNum = todayDayNum + focus.offset;
-  const thisSat = todayDayNum - ((todayDayNum + 5) % 7);
-  let anyLessons = false;
+  const colIsEmpty = [];
   updateWeekNav(focus);
 
   windowDays.forEach(({ date, dayIdx, dayNum, dateISO }) => {
     // شماره‌ی روزِ تهران — مستقل از منطقه‌ی زمانی مرورگر (VPN)
     const isToday = dayNum === todayDayNum;
     const isFocus = !isToday && dayNum === focusDayNum;
-    const lessons = state.days[dayIdx] || [];
-    anyLessons = anyLessons || lessons.length > 0;
-    // شماره‌ی هفته‌ی این ستون نسبت به هفته‌ی جاری (روزِ هفته = شنبه‌ی همان هفته)
-    const weekRel = (dayNum - dayIdx - thisSat) / 7;
+    const lessons = dayLessonsOf(dayIdx);
+    const empty = !lessons.length;
+    colIsEmpty.push(empty);
     const col = el('div', {
       class: 'day-col'
-        + (weekRel > 0 ? ' day-col--future' : weekRel < 0 ? ' day-col--past' : '')
+        + (dayNum < todayDayNum ? ' day-col--past' : '')
+        + (empty ? ' day-col--empty' : '')
         + (isToday ? ' day-col--today' : '') + (isFocus ? ' day-col--focus' : ''),
       'data-day': dayIdx,
       'data-daynum': dayNum,
       'data-date': dateISO,
-      'aria-label': `روز ${WEEK_DAY_NAMES[dayIdx]}`,
+      'aria-label': `روز ${WEEK_DAY_NAMES[dayIdx]}، ${dayLabel(dateISO)}${empty ? '، بدون کلاس' : `، ${faDigits(lessons.length)} زنگ`}`,
     });
-    // برچسب ستون: امروز / نزدیک‌ترین روزِ درسی / هفته‌ی قبل یا بعد (ولی هفته‌ی جاری بدون برچسب)
-    const tag = isToday ? el('span', { class: 'day-col__today-tag', text: 'امروز' })
-      : isFocus ? el('span', { class: 'day-col__focus-tag', text: 'روز بعد' })
-        : weekTag(weekRel);
+    // سربرگ ستون: نام روز + تاریخ؛ برچسب فقط برای امروز و نزدیک‌ترین روزِ درسی
+    // (برچسبِ «هفته‌ی بعد» روی هر هفت ستون تکرارِ بی‌فایده بود — نام هفته در ناوبری بالای جدول است)
     const head = el('div', { class: 'day-col__head' },
-      el('span', { class: 'day-col__name', text: WEEK_DAY_NAMES[dayIdx] }),
-      tag,
-    );
-    head.append(el('span', { class: 'day-col__date', text: formatJalali(date, { withYear: false }) }));
+      el('span', { class: 'day-col__id' },
+        el('span', { class: 'day-col__name', text: WEEK_DAY_NAMES[dayIdx] }),
+        el('span', { class: 'day-col__date', text: dayLabel(dateISO) })));
+    if (isToday) head.append(el('span', { class: 'day-col__tag day-col__tag--today', text: 'امروز' }));
+    else if (isFocus) head.append(el('span', { class: 'day-col__tag', text: focus.offset === 1 ? 'فردا' : 'روز بعد' }));
     col.append(head);
 
-    if (!lessons.length || periodsPerDay(dayIdx) === 0) {
-      const off = dayIdx === 5 || dayIdx === 6;
+    if (empty) {
+      const weekend = dayIdx === 5 || dayIdx === 6;
       col.append(el('div', { class: 'day-empty' },
-        el('span', { class: 'face', text: off ? '🛌' : '☁️' }),
-        el('div', { text: off ? 'تعطیل آخر هفته' : 'کلاسی نیست؛ نفس بکش!' }),
-      ));
+        el('span', { class: 'day-empty__icon' }, icon(weekend ? 'coffee' : 'cloud')),
+        el('span', { class: 'day-empty__text', text: weekend ? 'تعطیل آخر هفته' : 'کلاسی نیست' })));
     } else {
-      // فقط زنگ‌های مجاز روز (دوشنبه ۳ زنگ) — اضافه‌ها نادیده گرفته می‌شوند
-      const maxP = periodsPerDay(dayIdx) || 12;
       // dateMs = نیمه‌شبِ UTC همان تاریخِ تهران: کلید تکلیف و پاریتی گردش از آن بیرون می‌آید
       const dateMs = dayNum * 86_400_000;
-      for (const lesson of lessons.filter((l) => l.period <= maxP)) col.append(lessonCard(lesson, dateMs));
+      for (const lesson of lessons) col.append(lessonCard(lesson, dateMs));
     }
     grid.append(col);
   });
 
-  if (!anyLessons) {
+  // نمای هفت‌روزه (بدون اسکرول): ستون‌های بی‌کلاس باریک می‌شوند تا روزهای درسی جا بگیرند
+  const hasLessons = colIsEmpty.some((e) => !e);
+  const hasEmpty = colIsEmpty.some((e) => e);
+  grid.style.setProperty('--tt-cols',
+    hasLessons && hasEmpty
+      ? colIsEmpty.map((e) => (e ? '0.42fr' : '1fr')).join(' ')
+      : 'repeat(7, minmax(0, 1fr))');
+
+  if (!hasLessons) {
     $('#heroSub').textContent = 'هنوز برنامه‌ای ثبت نشده است؛ به‌زودی توسط سرِ کلاس تکمیل می‌شود.';
+  } else if (heroSubDefault === null) {
+    heroSubDefault = $('#heroSub').textContent;
+  } else {
+    $('#heroSub').textContent = heroSubDefault;
   }
   $('#updatedAt').textContent = faDigits(tehranHHMM(Date.now()));
-  renderDots(todayDayNum);
+  renderDayStrip();
   updateScrollState();
 }
 
-// ---------- نقطه‌های راهنما و فلش‌ها ----------
-function renderDots(todayDayNum) {
-  const dots = $('#ttDots');
-  dots.textContent = '';
-  // هفت نقطه = هفت روزِ هفته (هر ستون دو ردیف دارد: این هفته روی هفته‌ی بعد)
-  const todayIdx = (todayDayNum + 5) % 7;
-  for (let dayIdx = 0; dayIdx < 7; dayIdx++) {
-    dots.append(el('button', {
-      class: `tt-dot${dayIdx === todayIdx ? ' tt-dot--today' : ''}`,
+// ---------- نوار روزها (نمای اسکرولی: تبلت و موبایل) ----------
+const DAY_ABBR = ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'];
+
+/** هفت دکمه‌ی روزِ هفته بالای جدولِ اسکرولی: پرش سریع به هر روز و نشان‌دادنِ
+    روزهایی که الان در دید هستند. امروز (یا روزِ تمرکز) با تُن پررنگ جدا می‌شود. */
+function renderDayStrip() {
+  const strip = $('#ttDots');
+  strip.textContent = '';
+  const todayNum = tehranDayNumber();
+  const focusNum = todayNum + focusDay().offset;
+  for (const { dayIdx, dayNum, dateISO } of displayWindow()) {
+    const isToday = dayNum === todayNum;
+    const isFocus = !isToday && dayNum === focusNum;
+    const dateFa = dayLabel(dateISO);
+    strip.append(el('button', {
+      class: 'day-chip'
+        + (isToday ? ' day-chip--today' : isFocus ? ' day-chip--focus' : '')
+        + (dayLessonsOf(dayIdx).length ? '' : ' day-chip--empty'),
       type: 'button',
       'data-day': dayIdx,
-      'aria-label': WEEK_DAY_NAMES[dayIdx],
+      'aria-label': `${WEEK_DAY_NAMES[dayIdx]} ${dateFa}${isToday ? '، امروز' : isFocus ? '، نزدیک‌ترین روزِ کلاس' : ''}`,
       onclick: () => scrollToDay(dayIdx),
-    }));
+    },
+    el('span', { class: 'day-chip__abbr', text: DAY_ABBR[dayIdx], 'aria-hidden': 'true' }),
+    el('span', { class: 'day-chip__name', text: WEEK_DAY_NAMES[dayIdx] }),
+    el('span', { class: 'day-chip__num', text: faDigits(jalaliPartsOfISO(dateISO).jd) })));
   }
   updateDots();
 }
 
+// ---------- نوار روزها: وضعیتِ دید و اسکرول ----------
 function updateDots() {
   const scroll = $('#ttScroll');
-  const cols = [...document.querySelectorAll('.day-col')];
-  if (!cols.length) return;
-  const center = scroll.scrollLeft + scroll.clientWidth / 2;
-  let closest = null;
-  let closestDist = Infinity;
-  for (const col of cols) {
-    const c = col.offsetLeft + col.offsetWidth / 2;
-    const dist = Math.abs(c - center);
-    if (dist < closestDist) { closestDist = dist; closest = col; }
+  const chips = document.querySelectorAll('.day-chip');
+  if (!scroll || !chips.length) return;
+  const sRect = scroll.getBoundingClientRect();
+  // ستون‌هایی که دست‌کم ۶۰٪ عرضشان داخل دیدِ اسکرولر است روی نوار روزها روشن می‌شوند
+  const inView = new Set();
+  for (const col of document.querySelectorAll('.day-col')) {
+    const r = col.getBoundingClientRect();
+    const visible = Math.min(r.right, sRect.right) - Math.max(r.left, sRect.left);
+    if (visible > r.width * 0.6) inView.add(col.dataset.day);
   }
-  const closestDay = closest?.dataset.day ?? '0';
-  for (const dot of document.querySelectorAll('.tt-dot')) {
-    dot.classList.toggle('tt-dot--active', dot.dataset.day === closestDay);
-  }
+  for (const chip of chips) chip.classList.toggle('day-chip--inview', inView.has(chip.dataset.day));
 }
 
 function updateScrollState() {
@@ -498,8 +596,6 @@ function updateScrollState() {
   const atEnd = pos >= max - 4;
   wrap.classList.toggle('tt-wrap--at-start', atStart);
   wrap.classList.toggle('tt-wrap--at-end', atEnd);
-  $('#ttPrev').disabled = atStart;
-  $('#ttNext').disabled = atEnd;
 }
 
 /** اسکرول افقی تا ستونِ داده‌شده در وسطِ دید بیفتد (قابل‌اعتماد در RTL) */
@@ -532,8 +628,16 @@ function scrollToToday(smooth = true) {
 /** جابه‌جایی پنجره یک هفته (−۱ / +۱) و رندر مجدد */
 function shiftWeek(delta) {
   ttWeek = Math.max(ttWeekBounds.min, Math.min(ttWeekBounds.max, ttWeek + delta));
-  renderTimetable();
+  renderWeek();
   scrollToToday(false);
+}
+
+/** رندر همه‌ی بخش‌هایی که به هفته‌ی در حال نمایش وابسته‌اند: هیرو، جدول و چکیده
+    (چکیده قبلاً با عوض‌شدن هفته به‌روز نمی‌شد و تکالیفِ هفته‌ی قبل را نشان می‌داد). */
+function renderWeek() {
+  renderHero();
+  renderTimetable();
+  renderDigest();
 }
 
 /** دکمه‌های ناوبری هفته + برچسب بازه + برچسبِ دکمه‌ی «برو به …» بر اساس روزِ تمرکز */
@@ -542,18 +646,17 @@ function updateWeekNav(focus) {
   const next = $('#weekNext');
   if (prev) prev.disabled = ttWeek <= ttWeekBounds.min;
   if (next) next.disabled = ttWeek >= ttWeekBounds.max;
-  const range = $('#ttRange');
-  if (range) {
-    // برچسبِ اسلایدِ باز: نامِ هفته نسبت به هفته‌ی جاریِ تقویم + بازه‌ی تاریخِ همان یک هفته
-    const win = displayWindow();
-    const label = ttWeek === 0 ? 'این هفته'
-      : ttWeek === 1 ? 'هفته‌ی بعد'
-        : ttWeek === -1 ? 'هفته‌ی قبل'
-          : ttWeek > 0 ? `${faDigits(ttWeek)} هفته بعد` : `${faDigits(-ttWeek)} هفته قبل`;
-    range.textContent = `${label} · ${formatJalali(win[0].date, { withYear: false })} تا ${formatJalali(win[6].date, { withYear: false })}`;
-  }
+  // برچسبِ اسلایدِ باز: نامِ هفته نسبت به هفته‌ی جاریِ تقویم + بازه‌ی تاریخِ همان یک هفته
+  const win = displayWindow();
+  const label = $('#ttRangeLabel');
+  const dates = $('#ttRangeDates');
+  if (label) label.textContent = weekLabel(ttWeek);
+  if (dates) dates.textContent = `${dayLabel(win[0].dateISO)} تا ${dayLabel(win[6].dateISO)}`;
   // دکمه‌ی «برو به …» فقط وقتی لازم است که پنجره از هفته‌ی روزِ تمرکز جدا افتاده باشد
-  $('#weekToday')?.classList.toggle('hidden', ttWeek === focusWeekOffset());
+  const back = $('#weekToday');
+  if (back) back.classList.toggle('hidden', ttWeek === focusWeekOffset());
+  const backLabel = $('#weekTodayLabel');
+  if (backLabel) backLabel.textContent = `برو به ${focusWeekOffset() === 0 ? 'این هفته' : weekLabel(focusWeekOffset())}`;
   // صبح (هنوز کلاس داریم) → «برو به امروز»؛ عصر/آخر هفته → «برو به فردا» یا روز بعد
   const goLabel = focus.offset === 0 ? 'برو به امروز' : focus.offset === 1 ? 'برو به فردا' : `برو به ${WEEK_DAY_NAMES[focus.dayIdx]}`;
   const fabLabel = $('#fabTodayLabel');
@@ -610,7 +713,7 @@ async function openLesson(id, dateMs = Date.now()) {
 
 function renderLessonDetail(lesson, dateMs) {
   const subj = resolveSubject(lesson, dateMs);
-  $('#detailTitle').textContent = `${subjectEmoji(subj.subject_name)} ${subj.subject_name} — ${WEEK_DAY_NAMES[lesson.day]}`;
+  $('#detailTitle').textContent = `${subjectEmoji(subj.subject_name)} ${subj.subject_name}`;
   const body = $('#detailBody');
   body.textContent = '';
 
@@ -618,49 +721,46 @@ function renderLessonDetail(lesson, dateMs) {
 
   wrap.append(el('div', { class: `detail-hero sub-${subj.color_key}` },
     el('div', { class: 'detail-hero__period', text: `زنگ ${faDigits(lesson.period)}` }),
-    el('div', {},
+    el('div', { class: 'detail-hero__text' },
       el('h3', { class: 'detail-hero__subject', text: subj.subject_name }),
-      el('div', { class: 'detail-hero__meta', text: `${WEEK_DAY_NAMES[lesson.day]} · ${faTime(lesson.start_time)} تا ${faTime(lesson.end_time)}` }),
-    ),
-  ));
+      el('div', { class: 'detail-hero__meta' },
+        el('span', { text: `${WEEK_DAY_NAMES[lesson.day]} · ${dayLabel(tehranDateISO(dateMs), { withYear: true })}` }),
+        el('span', { class: 'detail-hero__dot', text: '·', 'aria-hidden': 'true' }),
+        el('span', { text: `${faTime(lesson.start_time)} تا ${faTime(lesson.end_time)}` })))));
 
   const hw = lesson.homework;
   if (!hw) {
     wrap.append(el('div', { class: 'detail-block' },
-      el('p', { class: 'detail-block__title', text: '📝 تکلیف' }),
-      el('p', { class: 'detail-block__text detail-block__text--muted', text: 'برای این درس تکلیفی ثبت نشده است. همین‌طور نفس بکش! 😌' }),
-    ));
+      detailBlockTitle('edit', 'تکلیف'),
+      el('p', { class: 'detail-block__text detail-block__text--muted', text: 'برای این درس تکلیفی ثبت نشده است.' })));
   } else {
-    wrap.append(el('div', { class: 'detail-block' },
-      el('p', { class: 'detail-block__title', text: '📝 تکلیف' }),
-      el('p', { class: 'detail-block__text', text: hw.title }),
-    ));
-    if (hw.description) {
-      wrap.append(el('div', { class: 'detail-block' },
-        el('p', { class: 'detail-block__title', text: '📖 توضیحات کامل' }),
-        el('p', { class: 'detail-block__text', text: hw.description }),
-      ));
-    }
-    const dl = el('dl', { style: 'margin:0;' });
+    const hwBlock = el('div', { class: 'detail-block' },
+      detailBlockTitle('edit', 'تکلیف'),
+      el('p', { class: 'detail-block__text detail-block__text--lead', text: hw.title }));
+    const dl = el('dl', { class: 'dl-list' });
     if (hw.textbook_pages) {
       dl.append(el('div', { class: 'dl-row' }, el('dt', { text: 'صفحات کتاب' }), el('dd', { text: hw.textbook_pages })));
     }
-    if (dl.children.length) wrap.append(el('div', { class: 'detail-block' }, dl));
+    if (dl.children.length) hwBlock.append(dl);
+    wrap.append(hwBlock);
+    if (hw.description) {
+      wrap.append(el('div', { class: 'detail-block' },
+        detailBlockTitle('book', 'توضیحات کامل'),
+        el('p', { class: 'detail-block__text', text: hw.description })));
+    }
     if (hw.instructions) {
       wrap.append(el('div', { class: 'detail-block' },
-        el('p', { class: 'detail-block__title', text: '📋 دستورالعمل' }),
-        el('p', { class: 'detail-block__text', text: hw.instructions }),
-      ));
+        detailBlockTitle('clipboard', 'دستورالعمل'),
+        el('p', { class: 'detail-block__text', text: hw.instructions })));
     }
     if (hw.notes) {
       wrap.append(el('div', { class: 'detail-block' },
-        el('p', { class: 'detail-block__title', text: '💬 یادداشت سرِ کلاس' }),
-        el('p', { class: 'detail-block__text', text: hw.notes }),
-      ));
+        detailBlockTitle('message', 'یادداشت سرِ کلاس'),
+        el('p', { class: 'detail-block__text', text: hw.notes })));
     }
-    if (lesson.attachments && lesson.attachments.length) {
+    if (lesson.attachments?.length) {
       wrap.append(el('div', { class: 'detail-block' },
-        el('p', { class: 'detail-block__title', text: '📎 پیوست‌ها' }),
+        detailBlockTitle('paperclip', 'پیوست‌ها'),
         attachmentList(lesson.attachments)));
     }
   }
@@ -669,19 +769,20 @@ function renderLessonDetail(lesson, dateMs) {
 
 /** آیتم دانلود فایل — مشترک بین پیوست تکلیف/مهلت/اطلاعیه و کارت جزوه */
 function fileItemEl(a, origin) {
-  return el('a', {
+  const link = el('a', {
     class: 'attachment-item', href: `${origin}/api/attachments/${a.id}`, download: a.filename, // روی mirror از مبدأ اصلی
   },
-  el('span', { class: 'attachment-item__icon', text: '📎' }),
+  el('span', { class: 'attachment-item__icon' }, icon(fileIconName(a.mime))),
   el('span', { class: 'attachment-item__name', text: a.filename }),
   el('span', { class: 'attachment-item__size', text: formatSize(a.size) }));
+  return link;
 }
 
 function attachmentList(files) {
   const list = el('div', { class: 'attachment-list' });
   // روی آینه‌ی استاتیک، دانلود پیوست فقط از مبدأ اصلی ممکن است
   const origin = window.__IS_MIRROR__ ? (window.__LIVE_ORIGIN__ || '') : '';
-  for (const a of files) {
+  for (const a of files ?? []) {
     // پیوست «لینک»: فایل روی سرویس بیرونی (مثل گوگل‌درایو) — مستقیم همان‌جا باز می‌شود
     if (a.url) {
       let host = '';
@@ -689,7 +790,7 @@ function attachmentList(files) {
       list.append(el('a', {
         class: 'attachment-item attachment-item--link', href: a.url, target: '_blank', rel: 'noopener noreferrer',
       },
-      el('span', { class: 'attachment-item__icon', text: '🔗' }),
+      el('span', { class: 'attachment-item__icon' }, icon('link')),
       el('span', { class: 'attachment-item__name', text: a.filename }),
       el('span', { class: 'attachment-item__size', text: host || 'لینک' })));
       continue;
@@ -781,71 +882,104 @@ function homeworkInRange() {
   return out;
 }
 
+/** یک ردیف چکیده: کاشیِ آیکونِ رنگی + دو خطِ متن (عنوان و توضیح) + برچسبِ زمان */
+function digestRow({ tileClass = '', tileIcon = null, tileText = '', title, meta = '', label, high = false, onclick }) {
+  return el('button', {
+    class: `digest-row${high ? ' digest-row--high' : ''}`,
+    type: 'button',
+    onclick,
+    title: meta ? `${title} — ${meta}` : title,
+  },
+  el('span', { class: `digest-row__icon${tileClass ? ` ${tileClass}` : ''}` },
+    tileIcon, tileText ? el('span', { text: tileText, 'aria-hidden': 'true' }) : null),
+  el('span', { class: 'digest-row__main' },
+    el('span', { class: 'digest-row__title', text: title }),
+    meta ? el('span', { class: 'digest-row__meta', text: meta }) : null),
+  el('span', { class: `digest-row__label ${label.cls}`, text: label.text }));
+}
+
+/** یک ستونِ چکیده: سربرگ با آیکون و شمار، و ردیف‌های زیرش */
+function digestCol(title, iconName, count, ...rows) {
+  return el('section', { class: 'digest-col' },
+    el('h3', { class: 'digest-col__title' },
+      el('span', { class: 'digest-col__icon' }, icon(iconName)),
+      el('span', { text: title }),
+      el('span', { class: 'digest-col__count', text: faDigits(count) })),
+    ...rows);
+}
+
+/** تاریخ کوتاهِ مهلت برای کارت: «۷ آذر، ۱۲:۳۰» (بدون سال) */
+function dueShort(dueAt) {
+  const parts = formatJalaliDateTime(dueAt).split('، ساعت ');
+  return parts[1] ? `${jalaliDateOnly(dueAt)}، ${parts[1]}` : parts[0];
+}
+
+/** رفتن به جدول برنامه (از چکیده یا تب دیگر) و نشان‌دادنِ ستونِ یک روز */
+function showDayInTimetable(dayIdx) {
+  if (activeTab !== 'schedule') switchTab('schedule', { scroll: false });
+  const head = document.querySelector('#panel-schedule .section__head');
+  const chrome = (document.querySelector('.site-header')?.offsetHeight ?? 64) + ($('#stdTabs')?.offsetHeight ?? 60);
+  const top = head.getBoundingClientRect().top + window.scrollY - chrome - 10;
+  window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+  if (dayIdx !== undefined) scrollToDay(dayIdx);
+}
+
 // بیشینه‌ی تکلیف‌هایی که در چکیده لیست می‌شود (بقیه در خود جدول دیده می‌شوند)
 const DIGEST_HW_MAX = 8;
+// بیشینه‌ی مهلت‌هایی که در چکیده لیست می‌شود (بقیه در تب مهلت‌ها)
+const DIGEST_TASK_MAX = 6;
 
 function renderDigest() {
   const list = $('#digestList');
   if (!list) return;
   list.textContent = '';
+  const todayNum = tehranDayNumber();
+  const weekName = weekLabel(ttWeek);
+  const meta = $('#digestMeta');
+  if (meta) meta.textContent = `تکالیفِ ${weekName} و نزدیک‌ترین مهلت‌ها`;
 
-  // ۱) تکلیف‌های ثبت‌شده‌ی همین هفته — روی هر ردیف، جزئیات همان درس در همان تاریخ باز می‌شود
+  // ۱) تکلیف‌های ثبت‌شده‌ی هفته‌ی در حال نمایش — هر ردیف جزئیات همان درس در همان تاریخ را باز می‌کند
   const homework = homeworkInRange();
-  for (const { lesson, hw, dayIdx, dayNum } of homework.slice(0, DIGEST_HW_MAX)) {
-    const label = hwDateLabel(dayNum, tehranDayNumber());
+  const hwRows = homework.slice(0, DIGEST_HW_MAX).map(({ lesson, hw, dayIdx, dayNum }) => {
+    const label = hwDateLabel(dayNum, todayNum);
     const subj = resolveSubject(lesson, dayNum * 86_400_000);
-    list.append(el('button', {
-      class: 'digest-row digest-row--hw',
-      type: 'button',
-      onclick: () => openLesson(lesson.id, dayNum * 86_400_000),
+    return digestRow({
+      tileClass: `sub-${subj.color_key}`,
+      tileText: subjectEmoji(subj.subject_name),
       title: hw.title,
-    },
-    el('span', { class: 'digest-row__icon', text: '📝', 'aria-hidden': 'true' }),
-    el('span', { class: 'digest-row__title', text: `${subjectEmoji(subj.subject_name)} ${subj.subject_name} — ${hw.title}` }),
-    el('span', { class: `digest-row__label ${label.cls}`, text: `${WEEK_DAY_NAMES[dayIdx]} · ${label.text}` }),
-    ));
-  }
-  if (homework.length > DIGEST_HW_MAX) {
-    list.append(el('div', {
-      class: 'digest-note',
-      text: `و ${faDigits(homework.length - DIGEST_HW_MAX)} تکلیف دیگر در جدول برنامه`,
-    }));
-  }
-
-  // ۲) مهلت‌های فعال از قبل بر اساس نزدیکی مرتب‌اند؛ فقط ۶ مورد نخست
-  const items = (state.tasks?.active ?? []).slice(0, 6);
-  if (!homework.length && !items.length) {
-    list.append(el('div', { class: 'digest-empty', text: 'برای این هفته تکلیف یا مهلتی ثبت نشده — نفس بکش! 🌿' }));
-    return;
-  }
-  for (const task of items) {
-    const label = dueLabelFa(task.due_at);
-    const row = el('button', {
-      class: `digest-row${task.priority === 'high' ? ' digest-row--high' : ''}`,
-      type: 'button',
-      onclick: () => openTask(task.id),
-      title: task.title,
+      meta: `${subj.subject_name} · ${WEEK_DAY_NAMES[dayIdx]}، زنگ ${faDigits(lesson.period)}`,
+      label,
+      onclick: () => openLesson(lesson.id, dayNum * 86_400_000),
     });
-    if (task.subject_name) {
-      row.append(el('span', {
-        class: 'digest-row__dot',
-        style: `background: var(--${task.color_key ?? 'lavender'});`,
-        'aria-hidden': 'true',
-      }));
-    }
-    row.append(
-      el('span', { class: 'digest-row__icon', text: KIND_ICONS[task.kind] || '📌', 'aria-hidden': 'true' }),
-      el('span', { class: 'digest-row__title', text: `${task.subject_name ? task.subject_name + ' — ' : ''}${task.title}` }),
-      el('span', { class: `digest-row__label ${label.cls}`, text: label.text }),
-    );
-    list.append(row);
+  });
+  if (!homework.length) {
+    hwRows.push(el('p', { class: 'digest-col__empty', text: `برای ${weekName} تکلیفی ثبت نشده است.` }));
+  } else if (homework.length > DIGEST_HW_MAX) {
+    hwRows.push(el('button', { class: 'digest-more', type: 'button', onclick: () => showDayInTimetable(homework[0].dayIdx) },
+      el('span', { text: `${faDigits(homework.length - DIGEST_HW_MAX)} تکلیف دیگر در جدول برنامه` }),
+      icon('arrow-left')));
   }
-  if (state.tasks.active.length > 6) {
-    list.append(el('button', {
-      class: 'digest-more', type: 'button', text: `نمایش همه‌ی ${faDigits(state.tasks.active.length)} مهلت ←`,
-      onclick: () => switchTab('tasks'),
-    }));
+  list.append(digestCol('تکلیفِ درس‌ها', 'edit', homework.length, ...hwRows));
+
+  // ۲) مهلت‌های فعال (از قبل بر اساس نزدیکی مرتب‌اند) — فقط ۶ مورد نخست
+  const items = state.tasks?.active ?? [];
+  const taskRows = items.slice(0, DIGEST_TASK_MAX).map((task) => digestRow({
+    tileClass: task.color_key ? `sub-${task.color_key}` : '',
+    tileIcon: kindIcon(task.kind),
+    title: task.title,
+    meta: `${KIND_LABELS[task.kind] || task.kind}${task.subject_name ? ` · ${task.subject_name}` : ''}`,
+    label: dueLabelFa(task.due_at),
+    high: task.priority === 'high',
+    onclick: () => openTask(task.id),
+  }));
+  if (!items.length) {
+    taskRows.push(el('p', { class: 'digest-col__empty', text: 'مهلت فعالی ثبت نشده است.' }));
+  } else if (items.length > DIGEST_TASK_MAX) {
+    taskRows.push(el('button', { class: 'digest-more', type: 'button', onclick: () => switchTab('tasks') },
+      el('span', { text: `نمایش همه‌ی ${faDigits(items.length)} مهلت` }),
+      icon('arrow-left')));
   }
+  list.append(digestCol('مهلت‌های نزدیک', 'hourglass', items.length, ...taskRows));
 }
 
 // ---------- نشان «دیده‌نشده» روی سربرگ تب‌ها ----------
@@ -910,32 +1044,25 @@ function renderTabBadges() {
 // ---------- مهلت‌ها ----------
 function taskCard(task) {
   const cd = countdown(task.due_at);
+  const high = task.priority === 'high';
+  const files = Number(task.attachment_count) || 0;
   const card = el('button', {
-    class: `task-card${task.priority === 'high' ? ' task-card--high' : ''}`, type: 'button',
+    class: `task-card${high ? ' task-card--high' : ''}`, type: 'button',
     onclick: () => openTask(task.id),
   });
-  const head = el('div', { class: 'task-card__kind' },
-    el('span', { text: KIND_ICONS[task.kind] || '📌' }),
-    el('span', { text: KIND_LABELS[task.kind] || task.kind }),
-  );
-  if (task.subject_name) head.append(el('span', { text: `· ${task.subject_name}`, style: 'color:var(--sub);font-weight:500;' }));
-  card.append(head, el('h3', { class: 'task-card__title', text: task.title }));
-  if (task.description) {
-    card.append(el('p', {
-      class: 'task-card__subject', text: task.description,
-      style: 'margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;',
-    }));
-  }
-  const footer = el('div', { class: 'task-card__footer' },
-    el('span', { class: `countdown-chip cd-${cd.state}`, text: `⏰ ${cd.text}` }),
-    el('span', { class: 'task-card__due', text: formatJalaliDateTime(task.due_at) }),
-  );
-  if (task.priority === 'high') {
-    footer.append(el('span', { class: 'priority-dot priority-high', title: PRIORITY_LABELS[task.priority] }));
-  }
-  if (task.attachment_count > 0) {
-    footer.append(el('span', { class: 'attach-chip', text: `📎 ${faDigits(task.attachment_count)}` }));
-  }
+  const kind = el('span', { class: 'task-card__kind' },
+    el('span', { class: 'task-card__kind-icon' }, kindIcon(task.kind)),
+    el('span', { text: KIND_LABELS[task.kind] || task.kind }));
+  if (task.subject_name) kind.append(el('span', { class: 'task-card__subject', text: `· ${task.subject_name}` }));
+  card.append(kind, el('span', { class: 'task-card__title', text: task.title }));
+  if (task.description) card.append(el('span', { class: 'task-card__desc', text: task.description }));
+  const footer = el('span', { class: 'task-card__footer' },
+    el('span', { class: `countdown-chip cd-${cd.state}` },
+      icon(cd.state === 'passed' ? 'check' : 'clock'),
+      el('span', { text: cd.text })),
+    el('span', { class: 'task-card__due' }, icon('calendar'), el('span', { text: dueShort(task.due_at) })));
+  if (high) footer.append(el('span', { class: 'task-card__flag' }, icon('alert'), el('span', { text: 'مهم' })));
+  if (files) footer.append(el('span', { class: 'attach-chip' }, icon('paperclip'), el('span', { text: faDigits(files) })));
   card.append(footer);
   return card;
 }
@@ -945,9 +1072,8 @@ function renderTasks() {
   grid.textContent = '';
   const active = state.tasks.active;
   if (!active.length) {
-    grid.append(el('div', { class: 'empty-state', style: 'grid-column: 1 / -1;' },
-      el('span', { class: 'face', text: '🌈' }),
-      el('div', { text: 'فعلاً هیچ مهلت فوری وجود ندارد؛ خیالتان راحت!' })));
+    grid.append(emptyState('check-circle', 'فعلاً هیچ مهلت فوری وجود ندارد',
+      'هرچه سرِ کلاس ثبت کند، همین‌جا و به ترتیبِ نزدیک‌ترین مهلت دیده می‌شود.'));
   } else {
     for (const t of active) grid.append(taskCard(t));
   }
@@ -956,10 +1082,23 @@ function renderTasks() {
   exp.textContent = '';
   for (const t of state.tasks.expired) {
     const card = taskCard(t);
-    card.style.opacity = '0.62';
-    card.style.filter = 'saturate(0.6)';
+    card.classList.add('task-card--expired');
     exp.append(card);
   }
+  // دکمه‌ی آرشیو فقط وقتی چیزی برای نشان‌دادن هست (قبلاً حتی با آرشیوِ خالی دیده می‌شد)
+  const toggle = $('#showExpiredBtn');
+  if (toggle) {
+    toggle.classList.toggle('hidden', !state.tasks.expired.length);
+    $('#expiredCount').textContent = faDigits(state.tasks.expired.length);
+  }
+}
+
+/** حالت خالیِ جمع‌وجور: آیکون در دایره‌ی رنگی + یک جمله + یک راهنمای کوتاه */
+function emptyState(iconName, title, hint = '') {
+  return el('div', { class: 'empty-state' },
+    el('span', { class: 'empty-state__icon' }, icon(iconName)),
+    el('p', { class: 'empty-state__title', text: title }),
+    hint ? el('p', { class: 'empty-state__hint', text: hint }) : null);
 }
 
 async function openTask(id) {
@@ -977,33 +1116,35 @@ async function openTask(id) {
 }
 
 function renderTaskDetail(task) {
-  $('#detailTitle').textContent = `${KIND_ICONS[task.kind] || '📌'} ${task.title}`;
+  $('#detailTitle').textContent = task.title;
   const body = $('#detailBody');
   body.textContent = '';
   const cd = countdown(task.due_at);
   const wrap = el('div', { class: 'detail-lesson fade-up' });
-  wrap.append(el('div', { class: `detail-hero sub-${task.color_key || 'lavender'}` },
-    el('div', { class: 'detail-hero__period', text: KIND_ICONS[task.kind] || '📌' }),
-    el('div', {},
+  const hero = el('div', { class: `detail-hero sub-${task.color_key || 'lavender'}` },
+    el('div', { class: 'detail-hero__period' }, kindIcon(task.kind)),
+    el('div', { class: 'detail-hero__text' },
       el('h3', { class: 'detail-hero__subject', text: KIND_LABELS[task.kind] || task.kind }),
-      el('div', { class: 'detail-hero__meta', text: task.subject_name ? `درس ${task.subject_name}` : 'مرتبط با کل کلاس' }),
-    ),
-  ));
+      el('div', { class: 'detail-hero__meta', text: task.subject_name ? `درس ${task.subject_name}` : 'مرتبط با کل کلاس' })));
+  // شمارش معکوس، داخل خود کارتِ عنوان (نه یک ردیف جدا در پایین)
+  hero.append(el('span', { class: `countdown-chip cd-${cd.state} detail-hero__chip` },
+    icon(cd.state === 'passed' ? 'check' : 'clock'),
+    el('span', { text: cd.text })));
+  wrap.append(hero);
   if (task.description) {
     wrap.append(el('div', { class: 'detail-block' },
-      el('p', { class: 'detail-block__title', text: '📖 توضیحات' }),
-      el('p', { class: 'detail-block__text', text: task.description }),
-    ));
+      detailBlockTitle('list', 'توضیحات'),
+      el('p', { class: 'detail-block__text', text: task.description })));
   }
-  const dl = el('dl', { style: 'margin:0;' });
+  const dl = el('dl', { class: 'dl-list' });
   dl.append(el('div', { class: 'dl-row' }, el('dt', { text: 'مهلت' }),
     el('dd', {}, `${formatJalaliDateTime(task.due_at)} (${cd.text})`)));
   dl.append(el('div', { class: 'dl-row' }, el('dt', { text: 'اولویت' }), el('dd', { text: PRIORITY_LABELS[task.priority] || task.priority })));
   if (task.archived) dl.append(el('div', { class: 'dl-row' }, el('dt', { text: 'وضعیت' }), el('dd', { text: 'بایگانی‌شده' })));
-  wrap.append(el('div', { class: 'detail-block' }, dl));
-  if (task.attachments && task.attachments.length) {
+  wrap.append(el('div', { class: 'detail-block' }, detailBlockTitle('clock', 'زمان و وضعیت'), dl));
+  if (task.attachments?.length) {
     wrap.append(el('div', { class: 'detail-block' },
-      el('p', { class: 'detail-block__title', text: '📎 پیوست‌ها' }),
+      detailBlockTitle('paperclip', 'پیوست‌ها'),
       attachmentList(task.attachments)));
   }
   body.append(wrap);
@@ -1011,18 +1152,19 @@ function renderTaskDetail(task) {
 
 // ---------- اطلاعیه‌ها ----------
 function annCard(ann) {
+  const files = Number(ann.attachment_count) || 0;
   const card = el('button', {
     class: `ann-card${ann.pinned ? ' ann-card--pinned' : ''}`,
     type: 'button',
     onclick: () => openAnnouncement(ann),
   });
-  const head = el('div', { class: 'ann-card__head' });
-  if (ann.pinned) head.append(el('span', { class: 'ann-card__pin', text: '📌 سنجاق‌شده' }));
-  head.append(el('h3', { class: 'ann-card__title', text: ann.title }));
-  if (ann.attachment_count > 0) head.append(el('span', { class: 'attach-chip', text: `📎 ${faDigits(ann.attachment_count)}` }));
+  const head = el('span', { class: 'ann-card__head' });
+  if (ann.pinned) head.append(el('span', { class: 'ann-card__pin' }, icon('bookmark'), el('span', { text: 'سنجاق‌شده' })));
+  head.append(el('span', { class: 'ann-card__title', text: ann.title }));
+  if (files) head.append(el('span', { class: 'attach-chip' }, icon('paperclip'), el('span', { text: faDigits(files) })));
   card.append(head);
-  card.append(el('p', { class: 'ann-card__body', text: ann.body }));
-  card.append(el('span', { class: 'ann-card__date', text: formatJalaliDateTime(ann.published_at) }));
+  card.append(el('span', { class: 'ann-card__body', text: ann.body || '' }));
+  card.append(el('span', { class: 'ann-card__date' }, icon('calendar'), el('span', { text: formatJalaliDateTime(ann.published_at) })));
   return card;
 }
 
@@ -1030,52 +1172,49 @@ function renderAnnouncements() {
   const list = $('#annList');
   list.textContent = '';
   if (!state.announcements.length) {
-    list.append(el('div', { class: 'empty-state' },
-      el('span', { class: 'face', text: '🕊️' }), el('div', { text: 'هنوز اطلاعیه‌ای منتشر نشده است.' })));
+    list.append(emptyState('megaphone', 'هنوز اطلاعیه‌ای منتشر نشده است',
+      'اطلاعیه‌های سرِ کلاس، همین‌جا و جدیدترین در بالا دیده می‌شوند.'));
     return;
   }
   for (const a of state.announcements) list.append(annCard(a));
 }
 
 // ---------- جزوات ----------
-const HANDOUT_EMOJI = { pdf: '📄', image: '🖼️', zip: '🗂️', media: '🎬', audio: '🎧', doc: '📘' };
-function handoutFileEmoji(mime) {
-  const m = (mime || '').toLowerCase();
-  if (m.startsWith('image/')) return HANDOUT_EMOJI.image;
-  if (m === 'application/pdf') return HANDOUT_EMOJI.pdf;
-  if (m.startsWith('video/')) return HANDOUT_EMOJI.media;
-  if (m.startsWith('audio/')) return HANDOUT_EMOJI.audio;
-  if (m.includes('zip') || m.includes('rar') || m.includes('7z') || m.includes('compressed')) return HANDOUT_EMOJI.zip;
-  return HANDOUT_EMOJI.doc;
-}
+// نماد نوع فایل‌ها: fileIconName (بالا، کنار helperهای آیکون)
+let handoutsEntered = false;
 
 function renderHandouts() {
   const list = $('#handoutList');
   list.textContent = '';
-  if (!state.handouts?.length) {
-    list.append(el('div', { class: 'empty-state' },
-      el('span', { class: 'face', text: '📚' }), el('div', { text: 'هنوز جزوه یا تمرینی بارگذاری نشده است.' })));
+  const handouts = state.handouts ?? [];
+  if (!handouts.length) {
+    list.append(emptyState('book', 'هنوز جزوه یا تمرینی بارگذاری نشده است',
+      'جزوه‌ها، پاسخنامه‌ها و فایل‌های تمرین که سرِ کلاس بفرستد، همین‌جا جمع می‌شوند.'));
     return;
   }
+  // روی آینه‌ی استاتیک، دانلود پیوست فقط از مبدأ اصلی ممکن است
   const origin = window.__IS_MIRROR__ ? (window.__LIVE_ORIGIN__ || '') : '';
-  for (const h of state.handouts) {
-    const card = el('article', { class: 'handout-card fade-up' },
+  // انیمیشنِ ورود فقط برای نخستین رندر — نه هر پولِ ۳۰ ثانیه‌ای
+  const enter = !handoutsEntered;
+  handoutsEntered = true;
+  for (const h of handouts) {
+    const card = el('article', { class: `handout-card${enter ? ' fade-up' : ''}` },
       el('div', { class: 'handout-card__head' },
+        el('span', { class: 'handout-card__icon' }, icon('book')),
         el('h3', { class: 'handout-card__title', text: h.title }),
-        h.subject_name ? el('span', { class: 'handout-chip' },
-          el('span', { class: 'handout-chip__dot', style: h.color_key ? `background:var(--${h.color_key}-deep, var(--lavender-deep));` : '' }),
-          el('span', { text: h.subject_name })) : null));
+        h.subject_name
+          ? el('span', { class: `handout-chip${h.color_key ? ` sub-${h.color_key}` : ''}` },
+            el('span', { class: 'handout-chip__dot' }),
+            el('span', { text: h.subject_name }))
+          : null));
     if (h.description) card.append(el('p', { class: 'handout-card__desc', text: h.description }));
     if (h.attachments?.length) {
       const files = el('div', { class: 'handout-card__files' });
-      for (const f of h.attachments) {
-        const item = fileItemEl(f, origin);
-        item.querySelector('.attachment-item__icon').textContent = handoutFileEmoji(f.mime);
-        files.append(item);
-      }
+      for (const f of h.attachments) files.append(fileItemEl(f, origin));
       card.append(files);
     }
-    card.append(el('span', { class: 'handout-card__date', text: formatJalaliDateTime(h.updated_at || h.created_at) }));
+    card.append(el('span', { class: 'handout-card__date' }, icon('calendar'),
+      el('span', { text: formatJalaliDateTime(h.updated_at || h.created_at) })));
     list.append(card);
   }
 }
@@ -1087,23 +1226,23 @@ async function openAnnouncement(ann) {
     detail = data.announcement;
   } catch { /* بازگشت به خلاصه */ }
   const overlay = $('#detailOverlay');
-  $('#detailTitle').textContent = `📣 ${detail.title}`;
+  $('#detailTitle').textContent = detail.title;
   const body = $('#detailBody');
   body.textContent = '';
   const wrap = el('div', { class: 'detail-lesson fade-up' });
   if (detail.pinned) {
-    wrap.append(el('div', { class: 'countdown-chip cd-future', text: '📌 سنجاق‌شده', style: 'align-self:flex-start;' }));
+    wrap.append(el('span', { class: 'ann-card__pin ann-card__pin--detail' }, icon('bookmark'), el('span', { text: 'سنجاق‌شده' })));
   }
   wrap.append(el('div', { class: 'detail-block' },
-    el('p', { class: 'detail-block__title', text: '📣 متن اطلاعیه' }),
-    el('p', { class: 'detail-block__text', text: detail.body })));
-  wrap.append(el('div', { class: 'detail-block' },
-    el('dl', { style: 'margin:0;' },
-      el('div', { class: 'dl-row' }, el('dt', { text: 'تاریخ انتشار' }),
-        el('dd', { text: formatJalaliDateTime(detail.published_at) })))));
-  if (detail.attachments && detail.attachments.length) {
+    detailBlockTitle('megaphone', 'متن اطلاعیه'),
+    el('p', { class: 'detail-block__text detail-block__text--lead', text: detail.body || '' })));
+  const dl = el('dl', { class: 'dl-list' });
+  dl.append(el('div', { class: 'dl-row' }, el('dt', { text: 'تاریخ انتشار' }),
+    el('dd', { text: formatJalaliDateTime(detail.published_at) })));
+  wrap.append(el('div', { class: 'detail-block' }, detailBlockTitle('calendar', 'زمان انتشار'), dl));
+  if (detail.attachments?.length) {
     wrap.append(el('div', { class: 'detail-block' },
-      el('p', { class: 'detail-block__title', text: '📎 پیوست‌ها' }),
+      detailBlockTitle('paperclip', 'پیوست‌ها'),
       attachmentList(detail.attachments)));
   }
   body.append(wrap);
@@ -1143,9 +1282,9 @@ function urgentNotifItems() {
         kind: 'task',
         id: t.id,
         rev: Date.parse(t.updated_at ?? t.created_at ?? '') || 0,
-        icon: KIND_ICONS[t.kind] || '⏰',
+        iconName: KIND_ICON_NAMES[t.kind] || 'clock',
         title: t.title,
-        sub: `${KIND_LABELS[t.kind]} · ${cd.text}`,
+        sub: `${KIND_LABELS[t.kind] || t.kind} · ${cd.text}`,
         action: () => openTask(t.id),
       });
     }
@@ -1155,7 +1294,8 @@ function urgentNotifItems() {
       kind: 'ann',
       id: a.id,
       rev: Date.parse(a.published_at ?? a.publishedAt ?? '') || 0,
-      icon: '📌', title: a.title, sub: 'اطلاعیه سنجاق‌شده',
+      iconName: 'megaphone',
+      title: a.title, sub: 'اطلاعیه سنجاق‌شده',
       action: () => openAnnouncement(a),
     });
   }
@@ -1170,20 +1310,25 @@ function renderNotifications() {
   // نشان فقط تعدادِ دیده‌نشده‌ها را می‌دهد — نه همه‌ی آیتم‌های پنل را
   const seen = getNotifSeen();
   const fresh = items.filter((it) => !seen[notifItemKey(it)]).length;
+  panel.append(el('div', { class: 'notif-panel__head' },
+    el('span', { class: 'notif-panel__title' }, icon('bell'), el('span', { text: 'اعلان‌های مهم' })),
+    el('span', { class: 'notif-panel__hint', text: items.length ? `${faDigits(items.length)} مورد` : '' })));
   if (!items.length) {
-    panel.append(el('div', { class: 'notif-item' },
-      el('span', { class: 'notif-item__icon', text: '✨' }),
-      el('div', {}, el('div', { class: 'notif-item__title', text: 'همه‌چیز مرتب است!' }),
-        el('div', { class: 'notif-item__sub', text: 'هیچ مهلت فوری نداریم' }))));
+    panel.append(el('div', { class: 'notif-empty' },
+      el('span', { class: 'notif-empty__icon' }, icon('check')),
+      el('p', { class: 'notif-empty__title', text: 'همه‌چیز مرتب است!' }),
+      el('p', { class: 'notif-empty__hint', text: 'مهلت فوری یا اعلانِ سنجاق‌شده‌ای نداریم.' })));
   } else {
     for (const it of items) {
       panel.append(el('button', {
-        class: 'notif-item', type: 'button',
+        class: `notif-item notif-item--${it.kind}`,
+        type: 'button',
         onclick: () => { toggleNotif(false); it.action(); },
       },
-      el('span', { class: 'notif-item__icon', text: it.icon }),
-      el('div', {}, el('div', { class: 'notif-item__title', text: it.title }),
-        el('div', { class: 'notif-item__sub', text: it.sub }))));
+      el('span', { class: 'notif-item__icon' }, icon(it.iconName)),
+      el('span', { class: 'notif-item__text' },
+        el('span', { class: 'notif-item__title', text: it.title }),
+        el('span', { class: 'notif-item__sub', text: it.sub }))));
     }
   }
   badge.textContent = faDigits(fresh);
@@ -1222,6 +1367,7 @@ function switchTab(name, opts = {}) {
     const on = btn.dataset.tab === name;
     btn.classList.toggle('std-tab--active', on);
     btn.setAttribute('aria-selected', String(on));
+    btn.tabIndex = on ? 0 : -1; // tabindex سرگردان: فقط سربرگِ فعال در ترتیبِ Tab می‌آید
   }
   for (const panel of document.querySelectorAll('.panel')) {
     const on = panel.dataset.panel === name;
@@ -1241,8 +1387,26 @@ function switchTab(name, opts = {}) {
 function setupTabs() {
   syncHeaderHeight();
   window.addEventListener('resize', syncHeaderHeight);
-  for (const btn of document.querySelectorAll('.std-tab')) {
+  const tabs = [...document.querySelectorAll('.std-tab')];
+  for (const btn of tabs) {
     btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+    // صفحه‌کلید: فلشِ چپ/راست بین سربرگ‌ها (الگوی استاندارد tablist)؛ در RTL
+    // فلشِ چپ می‌رود به سربرگِ بعدی
+    btn.addEventListener('keydown', (e) => {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      const dir = e.key === 'ArrowLeft' ? 1 : -1;
+      const next = tabs[(tabs.indexOf(btn) + dir + tabs.length) % tabs.length];
+      next.focus();
+      switchTab(next.dataset.tab, { scroll: false });
+      e.preventDefault();
+    });
+  }
+  // وقتی نوار تب زیر هدر می‌چسبد، سایه می‌گیرد تا از محتوا جدا دیده شود
+  const sentinel = $('#tabsSentinel');
+  if (sentinel && 'IntersectionObserver' in window) {
+    new IntersectionObserver(([entry]) => {
+      $('#stdTabs').classList.toggle('is-stuck', !entry.isIntersecting && entry.boundingClientRect.top < 0);
+    }).observe(sentinel);
   }
   // باز شدن مستقیم تب از لینک (#handouts و مانند آن — قابل اشتراک در تلگرام)
   window.addEventListener('hashchange', () => {
@@ -1268,39 +1432,45 @@ function setupFab() {
   window.addEventListener('scroll', onScroll, { passive: true });
   fab.addEventListener('click', () => {
     if (activeTab !== 'schedule') switchTab('schedule', { scroll: false });
-    if (ttWeek !== focusWeekOffset()) { ttWeek = focusWeekOffset(); renderTimetable(); }
+    if (ttWeek !== focusWeekOffset()) { ttWeek = focusWeekOffset(); renderWeek(); }
     scrollToToday();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 }
 
 // ---------- راه‌اندازی ----------
+// بنرِ وضعیتِ اتصال برای شبکه‌ی ضعیف. پیامِ «شبکه کند است» فقط وقتی پدیدار
+// می‌شود که پاسخ بیش از ۲٫۵ ثانیه طول کشیده باشد (در شبکه‌ی معمولی هیچ بنری
+// دیده نمی‌شود)؛ و بنرِ خطا هرگز با پیامِ «در حال تلاش» بازنویسی نمی‌شود.
+const CONN_SLOW_AFTER_MS = 2500;
+let connBannerTimer = 0;
+
 function setConnState(mode) {
-  // mode: 'ok' | 'loading' | 'error' — بنر کوچک وضعیت اتصال برای شبکه ضعیف
-  let banner = document.getElementById('connBanner');
-  if (mode === 'ok') { if (banner) banner.remove(); return; }
-  if (!banner) {
-    banner = el('div', { id: 'connBanner', role: 'status' });
-    banner.style.cssText = 'position:fixed;inset-inline:0;bottom:0;z-index:60;text-align:center;'
-      + 'padding:10px 16px;font-size:14px;font-weight:600;color:#fff;background:#8a6d3b;'
-      + 'box-shadow:0 -2px 12px rgba(0,0,0,.15);';
-    document.body.append(banner);
-  }
-  if (mode === 'loading') {
-    banner.textContent = '🌐 شبکه کند است… در حال تلاش برای دریافت اطلاعات';
-    banner.style.background = '#8a6d3b';
-  } else {
+  // mode: 'ok' | 'loading' | 'error'
+  clearTimeout(connBannerTimer);
+  const existing = document.getElementById('connBanner');
+  if (mode === 'ok') { existing?.remove(); return; }
+
+  if (mode === 'error') {
+    const banner = existing ?? el('div', { id: 'connBanner', class: 'conn-banner conn-banner--error', role: 'status' });
+    banner.className = 'conn-banner conn-banner--error';
     banner.textContent = '';
-    banner.style.background = '#a94442';
-    banner.append('⚠️ اتصال قطع شد — دوباره تلاش می‌کنیم…');
+    banner.append(icon('alert'), 'اتصال قطع شد — دوباره تلاش می‌کنیم…');
     // لینک نجات: نسخه‌ی آینه روی GitHub Pages (شبکه‌ی غیر-کلادفلر، از ایران باز است)
-    const alt = el('a', {
+    banner.append(el('a', {
       href: 'https://gigashalgham.github.io/school-s-stuff/',
       text: 'نسخه‌ی جایگزین را باز کنید',
-    });
-    alt.style.cssText = 'color:#fff;text-decoration:underline;margin-inline-start:8px;';
-    banner.append(alt);
+    }));
+    if (!banner.isConnected) document.body.append(banner);
+    return;
   }
+
+  // loading: بنرِ خطای موجود را نگه می‌داریم؛ بنرِ تازه هم با تأخیر ساخته می‌شود
+  if (existing) return;
+  connBannerTimer = setTimeout(() => {
+    document.body.append(el('div', { id: 'connBanner', class: 'conn-banner', role: 'status' },
+      icon('cloud'), 'شبکه کند است… در حال تلاش برای دریافت اطلاعات'));
+  }, CONN_SLOW_AFTER_MS);
 }
 
 // رفرش دوره‌ی دیتا — نشان «دیده‌نشده» و مطالب تازه بدون رفرش صفحه می‌آیند
@@ -1380,7 +1550,6 @@ async function loadAll() {
       // مسیر زنده بسته بود — فقط یادداشت کوچک «نسخه‌ی آفلاین» می‌ماند
       if (!document.querySelector('.mirror-note')) {
         const note = el('div', { class: 'mirror-note' });
-        note.style.cssText = 'text-align:center;font-size:12px;color:#6b7280;padding:6px 12px;';
         note.textContent = `📦 نسخه‌ی آینه‌ی ${faDigits(String(window.__MIRROR_DATE__ || ''))} — برای اطلاعات لحظه‌ای VPN لازم است`;
         document.querySelector('footer')?.prepend(note);
       }
@@ -1395,18 +1564,12 @@ $('#detailClose').addEventListener('click', () => closeOverlay($('#detailOverlay
 $('#detailOverlay').addEventListener('mousedown', (e) => {
   if (e.target === $('#detailOverlay')) closeOverlay($('#detailOverlay'));
 });
-$('#weekToday').addEventListener('click', () => { ttWeek = focusWeekOffset(); renderTimetable(); scrollToToday(); });
+$('#weekToday').addEventListener('click', () => { ttWeek = focusWeekOffset(); renderWeek(); scrollToToday(); });
 $('#weekPrev').addEventListener('click', () => shiftWeek(-1));
 $('#weekNext').addEventListener('click', () => shiftWeek(1));
 $('#notifBtn').addEventListener('click', () => toggleNotif());
-$('#ttPrev').addEventListener('click', () => {
-  const scroll = $('#ttScroll');
-  scroll.scrollBy({ left: scroll.clientWidth * 0.8, behavior: 'smooth' });
-});
-$('#ttNext').addEventListener('click', () => {
-  const scroll = $('#ttScroll');
-  scroll.scrollBy({ left: -scroll.clientWidth * 0.8, behavior: 'smooth' });
-});
+// فلش‌های چپ/راستِ کنار جدول حذف شدند (روی کارت‌ها می‌افتادند) — پیمایش با کشیدن
+// و با نوار روزها انجام می‌شود
 $('#ttScroll').addEventListener('scroll', () => {
   updateScrollState();
   updateDots();
@@ -1424,9 +1587,12 @@ document.addEventListener('click', (e) => {
 });
 $('#showExpiredBtn').addEventListener('click', () => {
   const grid = $('#expiredGrid');
+  const btn = $('#showExpiredBtn');
   const show = grid.style.display === 'none';
   grid.style.display = show ? '' : 'none';
-  $('#showExpiredBtn').textContent = show ? 'پنهان کردن آرشیو' : 'آرشیو موارد گذشته';
+  btn.classList.toggle('archive-toggle--open', show);
+  btn.setAttribute('aria-expanded', String(show));
+  $('#showExpiredLabel').textContent = show ? 'پنهان کردن آرشیو' : 'آرشیو موارد گذشته';
 });
 
 // روی آینه‌ی استاتیک، دکمه‌ی ادمین به پنل ادمینِ خودِ آینه می‌رود
