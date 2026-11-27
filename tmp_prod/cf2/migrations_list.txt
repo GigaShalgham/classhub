@@ -1,0 +1,13 @@
+
+ ⛅️ wrangler 4.164.0 (update available 4.168.0)
+───────────────────────────────────────────────
+Resource location: remote 
+
+Migrations to be applied:
+┌───────────────────┐
+│ Name              │
+├───────────────────┤
+│ 0009_hw_dates.sql │
+├───────────────────┤
+│ 0010_api_keys.sql │
+└───────────────────┘

@@ -1,0 +1,114 @@
+[
+  {
+    "results": [
+      {
+        "name": "idx_api_keys_hash"
+      },
+      {
+        "name": "idx_homework_date"
+      },
+      {
+        "name": "idx_homework_lesson"
+      },
+      {
+        "name": "idx_homework_lesson_date_unique"
+      },
+      {
+        "name": "idx_lessons_day"
+      },
+      {
+        "name": "idx_sessions_expiry"
+      },
+      {
+        "name": "idx_tasks_due"
+      },
+      {
+        "name": "sqlite_autoindex_admins_1"
+      },
+      {
+        "name": "sqlite_autoindex_api_keys_1"
+      },
+      {
+        "name": "sqlite_autoindex_bells_1"
+      },
+      {
+        "name": "sqlite_autoindex_d1_migrations_1"
+      },
+      {
+        "name": "sqlite_autoindex_lessons_1"
+      },
+      {
+        "name": "sqlite_autoindex_sessions_1"
+      },
+      {
+        "name": "sqlite_autoindex_settings_1"
+      },
+      {
+        "name": "sqlite_autoindex_subjects_1"
+      },
+      {
+        "name": "_cf_KV"
+      },
+      {
+        "name": "admins"
+      },
+      {
+        "name": "announcements"
+      },
+      {
+        "name": "api_keys"
+      },
+      {
+        "name": "attachments"
+      },
+      {
+        "name": "bells"
+      },
+      {
+        "name": "d1_migrations"
+      },
+      {
+        "name": "handouts"
+      },
+      {
+        "name": "homework"
+      },
+      {
+        "name": "lessons"
+      },
+      {
+        "name": "sessions"
+      },
+      {
+        "name": "settings"
+      },
+      {
+        "name": "sqlite_sequence"
+      },
+      {
+        "name": "subjects"
+      },
+      {
+        "name": "tasks"
+      }
+    ],
+    "success": true,
+    "meta": {
+      "served_by": "v3-prod",
+      "served_by_region": "APAC",
+      "served_by_colo": "HKG",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 0.1882
+      },
+      "duration": 0.1882,
+      "changes": 0,
+      "last_row_id": 0,
+      "changed_db": false,
+      "size_after": 139264,
+      "rows_read": 60,
+      "rows_written": 0,
+      "total_attempts": 1
+    }
+  }
+]

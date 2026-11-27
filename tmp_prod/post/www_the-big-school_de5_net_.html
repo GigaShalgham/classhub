@@ -1,0 +1,4087 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#FCFAFD">
+  <meta name="description" content="درس من — برنامه هفتگی، تکالیف، مهلت‌ها و اطلاعیه‌های کلاس">
+  <title>درس من | برنامه هفتگی کلاس</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
+  <link rel="preload" href="/fonts/Vazirmatn-Regular.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/Vazirmatn-SemiBold.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/Estedad-ExtraBold.woff2" as="font" type="font/woff2" crossorigin>
+  <style>
+/* ================================================================
+   کلاس‌هاب — Pastel Slate Design System v3
+   فونت‌ها: وزیرمتن (۷ وزن) + استعداد (تیترها)
+   پالت: آبی فولادی #D9E4F2 · نیلی #D6DFF5 · سبزآبی #D8EEE9 ·
+         کرم #F5EEDC · پس‌زمینه #FAFBFD · متن #2C3242
+   ================================================================ */
+
+/* ---------- فونت‌ها (زیرمجموعه‌شده برای اینترنت ضعیف) ---------- */
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('/fonts/Vazirmatn-Regular.woff2') format('woff2');
+  font-weight: 400 500; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('/fonts/Vazirmatn-SemiBold.woff2') format('woff2');
+  font-weight: 600 700; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('/fonts/Vazirmatn-ExtraBold.woff2') format('woff2');
+  font-weight: 800 900; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Estedad';
+  src: url('/fonts/Estedad-ExtraBold.woff2') format('woff2');
+  font-weight: 700 800; font-style: normal; font-display: swap;
+}
+
+/* ---------- توکن‌ها ---------- */
+:root {
+  /* پالت پاستلی خنثی‌تر (steel blue / indigo / teal) */
+  --lavender: #D9E4F2;   /* آبی فولادی (سابق: بنفش) */
+  --pink: #F2DEDE;       /* رز خنثی (سابق: صورتی پررنگ) */
+  --mint: #D8EEE9;       /* سبزآبی */
+  --cream: #F5EEDC;      /* کرم */
+  --blue: #D6DFF5;       /* نیلی */
+  --green: #E2EFD8;      /* سبز زیتونی روشن */
+  --bg: #FAFBFD;
+  --text: #2C3242;
+  --sub: #7C8496;
+  --white: #FFFFFF;
+
+  --lavender-deep: #4C6E9E;  /* آبی فولادی عمیق */
+  --pink-deep: #B06A6A;      /* رز عمیق */
+  --mint-deep: #3E8A7C;      /* تیال عمیق */
+  --cream-deep: #A97F36;     /* خردلی عمیق */
+  --blue-deep: #5566B0;      /* نیلی عمیق */
+  --green-deep: #5F8A3C;     /* سبز عمیق */
+
+  --surface: #FFFFFF;
+  --surface-2: #F3F5F9;
+  --surface-3: #EBEEF4;
+  --border: #E4E8F0;
+  --border-strong: #CBD3E1;
+
+  /* تایپوگرافی سیال */
+  --font-body: 'Vazirmatn', 'Segoe UI', Tahoma, sans-serif;
+  --font-display: 'Estedad', 'Vazirmatn', 'Segoe UI', sans-serif;
+
+  --fs-xs: clamp(10.5px, 0.5vw + 9px, 12px);
+  --fs-sm: clamp(12px, 0.4vw + 10.5px, 13.5px);
+  --fs-base: clamp(13.5px, 0.4vw + 12px, 15.5px);
+  --fs-md: clamp(15px, 0.6vw + 12.5px, 17px);
+  --fs-lg: clamp(18px, 1vw + 14px, 22px);
+  --fs-xl: clamp(22px, 1.8vw + 16px, 30px);
+  --fs-hero: clamp(28px, 3.2vw + 17px, 42px);
+
+  /* گردی — کمی مرددتر */
+  --radius-xs: 7px;
+  --radius-sm: 10px;
+  --radius-md: 13px;
+  --radius-lg: 17px;
+  --radius-xl: 22px;
+
+  /* سایه‌های خاکستری-آبی */
+  --shadow-xs: 0 1px 2px rgba(52, 66, 92, 0.06);
+  --shadow-soft: 0 1px 2px rgba(52, 66, 92, 0.05), 0 8px 24px -6px rgba(52, 66, 92, 0.11);
+  --shadow-hover: 0 2px 4px rgba(52, 66, 92, 0.07), 0 16px 40px -8px rgba(52, 66, 92, 0.17);
+  --shadow-pop: 0 4px 8px rgba(52, 66, 92, 0.09), 0 24px 64px -12px rgba(52, 66, 92, 0.24);
+
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --ease-out: cubic-bezier(0.22, 0.9, 0.36, 1);
+}
+
+/* ---------- پایه ---------- */
+* { box-sizing: border-box; }
+
+/* اتریبیوت hidden باید همیشه بر display کلاس‌ها غلبه کند
+   (بدون این، overlay های بسته با display:flex کل صفحه را می‌پوشانند و کلیک را می‌بلعند) */
+[hidden] { display: none !important; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  direction: rtl;
+  font-size: var(--fs-base);
+  line-height: 1.8;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+/* پس‌زمینه تزئینی: هاله‌های پاستلی خنثی + نقطه‌های ریز */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background-image:
+    radial-gradient(circle at 12% 6%, rgba(217, 228, 242, 0.65) 0, transparent 30%),
+    radial-gradient(circle at 88% 2%, rgba(214, 223, 245, 0.55) 0, transparent 26%),
+    radial-gradient(circle at 96% 90%, rgba(216, 238, 233, 0.55) 0, transparent 28%),
+    radial-gradient(circle at 3% 94%, rgba(245, 238, 220, 0.5) 0, transparent 26%);
+  pointer-events: none;
+}
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image: radial-gradient(rgba(76, 110, 158, 0.07) 1.2px, transparent 1.2px);
+  background-size: 26px 26px;
+  pointer-events: none;
+  mask-image: linear-gradient(180deg, rgba(0,0,0,.5), rgba(0,0,0,.15) 40%, rgba(0,0,0,.4));
+  -webkit-mask-image: linear-gradient(180deg, rgba(0,0,0,.5), rgba(0,0,0,.15) 40%, rgba(0,0,0,.4));
+}
+
+::selection { background: var(--lavender); color: var(--text); }
+
+img { max-width: 100%; height: auto; }
+
+a { color: var(--lavender-deep); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+button { font-family: inherit; }
+
+h1, h2, h3, h4 { line-height: 1.5; }
+
+/* ---------- اسکرول‌بار ---------- */
+::-webkit-scrollbar { width: 10px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 8px;
+  border: 2px solid var(--bg);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--lavender-deep); }
+
+:focus-visible {
+  outline: 3px solid rgba(76, 110, 158, 0.5);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ================================================================
+   هدر
+   ================================================================ */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  background: rgba(252, 250, 253, 0.78);
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  border-bottom: 1px solid var(--border);
+}
+
+.site-header__inner {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 10px clamp(12px, 3vw, 32px);
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 1.5vw, 16px);
+}
+
+.brand { display: flex; align-items: center; gap: 11px; min-width: 0; }
+
+.brand__logo {
+  width: clamp(42px, 3vw, 50px);
+  height: clamp(42px, 3vw, 50px);
+  border-radius: 15px;
+  background: linear-gradient(135deg, var(--lavender) 0%, var(--pink) 100%);
+  display: grid;
+  place-items: center;
+  font-size: clamp(20px, 1.6vw, 25px);
+  box-shadow: var(--shadow-soft);
+  flex-shrink: 0;
+  position: relative;
+  transition: transform 0.3s var(--ease-spring);
+}
+.brand__logo:hover { transform: rotate(-8deg) scale(1.06); }
+
+.brand__logo::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 18px;
+  border: 2px dashed rgba(76, 110, 158, 0.4);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.brand__logo:hover::after { opacity: 1; }
+
+.brand__name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(16px, 1.3vw, 20px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.4;
+}
+
+.brand__date {
+  font-size: var(--fs-xs);
+  color: var(--sub);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.brand__clock {
+  font-variant-numeric: tabular-nums;
+  background: var(--surface-2);
+  border-radius: 999px;
+  padding: 1px 8px;
+  font-weight: 600;
+  color: var(--lavender-deep);
+}
+
+.header-spacer { flex: 1; }
+
+.welcome-bubble {
+  display: none;
+  background: linear-gradient(135deg, var(--cream), #FBF6E9);
+  border: 1px solid #E5D9B8;
+  color: #77591F;
+  border-radius: 999px;
+  padding: 7px 18px;
+  font-size: var(--fs-sm);
+  max-width: 340px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: var(--shadow-xs);
+}
+.welcome-bubble::before {
+  content: '☕';
+  margin-inline-end: 6px;
+}
+
+@media (min-width: 1000px) { .welcome-bubble { display: block; } }
+
+.header-actions { display: flex; align-items: center; gap: 9px; position: relative; }
+
+.icon-btn {
+  position: relative;
+  width: clamp(40px, 3vw, 46px);
+  height: clamp(40px, 3vw, 46px);
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  font-size: clamp(17px, 1.2vw, 20px);
+  color: var(--text);
+  transition: transform 0.25s var(--ease-spring), box-shadow 0.25s, background 0.25s, border-color 0.25s;
+  flex-shrink: 0;
+}
+.icon-btn:hover {
+  background: var(--surface-2);
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-soft);
+  transform: translateY(-2px);
+}
+.icon-btn:active { transform: scale(0.92); }
+
+.icon-btn__badge {
+  position: absolute;
+  top: -5px;
+  inset-inline-start: -5px;
+  background: linear-gradient(135deg, var(--pink-deep), #C08080);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 800;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 5px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--bg);
+  animation: badge-pop 0.45s var(--ease-spring);
+}
+
+/* ================================================================
+   چیدمان کلی
+   ================================================================ */
+.container {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: clamp(14px, 2.5vw, 28px) clamp(12px, 3vw, 32px) 90px;
+}
+
+/* ---------- هیرو ---------- */
+.page-hero {
+  position: relative;
+  margin: clamp(6px, 1.5vw, 18px) 0 clamp(18px, 2.5vw, 30px);
+  background: linear-gradient(120deg, var(--lavender) 0%, var(--blue) 45%, var(--cream) 100%);
+  border-radius: var(--radius-xl);
+  padding: clamp(22px, 3.5vw, 42px) clamp(18px, 4vw, 48px);
+  overflow: hidden;
+  box-shadow: var(--shadow-soft);
+}
+
+.page-hero::before,
+.page-hero::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(2px);
+  opacity: 0.55;
+  pointer-events: none;
+}
+.page-hero::before {
+  width: clamp(120px, 18vw, 240px);
+  height: clamp(120px, 18vw, 240px);
+  background: radial-gradient(circle, rgba(255,255,255,0.8), transparent 70%);
+  top: -40%;
+  inset-inline-start: 6%;
+  animation: float-slow 7s ease-in-out infinite;
+}
+.page-hero::after {
+  width: clamp(80px, 12vw, 160px);
+  height: clamp(80px, 12vw, 160px);
+  background: radial-gradient(circle, rgba(255,255,255,0.65), transparent 70%);
+  bottom: -30%;
+  inset-inline-end: 10%;
+  animation: float-slow 9s ease-in-out infinite reverse;
+}
+
+.page-hero__title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-hero);
+  margin: 0 0 6px;
+  line-height: 1.45;
+  color: #333B52;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.5);
+  position: relative;
+  z-index: 1;
+}
+
+.page-hero__sub {
+  color: #5A6379;
+  font-size: var(--fs-md);
+  margin: 0;
+  position: relative;
+  z-index: 1;
+}
+
+/* چیپ‌های آمار هیرو */
+.hero-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(8px, 1.2vw, 14px);
+  margin-top: clamp(14px, 2vw, 22px);
+  position: relative;
+  z-index: 1;
+}
+
+.stat-chip {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 999px;
+  padding: 7px 18px;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: #3E4A6B;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  box-shadow: var(--shadow-xs);
+  animation: fade-up 0.5s var(--ease-out) both;
+}
+.stat-chip:nth-child(2) { animation-delay: 0.07s; }
+.stat-chip:nth-child(3) { animation-delay: 0.14s; }
+.stat-chip b {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.25em;
+  color: var(--lavender-deep);
+}
+
+/* ---------- بخش‌ها ---------- */
+.section { margin-top: clamp(30px, 4vw, 52px); }
+
+.section__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: clamp(14px, 2vw, 20px);
+  flex-wrap: wrap;
+}
+
+.section__title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-xl);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #333B52;
+}
+
+.section__title .emoji {
+  font-size: clamp(19px, 1.5vw, 24px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  width: clamp(38px, 3vw, 46px);
+  height: clamp(38px, 3vw, 46px);
+  border-radius: 14px;
+  display: inline-grid;
+  place-items: center;
+  box-shadow: var(--shadow-xs);
+  flex-shrink: 0;
+}
+
+.section__note { color: var(--sub); font-size: var(--fs-xs); margin-inline-start: auto; }
+
+/* ================================================================
+   جدول هفتگی
+   ================================================================ */
+.tt-wrap { position: relative; }
+
+/* لبه‌های محو برای نشان‌دادن امکان اسکرول */
+.tt-scroll {
+  overflow-x: auto;
+  padding: 6px 2px 14px;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+}
+
+.tt-wrap--scrollable .tt-scroll {
+  mask-image: linear-gradient(to left, transparent 0, #000 26px, #000 calc(100% - 26px), transparent 100%);
+  -webkit-mask-image: linear-gradient(to left, transparent 0, #000 26px, #000 calc(100% - 26px), transparent 100%);
+}
+.tt-wrap--at-start .tt-scroll {
+  mask-image: linear-gradient(to left, #000 0, #000 calc(100% - 26px), transparent 100%);
+  -webkit-mask-image: linear-gradient(to left, #000 0, #000 calc(100% - 26px), transparent 100%);
+}
+.tt-wrap--at-end .tt-scroll {
+  mask-image: linear-gradient(to left, transparent 0, #000 26px, #000 100%);
+  -webkit-mask-image: linear-gradient(to left, transparent 0, #000 26px, #000 100%);
+}
+
+/* دسکتاپ بزرگ: هر ۷ روز کنار هم — ۱۴ ستونِ دو هفته در دو ردیف می‌نشینند
+   (ردیف اول این هفته، ردیف دوم هفته‌ی بعد) */
+.tt-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: clamp(10px, 1.2vw, 16px);
+  row-gap: clamp(22px, 2.4vw, 34px);
+  min-width: 100%;
+}
+
+/* زیر ۱۳۶۰px: ستون‌های ثابت + اسکرول افقی */
+@media (max-width: 1359px) {
+  .tt-grid { grid-template-columns: repeat(7, 252px); }
+}
+@media (max-width: 480px) {
+  .tt-grid { grid-template-columns: repeat(7, min(86vw, 320px)); }
+}
+
+/* فلش‌های ناوبری */
+.tt-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-58%);
+  z-index: 20;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid var(--border-strong);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  box-shadow: var(--shadow-hover);
+  cursor: pointer;
+  font-size: 20px;
+  color: var(--lavender-deep);
+  display: grid;
+  place-items: center;
+  transition: transform 0.25s var(--ease-spring), opacity 0.25s, background 0.25s;
+  opacity: 0;
+  pointer-events: none;
+}
+.tt-arrow--prev { inset-inline-end: 2px; }
+.tt-arrow--next { inset-inline-start: 2px; }
+
+.tt-wrap--scrollable:not(.tt-wrap--at-start) .tt-arrow--prev,
+.tt-wrap--scrollable:not(.tt-wrap--at-end) .tt-arrow--next {
+  opacity: 1;
+  pointer-events: auto;
+}
+.tt-arrow:hover { background: var(--lavender); transform: translateY(-58%) scale(1.1); }
+.tt-arrow:active { transform: translateY(-58%) scale(0.94); }
+
+/* نقطه‌های راهنمای روز (موبایل/تبلت) */
+.tt-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+.tt-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  border: none;
+  padding: 0;
+  background: var(--border-strong);
+  cursor: pointer;
+  transition: transform 0.25s var(--ease-spring), background 0.25s, width 0.25s;
+}
+.tt-dot--today { background: var(--lavender-deep); }
+.tt-dot--active {
+  width: 26px;
+  background: linear-gradient(90deg, var(--lavender-deep), var(--blue-deep));
+}
+.tt-dot:hover { transform: scale(1.35); }
+
+@media (min-width: 1360px) {
+  .tt-dots { display: none; }
+}
+
+/* ---------- ستون روز ---------- */
+.day-col {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: clamp(12px, 1vw, 16px) clamp(10px, 0.9vw, 14px) clamp(14px, 1.2vw, 18px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 0.9vw, 11px);
+  scroll-snap-align: start;
+  min-height: clamp(280px, 30vw, 380px);
+  transition: box-shadow 0.3s, border-color 0.3s, transform 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+
+/* روبان بالای ستون امروز */
+.day-col--today {
+  border-color: rgba(138, 111, 184, 0.45);
+  box-shadow: 0 0 0 3px rgba(217, 228, 242, 0.65), var(--shadow-soft);
+  background:
+    linear-gradient(180deg, rgba(217, 228, 242, 0.5), rgba(255, 255, 255, 0) 150px),
+    var(--surface);
+}
+.day-col--today::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  inset-inline: 0;
+  height: 5px;
+  background: linear-gradient(90deg, var(--lavender-deep), var(--blue-deep), var(--cream-deep));
+  border-radius: 5px 5px 0 0;
+}
+
+.day-col__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 2px 4px 10px;
+  border-bottom: 2px dashed var(--border);
+  flex-wrap: wrap;
+}
+
+.day-col__name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(15px, 1.1vw, 18px);
+}
+
+.day-col--today .day-col__name { color: var(--lavender-deep); }
+
+.day-col__date {
+  font-size: var(--fs-xs);
+  color: var(--sub);
+  white-space: nowrap;
+}
+
+.day-col__today-tag {
+  background: linear-gradient(135deg, var(--lavender), var(--blue));
+  color: #3E4A6B;
+  font-size: 10.5px;
+  font-weight: 800;
+  padding: 3px 11px;
+  border-radius: 999px;
+  box-shadow: var(--shadow-xs);
+}
+
+/* برچسب «هفته‌ی بعد / قبل» روی ستون‌های هفته‌های غیرجاری */
+.day-col__week-tag {
+  background: var(--surface-3);
+  color: var(--sub);
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* نزدیک‌ترین روزِ درسیِ بعدی (عصرِ بعدازمدرسه / آخر هفته) */
+.day-col--focus { border-color: rgba(138, 111, 184, 0.5); }
+.day-col__focus-tag {
+  background: var(--lavender);
+  color: var(--lavender-deep);
+  font-size: 10.5px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* هفته‌های بعدی کمی رنگِ آبی دارند و هفته‌های گذشته کم‌رنگ‌اند */
+.day-col--future {
+  background:
+    linear-gradient(180deg, rgba(217, 228, 242, 0.3), rgba(255, 255, 255, 0) 170px),
+    var(--surface);
+}
+.day-col--past { background: var(--surface-2); border-style: dashed; }
+
+/* برچسب بازه‌ی دو هفته در نوار ناوبری */
+.tt-range {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--lavender-deep);
+  white-space: nowrap;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--lavender);
+}
+
+/* ---------- کارت درس ---------- */
+.lesson-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: clamp(9px, 0.8vw, 12px) clamp(10px, 0.9vw, 13px);
+  cursor: pointer;
+  text-align: right;
+  background: var(--surface);
+  position: relative;
+  transition: transform 0.25s var(--ease-out), box-shadow 0.25s, border-color 0.25s;
+  font-family: inherit;
+  width: 100%;
+  display: block;
+  color: var(--text);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.lesson-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-hover);
+  border-color: var(--border-strong);
+  z-index: 2;
+}
+.lesson-card:active { transform: scale(0.97); }
+.lesson-card:focus-visible { outline: 3px solid var(--lavender); outline-offset: 2px; }
+
+.lesson-card__top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 5px;
+  /* زمان زنگ (نقطه‌شکن) حق دارد جا بگیرد؛ نام درس ellipsis می‌شود.
+     بدون این، در ستون‌های فشرده (لپ‌تاپ ۱۳۶۶+) زمان قیچی می‌شد. */
+  flex-wrap: wrap;
+}
+
+.lesson-card__emoji {
+  width: 30px;
+  height: 30px;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.72);
+  display: grid;
+  place-items: center;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.lesson-card__period {
+  font-size: 11px;
+  font-weight: 800;
+  min-width: 27px;
+  height: 27px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+
+.lesson-card__subject {
+  font-weight: 700;
+  font-size: clamp(13.5px, 0.8vw, 14.5px);
+  flex: 1 1 9em; /* نه basis صفر: اول فشرده می‌شود تا ۹em، بعد به خط بعد می‌رود */
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lesson-card__time {
+  font-size: var(--fs-xs);
+  color: var(--sub);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  /* زمان زنگ هرگز قیچی یا «…» نمی‌شود؛ در ستون فشرده به خط خودش می‌رود. */
+  flex-shrink: 0;
+}
+
+.lesson-card__hw {
+  font-size: var(--fs-xs);
+  color: var(--sub);
+  background: var(--surface-2);
+  border-radius: 10px;
+  padding: 5px 9px;
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+}
+.lesson-card__hw span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  /* عنوان تکلیف بلند: تا ۲ خط کامل جا می‌شود، بعد از آن ellipsis */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  white-space: normal;
+  overflow: hidden;
+  min-width: 0;
+}
+.lesson-card__hw--none {
+  color: #A9C7B4;
+  background: transparent;
+  padding-inline-start: 2px;
+}
+
+.lesson-card__badge {
+  position: absolute;
+  top: -8px;
+  inset-inline-end: 10px;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--pink-deep), #C08080);
+  color: #fff;
+  box-shadow: var(--shadow-xs);
+  animation: badge-pop 0.4s var(--ease-spring);
+}
+
+/* هویت رنگی درس‌ها */
+.sub-lavender { background: var(--lavender); }
+.sub-lavender .lesson-card__period { background: var(--lavender-deep); }
+.sub-lavender:hover { background: #E8EFF8; }
+
+.sub-blue { background: var(--blue); }
+.sub-blue .lesson-card__period { background: var(--blue-deep); }
+.sub-blue:hover { background: #E8F0FB; }
+
+.sub-mint { background: var(--mint); }
+.sub-mint .lesson-card__period { background: var(--mint-deep); }
+.sub-mint:hover { background: #E8F7EE; }
+
+.sub-pink { background: var(--pink); }
+.sub-pink .lesson-card__period { background: var(--pink-deep); }
+.sub-pink:hover { background: #F7E9E9; }
+
+.sub-cream { background: var(--cream); }
+.sub-cream .lesson-card__period { background: var(--cream-deep); }
+.sub-cream:hover { background: #FFF5E3; }
+
+.sub-green { background: var(--green); }
+.sub-green .lesson-card__period { background: var(--green-deep); }
+.sub-green:hover { background: #EDF6E3; }
+
+/* حالت خالی روز */
+.day-empty {
+  margin: auto 0;
+  text-align: center;
+  color: var(--sub);
+  padding: 26px 8px;
+  font-size: var(--fs-sm);
+}
+.day-empty .face { font-size: 31px; display: block; margin-bottom: 8px; opacity: 0.85; }
+
+/* ---------- اسکلتون بارگذاری ---------- */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-2);
+  border-radius: var(--radius-md);
+}
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent);
+  animation: shimmer 1.4s infinite;
+}
+
+/* ================================================================
+   مهلت‌ها
+   ================================================================ */
+.tasks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(clamp(250px, 26vw, 300px), 1fr));
+  gap: clamp(10px, 1.4vw, 16px);
+}
+
+.task-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: clamp(14px, 1.4vw, 18px) clamp(15px, 1.5vw, 19px);
+  cursor: pointer;
+  text-align: right;
+  transition: transform 0.25s var(--ease-out), box-shadow 0.25s, border-color 0.25s;
+  font-family: inherit;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+  color: var(--text);
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+.task-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  inset-inline: 0;
+  height: 4px;
+  background: var(--border);
+}
+.task-card--high::before { background: linear-gradient(90deg, var(--pink-deep), var(--cream-deep)); }
+.task-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); }
+.task-card:focus-visible { outline: 3px solid var(--lavender); outline-offset: 2px; }
+
+.task-card__kind {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  padding: 3px 12px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+
+.task-card__title {
+  font-weight: 800;
+  font-size: clamp(14.5px, 1vw, 16px);
+  margin: 0;
+  line-height: 1.6;
+}
+
+.task-card__subject { color: var(--sub); font-size: var(--fs-sm); }
+
+.task-card__footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
+.countdown-chip {
+  font-size: var(--fs-xs);
+  font-weight: 800;
+  padding: 4px 13px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.cd-today { background: #FBE3E3; color: #B84A4A; animation: pulse-soft 2s infinite; }
+.cd-tomorrow { background: var(--cream); color: var(--cream-deep); }
+.cd-soon { background: var(--cream); color: var(--cream-deep); }
+.cd-future { background: var(--mint); color: var(--mint-deep); }
+.cd-passed { background: var(--surface-2); color: var(--sub); }
+
+.task-card__due { font-size: var(--fs-xs); color: var(--sub); }
+
+.priority-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.priority-high { background: #E58B8B; box-shadow: 0 0 0 3px rgba(229, 139, 139, 0.25); }
+.priority-normal { background: var(--cream-deep); box-shadow: 0 0 0 3px rgba(192, 138, 62, 0.18); }
+.priority-low { background: var(--mint-deep); box-shadow: 0 0 0 3px rgba(78, 158, 120, 0.18); }
+
+.attach-chip {
+  font-size: var(--fs-xs);
+  color: var(--sub);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--surface-2);
+  border-radius: 999px;
+  padding: 3px 10px;
+  white-space: nowrap;
+}
+
+/* ================================================================
+   اطلاعیه‌ها
+   ================================================================ */
+.ann-list { display: flex; flex-direction: column; gap: 11px; max-width: 900px; }
+
+/* ---------- چکیده تکالیف (زیر تقویم) ---------- */
+.digest-list { display: flex; flex-direction: column; gap: 8px; }
+.digest-row {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 10px 14px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 14px;
+  cursor: pointer; text-align: right; font-family: inherit;
+  transition: border-color 0.2s, transform 0.15s;
+}
+.digest-row:hover { border-color: var(--lavender-deep); }
+.digest-row:active { transform: scale(0.99); }
+.digest-row--high { border-inline-start: 3px solid var(--pink-deep); }
+/* ردیف تکلیفِ درس (نه مهلت): نوار آبی، تا از مهلت‌ها جدا دیده شود */
+.digest-row--hw { border-inline-start: 3px solid var(--lavender-deep); }
+.digest-row__dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.digest-row__icon { font-size: 17px; flex-shrink: 0; }
+.digest-row__title {
+  flex: 1; min-width: 0; font-weight: 700; font-size: var(--fs-sm);
+  color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.digest-row__label {
+  flex-shrink: 0; border-radius: 999px; padding: 3px 10px;
+  font-size: var(--fs-xs); font-weight: 700; white-space: nowrap;
+}
+.dl-today { background: #FBE0E0; color: var(--pink-deep); }
+.dl-tomorrow { background: var(--cream); color: var(--cream-deep); }
+.dl-soon { background: var(--lavender); color: var(--lavender-deep); }
+.dl-later { background: var(--surface-3); color: var(--sub); }
+.dl-past { background: var(--surface-3); color: var(--sub); }
+.digest-note {
+  align-self: center; color: var(--sub); font-size: var(--fs-xs);
+  padding: 2px 10px;
+}
+.digest-empty {
+  padding: 16px; text-align: center; color: var(--sub);
+  background: var(--surface); border: 1px dashed var(--border-strong); border-radius: 14px;
+  font-size: var(--fs-sm);
+}
+.digest-more {
+  align-self: center; border: none; background: none; cursor: pointer;
+  color: var(--lavender-deep); font-family: inherit; font-size: var(--fs-xs);
+  font-weight: 700; padding: 4px 10px;
+}
+
+/* ---------- تب‌های صفحه دانش‌آموز ---------- */
+.std-tabs {
+  position: sticky;
+  top: var(--header-h, 56px);
+  z-index: 50;
+  display: flex;
+  gap: 7px;
+  overflow-x: auto;
+  padding: 10px 2px 12px;
+  margin: 0 0 4px;
+  background: linear-gradient(180deg, rgba(250, 251, 253, 0.96), rgba(250, 251, 253, 0.88));
+  backdrop-filter: blur(12px) saturate(1.3);
+  -webkit-backdrop-filter: blur(12px) saturate(1.3);
+  border-bottom: 1px solid var(--border);
+  scrollbar-width: none;
+}
+.std-tabs::-webkit-scrollbar { display: none; }
+.std-tab {
+  flex: 0 0 auto;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--sub);
+  border-radius: 999px;
+  padding: 8px 15px;
+  font-family: inherit;
+  font-size: var(--fs-sm);
+  line-height: 1.4;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s;
+}
+.std-tab:hover { color: var(--text); border-color: var(--lavender); }
+.std-tab:active { transform: scale(0.97); }
+.std-tab { position: relative; }
+.std-tab__badge {
+  position: absolute; top: -7px; inset-inline-start: -7px;
+  min-width: 18px; height: 18px; padding: 0 5px;
+  border-radius: 999px; background: var(--pink-deep); color: #fff;
+  font-size: 11px; font-weight: 700; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 0 2px var(--bg);
+  animation: badge-pop 0.35s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+@keyframes badge-pop {
+  from { transform: scale(0); }
+  60% { transform: scale(1.2); }
+  to { transform: scale(1); }
+}
+.std-tab--active {
+  background: var(--lavender);
+  color: var(--lavender-deep);
+  border-color: var(--lavender);
+  font-weight: 700;
+}
+.panel[aria-hidden="true"] { display: none; }
+
+/* ---------- ناوبری هفته (ادمین) ---------- */
+.week-nav {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  margin: 2px 0 12px;
+}
+.week-nav__label {
+  font-weight: 800; font-size: var(--fs-sm); color: var(--lavender-deep);
+  background: var(--lavender); border-radius: 999px; padding: 4px 14px;
+}
+
+/* ---------- تب زنگ‌ها (ادمین) ---------- */
+.bells-days { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.bell-day { border: 1px solid var(--border); border-radius: 16px; padding: 14px; background: var(--surface); }
+.bell-day--off { opacity: 0.55; }
+.bell-day__head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.bell-day__name { font-weight: 800; font-size: var(--fs-sm); color: var(--text); }
+.bell-day__count { font-size: var(--fs-xs); color: var(--sub); }
+.bell-day__rows { display: flex; flex-direction: column; gap: 8px; }
+.bell-row { display: flex; align-items: center; gap: 8px; }
+.bell-row__n { font-size: var(--fs-xs); color: var(--sub); min-width: 54px; font-weight: 700; }
+.bell-row__time { width: 96px; padding: 6px 8px; font-size: var(--fs-sm); text-align: center; direction: ltr; }
+.bell-row__sep { font-size: var(--fs-xs); color: var(--sub); }
+.bell-day__add { margin-top: 10px; width: 100%; }
+.grid-empty { padding: 26px 16px; text-align: center; color: var(--sub); font-size: var(--fs-sm); }
+
+/* ---------- بنر راه‌اندازی اولیه (ادمین) ---------- */
+.setup-banner {
+  border: 1px dashed var(--lavender-deep); background: var(--lavender);
+  border-radius: 16px; padding: 16px 18px; margin: 0 0 16px;
+}
+.setup-banner__title { margin: 0 0 8px; font-size: var(--fs-md); color: var(--text); }
+.setup-step { display: flex; gap: 10px; padding: 7px 0; align-items: flex-start; }
+.setup-step__n {
+  width: 26px; height: 26px; border-radius: 50%; background: var(--surface);
+  border: 1px solid var(--border-strong); display: flex; align-items: center;
+  justify-content: center; font-weight: 800; font-size: var(--fs-xs); flex-shrink: 0; color: var(--text);
+}
+.setup-step--done .setup-step__n { background: var(--mint); border-color: var(--mint-deep); }
+.setup-step__body { flex: 1; }
+.setup-step__title { font-weight: 700; font-size: var(--fs-sm); color: var(--text); }
+.setup-step__desc { font-size: var(--fs-xs); color: var(--sub); margin: 2px 0 6px; line-height: 1.8; }
+
+/* ---------- نوار پیشرفت بارگذاری ---------- */
+.upload-box { max-width: 380px; text-align: center; }
+.upload-box__icon { font-size: 30px; margin: 4px 0 8px; }
+.upload-box__file {
+  font-size: var(--fs-sm); font-weight: 700; color: var(--text);
+  word-break: break-word; margin-top: 6px; line-height: 1.6;
+}
+.upload-box__count { font-size: var(--fs-xs); color: var(--sub); margin-top: 2px; min-height: 16px; }
+.upload-bar {
+  height: 10px; background: #ECE9F4; border: 1px solid var(--border);
+  border-radius: 999px; overflow: hidden; margin: 14px 0 6px;
+}
+.upload-bar__fill {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, var(--lavender-deep), #6D8FC5);
+  border-radius: 999px; transition: width 0.25s ease;
+}
+.upload-bar__fill--processing {
+  width: 100% !important;
+  background-image: linear-gradient(100deg, rgba(255,255,255,.5) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.5) 50%, rgba(255,255,255,.5) 75%, transparent 75%);
+  background-size: 36px 100%;
+  animation: uploadStripe 0.8s linear infinite;
+}
+@keyframes uploadStripe { from { background-position: 0 0; } to { background-position: 36px 0; } }
+.upload-box__meta {
+  display: flex; justify-content: space-between; gap: 10px;
+  font-size: var(--fs-xs); color: var(--sub); margin-bottom: 12px; min-height: 15px;
+}
+
+/* ---------- جزوات ---------- */
+.handout-list { display: flex; flex-direction: column; gap: 11px; max-width: 900px; }
+.handout-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: clamp(13px, 1.3vw, 17px) clamp(15px, 1.8vw, 20px);
+  text-align: right;
+  font-family: inherit;
+  width: 100%;
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.handout-card__head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.handout-card__title { font-size: var(--fs-md); font-weight: 700; flex: 1 1 auto; min-width: 0; }
+.handout-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--chip, #F1F3F8); color: var(--sub);
+  border-radius: 999px; padding: 3px 10px; font-size: var(--fs-xs); white-space: nowrap;
+}
+.handout-chip__dot { width: 8px; height: 8px; border-radius: 50%; background: var(--lavender-deep); }
+.handout-card__desc { font-size: var(--fs-sm); color: var(--sub); line-height: 1.7; margin: 0; }
+.handout-card__files { display: flex; flex-direction: column; gap: 6px; }
+.handout-card__date { font-size: var(--fs-xs); color: var(--sub); }
+
+.ann-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: clamp(13px, 1.3vw, 17px) clamp(15px, 1.8vw, 20px);
+  cursor: pointer;
+  text-align: right;
+  transition: transform 0.22s, box-shadow 0.22s, border-color 0.22s;
+  font-family: inherit;
+  width: 100%;
+  color: var(--text);
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+}
+.ann-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-soft); border-color: var(--border-strong); }
+.ann-card:focus-visible { outline: 3px solid var(--lavender); outline-offset: 2px; }
+
+.ann-card--pinned {
+  background: linear-gradient(120deg, rgba(249, 221, 231, 0.35), var(--surface) 55%);
+  border-color: rgba(176, 106, 106, 0.35);
+}
+
+.ann-card__head { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+
+.ann-card__pin {
+  font-size: var(--fs-xs);
+  background: var(--pink);
+  color: var(--pink-deep);
+  padding: 2px 11px;
+  border-radius: 999px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.ann-card__title { font-weight: 700; font-size: clamp(14px, 1vw, 15.5px); margin: 0; flex: 1; min-width: 140px; }
+
+.ann-card__body {
+  color: var(--sub);
+  font-size: var(--fs-sm);
+  margin: 7px 0 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.ann-card__date { font-size: var(--fs-xs); color: var(--sub); margin-top: 7px; display: inline-block; }
+
+/* ================================================================
+   پنل جزئیات: سایدبار دسکتاپ / بات‌شیت موبایل
+   ================================================================ */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(55, 40, 75, 0.4);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  transition: opacity 0.28s;
+}
+
+.overlay--open { opacity: 1; }
+
+.sheet {
+  background: var(--surface);
+  border-radius: var(--radius-xl);
+  width: min(560px, 100%);
+  max-height: min(86vh, 780px);
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-pop);
+  transform: translateY(16px) scale(0.97);
+  opacity: 0;
+  transition: transform 0.34s var(--ease-spring), opacity 0.26s;
+  overflow: hidden;
+}
+
+.overlay--open .sheet { transform: none; opacity: 1; }
+
+.sheet__grip {
+  display: none;
+  width: 46px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--border-strong);
+  margin: 11px auto 0;
+  flex-shrink: 0;
+  cursor: grab;
+  touch-action: none;
+}
+.sheet__grip:active { cursor: grabbing; }
+
+.sheet__head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: clamp(16px, 2vw, 20px) clamp(18px, 2.4vw, 24px) 13px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sheet__title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(17px, 1.3vw, 21px);
+  margin: 0;
+  color: #333B52;
+  line-height: 1.6;
+}
+
+.sheet__close {
+  margin-inline-start: auto;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  cursor: pointer;
+  font-size: 15px;
+  color: var(--sub);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  transition: background 0.25s, color 0.25s, transform 0.35s var(--ease-spring);
+}
+.sheet__close:hover { background: var(--pink); color: var(--pink-deep); transform: rotate(90deg); }
+
+.sheet__body { padding: clamp(16px, 2vw, 20px) clamp(18px, 2.4vw, 24px) 26px; overflow-y: auto; overscroll-behavior: contain; }
+
+/* دسکتاپ: پنل کناری */
+@media (min-width: 769px) {
+  .overlay { justify-content: flex-start; padding: 0; }
+  .sheet {
+    width: min(480px, 94vw);
+    max-height: 100vh;
+    height: 100vh;
+    border-radius: var(--radius-xl) 0 0 var(--radius-xl);
+    transform: translateX(-46px);
+    transition: transform 0.36s var(--ease-spring), opacity 0.26s;
+  }
+  .overlay--open .sheet { transform: none; }
+}
+
+/* موبایل: بات‌شیت با قابلیت درگ */
+@media (max-width: 768px) {
+  .overlay { align-items: flex-end; padding: 0; }
+  .sheet {
+    width: 100%;
+    max-height: 88vh;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    transform: translateY(100%);
+    transition: transform 0.36s var(--ease-spring);
+    will-change: transform;
+  }
+  .overlay--open .sheet { transform: none; }
+  .sheet__grip { display: block; }
+  .sheet--dragging { transition: none; }
+}
+
+/* ---------- محتوای جزئیات ---------- */
+.detail-lesson { display: flex; flex-direction: column; gap: 14px; }
+
+.detail-hero {
+  border-radius: var(--radius-lg);
+  padding: clamp(14px, 1.6vw, 18px) clamp(15px, 1.8vw, 19px);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: relative;
+  overflow: hidden;
+}
+.detail-hero::after {
+  content: '';
+  position: absolute;
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,0.55), transparent 70%);
+  top: -45%;
+  inset-inline-end: -8%;
+  pointer-events: none;
+}
+
+.detail-hero__period {
+  min-width: 50px;
+  height: 50px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--text);
+  font-weight: 800;
+  font-size: clamp(13px, 1vw, 15px);
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 0 8px;
+  box-shadow: var(--shadow-xs);
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+.detail-hero__subject {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(19px, 1.5vw, 23px);
+  margin: 0;
+  color: #333B52;
+}
+
+.detail-hero__meta { font-size: var(--fs-sm); color: var(--sub); }
+
+.detail-block {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 13px 16px;
+  background: var(--surface);
+}
+.detail-block + .detail-block { margin-top: 10px; }
+.detail-block__title {
+  font-size: var(--fs-sm);
+  font-weight: 800;
+  color: var(--lavender-deep);
+  margin: 0 0 7px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.detail-block__text { margin: 0; font-size: var(--fs-base); white-space: pre-wrap; word-break: break-word; }
+.detail-block__text--muted { color: #A9C7B4; }
+
+.dl-row {
+  display: flex;
+  gap: 10px;
+  padding: 8px 0;
+  font-size: var(--fs-sm);
+  border-bottom: 1px dashed var(--border);
+}
+.dl-row:last-child { border-bottom: 0; }
+.dl-row dt { color: var(--sub); min-width: 112px; flex-shrink: 0; }
+.dl-row dd { margin: 0; font-weight: 600; }
+
+.attachment-list { display: flex; flex-direction: column; gap: 8px; }
+
+.attachment-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  padding: 10px 13px;
+  color: var(--text);
+  transition: border-color 0.2s, background 0.2s, transform 0.2s;
+}
+.attachment-item:hover { border-color: var(--lavender); background: #F6F1FB; text-decoration: none; transform: translateX(-3px); }
+
+.attachment-item__icon { font-size: 19px; }
+.attachment-item__name { font-size: var(--fs-sm); font-weight: 600; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.attachment-item__size { font-size: var(--fs-xs); color: var(--sub); white-space: nowrap; }
+
+/* ================================================================
+   فرم‌ها و دکمه‌ها
+   ================================================================ */
+.field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 15px; }
+.field__label { font-size: var(--fs-sm); font-weight: 700; }
+.field__hint { font-size: var(--fs-xs); color: var(--sub); }
+.field__req { color: var(--pink-deep); }
+
+.input, .select, .textarea {
+  font-family: inherit;
+  font-size: var(--fs-base);
+  color: var(--text);
+  background: var(--surface);
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 11px 15px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  width: 100%;
+  min-height: 46px;
+}
+.input:focus, .select:focus, .textarea:focus {
+  outline: none;
+  border-color: var(--lavender-deep);
+  box-shadow: 0 0 0 4px rgba(233, 221, 248, 0.5);
+}
+
+.textarea { resize: vertical; min-height: 96px; }
+
+.input--time { direction: ltr; text-align: center; font-variant-numeric: tabular-nums; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  border-radius: 14px;
+  padding: 12px 24px;
+  min-height: 46px;
+  cursor: pointer;
+  border: 1.5px solid transparent;
+  transition: transform 0.18s var(--ease-spring), box-shadow 0.25s, background 0.25s, color 0.25s;
+  position: relative;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn:active { transform: scale(0.96); }
+.btn:focus-visible { outline: 3px solid var(--lavender); outline-offset: 2px; }
+.btn[disabled] { opacity: 0.55; cursor: not-allowed; }
+
+.btn--primary {
+  background: linear-gradient(135deg, var(--lavender-deep), var(--blue-deep));
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(76, 110, 158, 0.32);
+}
+.btn--primary::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  inset-inline-start: -80%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(105deg, transparent, rgba(255,255,255,0.35), transparent);
+  transform: skewX(-20deg);
+  transition: inset-inline-start 0.6s;
+  pointer-events: none;
+}
+.btn--primary:hover { box-shadow: 0 8px 26px rgba(76, 110, 158, 0.45); transform: translateY(-1px); }
+.btn--primary:hover::after { inset-inline-start: 130%; }
+
+.btn--ghost { background: var(--surface); border-color: var(--border-strong); color: var(--text); }
+.btn--ghost:hover { background: var(--surface-2); }
+
+.btn--danger { background: #FDECEC; color: #B84A4A; border-color: #F3CFCF; }
+.btn--danger:hover { background: #F9DCDC; }
+
+.btn--sm { padding: 8px 15px; font-size: var(--fs-xs); border-radius: 11px; min-height: 38px; }
+
+.btn-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+/* دکمه شناور «امروز» */
+.fab-today {
+  position: fixed;
+  bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  inset-inline-start: 18px;
+  z-index: 70;
+  border: none;
+  border-radius: 999px;
+  padding: 12px 22px;
+  font-family: var(--font-display);
+  font-size: 15px;
+  color: #fff;
+  background: linear-gradient(135deg, var(--lavender-deep), var(--blue-deep));
+  box-shadow: var(--shadow-pop);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  opacity: 0;
+  transform: translateY(70px) scale(0.85);
+  transition: opacity 0.35s, transform 0.35s var(--ease-spring);
+  pointer-events: none;
+}
+.fab-today--visible { opacity: 1; transform: none; pointer-events: auto; }
+.fab-today:active { transform: scale(0.93); }
+@media (min-width: 1360px) { .fab-today { display: none; } }
+
+/* ---------- توست ---------- */
+.toast-region {
+  position: fixed;
+  bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  inset-inline-start: 50%;
+  transform: translateX(50%);
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  pointer-events: none;
+  width: min(92vw, 430px);
+}
+
+.toast {
+  pointer-events: auto;
+  background: var(--text);
+  color: #FBF9FC;
+  border-radius: 15px;
+  padding: 12px 22px;
+  font-size: var(--fs-sm);
+  box-shadow: var(--shadow-pop);
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  animation: toast-in 0.4s var(--ease-spring);
+  max-width: 100%;
+}
+.toast--success { background: #3E7D5E; }
+.toast--error { background: #B84A4A; }
+
+/* ---------- حالت‌های خالی و خطا ---------- */
+.empty-state {
+  text-align: center;
+  color: var(--sub);
+  padding: clamp(30px, 4vw, 46px) 20px;
+  background: var(--surface);
+  border: 2px dashed var(--border-strong);
+  border-radius: var(--radius-lg);
+  font-size: var(--fs-base);
+}
+.empty-state .face { font-size: clamp(34px, 4vw, 42px); display: block; margin-bottom: 10px; }
+
+.error-state {
+  background: #FDF1F3;
+  border: 1px solid #F3D3DA;
+  color: #A0455A;
+  padding: 16px 20px;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--fs-sm);
+}
+
+.muted { color: var(--sub); }
+.small { font-size: var(--fs-xs); }
+
+/* ---------- پنل اعلان‌ها ---------- */
+.notifications-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  inset-inline-end: 0;
+  width: min(370px, calc(100vw - 24px));
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-pop);
+  padding: 8px;
+  z-index: 90;
+  max-height: min(430px, 70vh);
+  overflow-y: auto;
+  animation: fade-up 0.28s var(--ease-out);
+}
+
+.notif-item {
+  display: flex;
+  gap: 11px;
+  padding: 11px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-align: right;
+  width: 100%;
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  color: var(--text);
+  transition: background 0.15s;
+}
+.notif-item:hover { background: var(--surface-2); }
+
+.notif-item__icon {
+  font-size: 19px;
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: var(--surface-2);
+  display: grid;
+  place-items: center;
+}
+.notif-item__title { font-size: var(--fs-sm); font-weight: 700; text-align: right; }
+.notif-item__sub { font-size: var(--fs-xs); color: var(--sub); text-align: right; }
+
+.hidden { display: none !important; }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- فوتر ---------- */
+.site-footer {
+  margin-top: clamp(36px, 5vw, 60px);
+  padding: clamp(22px, 3vw, 34px) clamp(16px, 3vw, 32px) clamp(26px, 3vw, 38px);
+  border-top: 1px solid var(--border);
+  text-align: center;
+  color: var(--sub);
+  font-size: var(--fs-sm);
+  background: linear-gradient(180deg, transparent, rgba(247, 243, 250, 0.7));
+}
+.site-footer__hearts { font-size: 17px; letter-spacing: 4px; }
+.site-footer__note { margin: 6px 0 0; }
+
+/* ================================================================
+   پنل مدیریت
+   ================================================================ */
+.admin-enter { min-height: 76vh; display: grid; place-items: center; }
+
+.login-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-soft);
+  padding: clamp(26px, 3vw, 38px);
+  width: min(430px, 100%);
+  position: relative;
+  overflow: hidden;
+}
+.login-card::before {
+  content: '';
+  position: absolute;
+  top: -70px;
+  inset-inline-end: -70px;
+  width: 190px;
+  height: 190px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--lavender), var(--blue));
+  opacity: 0.35;
+  filter: blur(4px);
+  pointer-events: none;
+}
+
+.login-card__logo {
+  width: 70px;
+  height: 70px;
+  border-radius: 22px;
+  background: linear-gradient(135deg, var(--lavender), var(--blue));
+  display: grid;
+  place-items: center;
+  font-size: 34px;
+  margin: 0 auto 16px;
+  box-shadow: var(--shadow-hover);
+  animation: float-slow 5s ease-in-out infinite;
+}
+
+.login-card__title {
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-lg);
+  margin: 0 0 4px;
+  color: #333B52;
+}
+.login-card__sub { text-align: center; color: var(--sub); font-size: var(--fs-sm); margin: 0 0 24px; }
+
+.admin-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  margin-bottom: 22px;
+  /* شیشه‌ی هاله‌دارِ هم‌تم — نه کارت سفید تخت */
+  background:
+    linear-gradient(135deg, rgba(217, 228, 242, 0.85), rgba(214, 223, 245, 0.66)),
+    rgba(250, 251, 253, 0.9);
+  backdrop-filter: blur(14px) saturate(1.4);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  padding: 8px;
+  border: 1px solid rgba(76, 110, 158, 0.18);
+  border-radius: 18px;
+  box-shadow: var(--shadow-xs);
+  position: sticky;
+  top: 66px;
+  z-index: 40;
+}
+.admin-tabs::-webkit-scrollbar { display: none; }
+.admin-tab { white-space: nowrap; flex-shrink: 0; }
+
+.admin-tab {
+  font-family: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  padding: 9px 17px;
+  background: transparent;
+  border-radius: 12px;
+  border: none;
+  color: var(--sub);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, transform 0.2s;
+}
+.admin-tab:hover { color: var(--text); background: rgba(255, 255, 255, 0.55); }
+.admin-tab--active {
+  background: linear-gradient(135deg, var(--lavender), #E3ECF7);
+  color: var(--lavender-deep);
+  box-shadow: var(--shadow-xs);
+}
+
+.admin-panel { display: flex; flex-direction: column; gap: clamp(14px, 2vw, 22px); }
+
+.admin-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: clamp(16px, 2.2vw, 24px);
+  box-shadow: var(--shadow-soft);
+}
+
+.admin-card__title {
+  font-size: clamp(15px, 1.2vw, 17px);
+  font-weight: 800;
+  margin: 0 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-list { display: flex; flex-direction: column; gap: 9px; }
+
+.admin-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 11px 15px;
+  flex-wrap: wrap;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  background: var(--surface);
+}
+.admin-row:hover { border-color: var(--border-strong); box-shadow: var(--shadow-xs); }
+
+.admin-row__main { flex: 1; min-width: 210px; }
+.admin-row__title { font-weight: 700; font-size: var(--fs-sm); }
+.admin-row__sub { font-size: var(--fs-xs); color: var(--sub); }
+
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+@media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
+
+.confirm-dialog { width: min(410px, 100%); }
+
+/* آپلود */
+.upload-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+.file-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 5px 13px;
+  font-size: var(--fs-xs);
+}
+
+.file-chip__x {
+  border: none;
+  background: transparent;
+  color: var(--pink-deep);
+  cursor: pointer;
+  font-size: 15px;
+  padding: 0 2px;
+  font-weight: 800;
+}
+
+/* ================================================================
+   گرید ویرایش برنامه (پنل مدیریت)
+   ================================================================ */
+.admin-tt-wrap { margin: 10px -4px 0; }
+
+.admin-tt-scroll {
+  overflow-x: auto;
+  padding: 4px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.grid-editor { border-collapse: separate; border-spacing: 6px; width: max-content; min-width: 100%; }
+
+.grid-editor th {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 14.5px;
+  color: #333B52;
+  padding: 6px 8px;
+  white-space: nowrap;
+  text-align: center;
+}
+.grid-editor th .grid-day-sub {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--sub);
+}
+
+.grid-cell {
+  min-width: 150px;
+  max-width: 190px;
+  padding: 0;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.grid-cell:hover { border-color: var(--border-strong); }
+.grid-cell--dirty { border-color: var(--lavender-deep); box-shadow: 0 0 0 3px rgba(217, 228, 242, 0.65); }
+
+.grid-cell--disabled {
+  background: repeating-linear-gradient(-45deg, var(--surface-2), var(--surface-2) 6px, #F1ECF5 6px, #F1ECF5 12px);
+  min-width: 110px;
+}
+.grid-cell--disabled::after {
+  content: 'بدون کلاس';
+  display: grid;
+  place-items: center;
+  font-size: 11.5px;
+  color: var(--sub);
+  min-height: 54px;
+}
+
+.grid-cell__select {
+  appearance: none;
+  -webkit-appearance: none;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text);
+  background: transparent;
+  border: none;
+  width: 100%;
+  padding: 10px 12px 6px;
+  cursor: pointer;
+  text-align: right;
+}
+.grid-cell__select:focus { outline: none; }
+.grid-cell__select:focus-visible { outline: 3px solid var(--lavender); border-radius: 10px; }
+.grid-cell__select--empty { color: var(--sub); font-weight: 500; }
+
+/* درس گردشی (دوم) — زیر select اصلی */
+.grid-cell__select--alt {
+  padding: 0 12px 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--blue-deep);
+}
+.grid-cell__select--alt option { color: var(--text); font-weight: 500; }
+.grid-cell__select--hidden { display: none; }
+
+.grid-cell__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 9px 8px;
+  gap: 6px;
+}
+
+.grid-cell__time {
+  font-size: 10.5px;
+  color: var(--sub);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  direction: ltr;
+}
+
+.grid-cell__hw {
+  border: none;
+  background: var(--surface-2);
+  border-radius: 9px;
+  width: 30px;
+  height: 30px;
+  font-size: 14px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  transition: background 0.2s, transform 0.2s var(--ease-spring);
+}
+.grid-cell__hw:hover { background: var(--lavender); transform: scale(1.1); }
+.grid-cell__hw--set { background: var(--mint); }
+.grid-cell__hw--set:hover { background: #C9E8D6; }
+
+.grid-status--dirty { color: var(--pink-deep); font-weight: 700; }
+.grid-status--saved { color: var(--mint-deep); font-weight: 700; }
+
+/* موبایل: سلول‌ها زیر هم در کارت‌های روزانه */
+@media (max-width: 768px) {
+  .admin-tt-scroll { padding: 2px; }
+  .grid-editor { display: block; border-spacing: 0; width: 100%; }
+  .grid-editor thead { display: none; }
+  .grid-editor tbody { display: flex; flex-direction: column; gap: 14px; }
+  .grid-row { display: grid; grid-template-columns: 1fr; gap: 6px; }
+  .grid-row__day {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 17px;
+    color: #333B52;
+    padding: 0 6px;
+  }
+  .grid-row__day small { font-family: var(--font-body); font-size: 11px; color: var(--sub); }
+  .grid-cell, .grid-cell--disabled { min-width: 0; max-width: none; width: 100%; }
+  .grid-cell--disabled { display: none; }
+}
+
+/* دسکتاپ: جدول واقعی */
+@media (min-width: 769px) {
+  .grid-row { display: table-row; }
+  .grid-row__day {
+    display: table-cell;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 16px;
+    color: #333B52;
+    padding: 6px 10px;
+    white-space: nowrap;
+    text-align: right;
+    vertical-align: middle;
+  }
+  .grid-row__day small { display: block; font-family: var(--font-body); font-size: 10.5px; color: var(--sub); }
+  .grid-cell { display: table-cell; vertical-align: top; }
+}
+
+/* ================================================================
+   تقویم ماهانه (پنل مدیریت)
+   ================================================================ */
+.cal-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+.cal-title { flex: 1; text-align: center; }
+
+.cal-week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+  margin-bottom: 6px;
+}
+.cal-week span {
+  text-align: center;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--sub);
+  padding: 4px 0;
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+}
+
+.cal-cell {
+  aspect-ratio: 1 / 1;
+  min-height: 44px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 4px 2px;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.cal-cell:hover { border-color: var(--border-strong); box-shadow: var(--shadow-xs); transform: translateY(-1px); }
+.cal-cell:focus-visible { outline: 3px solid var(--lavender); outline-offset: 1px; }
+
+.cal-cell--pad { background: transparent; border-color: transparent; cursor: default; pointer-events: none; }
+.cal-cell--off { background: var(--surface-2); }
+.cal-cell--off .cal-cell__num { color: var(--sub); }
+.cal-cell--today {
+  border-color: var(--lavender-deep);
+  box-shadow: 0 0 0 3px rgba(217, 228, 242, 0.65);
+  background: linear-gradient(180deg, rgba(217, 228, 242, 0.5), rgba(255, 255, 255, 0) 70%), var(--surface);
+}
+
+.cal-cell__num {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.cal-cell__dots {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+  height: 7px;
+}
+.cal-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  display: inline-block;
+}
+.cal-dot--hw { background: var(--pink-deep); }
+.cal-day-lesson__hw { font-size: var(--fs-xs); color: var(--text); margin-inline-start: 4px; }
+.cal-dot--lesson { background: var(--lavender-deep); }
+.cal-dot--task { background: var(--cream-deep); }
+.cal-dot--high { background: #C05A5A; }
+.cal-dot--more { background: var(--sub); width: 5px; height: 5px; }
+
+.cal-legend {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  font-size: var(--fs-xs);
+  color: var(--sub);
+}
+.cal-legend span { display: inline-flex; align-items: center; gap: 6px; }
+
+/* شیت روزِ تقویم */
+.cal-day-lessons { display: flex; flex-direction: column; gap: 7px; }
+.cal-day-lesson {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 11px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  flex-wrap: wrap;
+}
+.cal-day-lesson__p {
+  min-width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: var(--lavender-deep);
+  color: #fff;
+  font-weight: 800;
+  font-size: 12px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.cal-day-lesson__name { font-weight: 700; font-size: var(--fs-sm); flex: 1; min-width: 120px; }
+.cal-day-lesson__time { font-size: var(--fs-xs); color: var(--sub); font-variant-numeric: tabular-nums; }
+
+/* نشان گردشی در شیت روز */
+.cal-day-lesson__name .rotating-tag {
+  font-size: 10px;
+  background: var(--blue);
+  color: var(--blue-deep);
+  border-radius: 999px;
+  padding: 1px 8px;
+  margin-inline-start: 6px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* موبایل: سلول‌های تقویم کمی فشرده‌تر */
+@media (max-width: 480px) {
+  .cal-grid, .cal-week { gap: 4px; }
+  .cal-cell { min-height: 40px; gap: 3px; }
+}
+
+/* ================================================================
+   انیمیشن‌ها
+   ================================================================ */
+@keyframes badge-pop {
+  from { transform: scale(0); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+@keyframes toast-in {
+  from { transform: translateY(26px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+@keyframes pulse-soft {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(184, 74, 74, 0.16); }
+  50% { box-shadow: 0 0 0 7px rgba(184, 74, 74, 0); }
+}
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-11px); }
+}
+@keyframes fade-up {
+  from { transform: translateY(11px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+@keyframes shimmer {
+  to { transform: translateX(-100%); }
+}
+
+.fade-up { animation: fade-up 0.5s var(--ease-out) both; }
+
+/* کاهش حرکت */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---------- چاپ: فقط جدول ---------- */
+@media print {
+  body::before, body::after, .site-header, .fab-today, .tt-arrow, .tt-dots,
+  .toast-region, .overlay, .section:not(:first-of-type) { display: none !important; }
+  .tt-scroll { overflow: visible; }
+  .tt-grid { grid-template-columns: repeat(7, 1fr) !important; }
+}
+
+/* ---------- فیلد تاریخ/ساعت شمسی (پنل ادمین) ---------- */
+.jdate-field { position: relative; }
+.jdate-field__row { display: flex; gap: 8px; align-items: stretch; flex-wrap: wrap; }
+.jdate-field__input { flex: 1 1 180px; text-align: center; cursor: default; }
+.jdate-field__input--empty { color: var(--muted, #9a8f83); }
+.jdate-field__time { width: 96px; }
+.jdate-pop {
+  position: absolute; top: calc(100% + 6px); inset-inline-start: 0; z-index: 60;
+  background: var(--card, #fffdf8); border: 1px solid var(--line, #e8e0d5);
+  border-radius: 14px; box-shadow: 0 14px 34px rgba(40, 26, 12, 0.18);
+  padding: 10px; width: 262px; direction: rtl;
+}
+.jdate-pop__nav { display: flex; align-items: center; justify-content: space-between; gap: 4px; margin-bottom: 6px; }
+.jdate-pop__title { font-size: 0.95rem; }
+.jdate-pop__grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.jdate-pop__dow { text-align: center; font-size: 0.7rem; color: var(--muted, #9a8f83); padding: 3px 0; }
+.jdate-pop__pad { }
+.jdate-pop__day {
+  border: 0; background: transparent; border-radius: 8px; padding: 5px 0;
+  font: inherit; font-size: 0.85rem; cursor: pointer; text-align: center;
+}
+.jdate-pop__day:hover { background: rgba(0, 0, 0, 0.06); }
+.jdate-pop__day--sel { background: var(--accent, #2f6f4f); color: #fff; font-weight: 700; }
+.jdate-pop__day--today { border: 1.5px dashed var(--accent, #2f6f4f); }
+.jdate-pop__foot { display: flex; justify-content: center; margin-top: 6px; }
+
+/* لینک-بار افزودن پیوست (ادمین) */
+.link-add { display: flex; gap: 8px; flex-wrap: wrap; align-items: stretch; }
+.file-chip--link { border-style: dashed; }
+.attachment-item--link .attachment-item__size { direction: ltr; }
+
+/* ---------- ناوبری روزها (سربرگ برنامه هفتگی) ---------- */
+.tt-nav { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.tt-nav .btn { flex-shrink: 0; }
+
+</style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header__inner">
+      <div class="brand">
+        <div class="brand__logo" aria-hidden="true">📚</div>
+        <div>
+          <div class="brand__name" id="brandName">درس من</div>
+          <div class="brand__date">
+            <span id="brandDate">…</span>
+            <span class="brand__clock" id="brandClock">…</span>
+          </div>
+        </div>
+      </div>
+      <div class="header-spacer"></div>
+      <div class="welcome-bubble" id="welcomeBubble">امروز هم روز خوبی داشته باشیم!</div>
+      <div class="header-actions">
+        <button class="icon-btn" id="notifBtn" aria-label="اعلان‌ها" aria-haspopup="true" aria-expanded="false">
+          🔔
+          <span class="icon-btn__badge hidden" id="notifBadge">۰</span>
+        </button>
+        <div class="notifications-panel hidden" id="notifPanel" role="menu" aria-label="اعلان‌های مهم"></div>
+        <a class="icon-btn" href="/admin" id="adminLink" aria-label="ورود مدیر کلاس" title="ورود مدیر کلاس">⚙️</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="page-hero" id="pageHero">
+      <h1 class="page-hero__title">برنامه هفتگی کلاس</h1>
+      <p class="page-hero__sub" id="heroSub">برنامه و تکالیفِ این هفته و هفته‌ی بعد؛ برای دیدن جزئیات هر درس روی آن بزنید</p>
+      <div class="hero-stats" id="heroStats"></div>
+    </div>
+
+    <nav class="std-tabs" id="stdTabs" role="tablist" aria-label="بخش‌های صفحه">
+      <button class="std-tab std-tab--active" data-tab="schedule" role="tab" aria-selected="true" type="button">🗓️ برنامه</button>
+      <button class="std-tab" data-tab="tasks" role="tab" aria-selected="false" type="button">⏳ مهلت‌ها</button>
+      <button class="std-tab" data-tab="handouts" role="tab" aria-selected="false" type="button">📚 جزوات و تمارین</button>
+      <button class="std-tab" data-tab="announcements" role="tab" aria-selected="false" type="button">📣 اطلاعیه‌ها</button>
+    </nav>
+
+    <section class="section panel" data-panel="schedule" id="panel-schedule" aria-label="برنامه هفتگی" role="tabpanel">
+      <div class="section__head">
+        <h2 class="section__title"><span class="emoji" aria-hidden="true">🗓️</span> برنامه هفتگی</h2>
+        <div class="tt-nav" role="group" aria-label="ناوبری هفته‌ها">
+          <button class="btn btn--ghost btn--sm" id="weekPrev" type="button" title="هفته‌ی قبل (این هفته + هفته‌ی قبل‌تر)">‹ هفته قبل</button>
+          <span class="tt-range" id="ttRange">این هفته + هفته‌ی بعد</span>
+          <button class="btn btn--ghost btn--sm hidden" id="weekToday" type="button">برو به این هفته</button>
+          <button class="btn btn--ghost btn--sm" id="weekNext" type="button" title="هفته‌ی بعد (هفته‌ی بعد + دو هفته بعد)">هفته بعد ›</button>
+        </div>
+        <span class="section__note">به‌روزرسانی: <span id="updatedAt">…</span></span>
+      </div>
+      <div class="tt-wrap" id="ttWrap">
+        <button class="tt-arrow tt-arrow--prev" id="ttPrev" type="button" aria-label="روزهای قبلی">‹</button>
+        <div class="tt-scroll" id="ttScroll" tabindex="0" role="region" aria-label="جدول هفتگی — برای مرور روزها به چپ و راست بکشید">
+          <div class="tt-grid" id="ttGrid"></div>
+        </div>
+        <button class="tt-arrow tt-arrow--next" id="ttNext" type="button" aria-label="روزهای بعدی">›</button>
+        <div class="tt-dots" id="ttDots" role="tablist" aria-label="پیمایش روزها"></div>
+      </div>
+    </section>
+
+    <section class="section panel" data-panel="schedule" aria-label="چکیده تکالیف">
+      <div class="section__head">
+        <h2 class="section__title"><span class="emoji" aria-hidden="true">📋</span> چکیده تکالیف</h2>
+        <span class="section__note">تکالیف این دو هفته و نزدیک‌ترین مهلت‌ها</span>
+      </div>
+      <div class="digest-list" id="digestList"></div>
+    </section>
+
+    <section class="section panel hidden" data-panel="tasks" id="panel-tasks" aria-label="مهلت‌ها و تکالیف زمان‌دار" role="tabpanel">
+      <div class="section__head">
+        <h2 class="section__title"><span class="emoji" aria-hidden="true">⏳</span> مهلت‌ها و تکالیف زمان‌دار</h2>
+        <span class="section__note">مرتب‌شده بر اساس نزدیک‌ترین مهلت</span>
+      </div>
+      <div class="tasks-grid" id="tasksGrid"></div>
+      <div class="btn-row" style="margin-top: 14px;">
+        <button class="btn btn--ghost btn--sm" id="showExpiredBtn" type="button">آرشیو موارد گذشته</button>
+      </div>
+      <div class="tasks-grid" id="expiredGrid" style="margin-top: 14px; display: none;"></div>
+    </section>
+
+    <section class="section panel hidden" data-panel="handouts" id="panel-handouts" aria-label="جزوات و تمارین" role="tabpanel">
+      <div class="section__head">
+        <h2 class="section__title"><span class="emoji" aria-hidden="true">📚</span> جزوات و تمارین</h2>
+      </div>
+      <div class="handout-list" id="handoutList"></div>
+    </section>
+
+    <section class="section panel hidden" data-panel="announcements" id="panel-announcements" aria-label="اطلاعیه‌ها" role="tabpanel">
+      <div class="section__head">
+        <h2 class="section__title"><span class="emoji" aria-hidden="true">📣</span> اطلاعیه‌ها</h2>
+      </div>
+      <div class="ann-list" id="annList"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer__hearts" aria-hidden="true">🌸 📚 🌸</div>
+    <div id="footerName">درس من</div>
+    <p class="site-footer__note" id="footerNote">با علاقه، توسط سرِ کلاس نگهداری می‌شود.</p>
+  </footer>
+
+  <!-- دکمه شناور «برو به امروز» -->
+  <button class="fab-today" id="fabToday" type="button">
+    <span aria-hidden="true">📌</span> <span id="fabTodayLabel">برو به فردا</span>
+  </button>
+
+  <!-- پنل جزئیات: کنار صفحه در دسکتاپ، بات‌شیت در موبایل -->
+  <div class="overlay" id="detailOverlay" role="dialog" aria-modal="true" aria-labelledby="detailTitle" hidden>
+    <div class="sheet" id="detailSheet">
+      <div class="sheet__grip" id="detailGrip" aria-hidden="true"></div>
+      <div class="sheet__head">
+        <h2 class="sheet__title" id="detailTitle">جزئیات درس</h2>
+        <button class="sheet__close" id="detailClose" aria-label="بستن">✕</button>
+      </div>
+      <div class="sheet__body" id="detailBody"></div>
+    </div>
+  </div>
+
+  <div class="toast-region" id="toastRegion" aria-live="polite"></div>
+
+  <script>
+// Persian (Jalali) calendar utilities — dependency-free conversion.
+// Algorithm: the standard jalali_to_gregorian / gregorian_to_jalali pair
+// used widely (based on the work by Kazimierz M. Borkowski / jalaali-js logic,
+// re-implemented here so the bundle stays tiny).
+
+const PERSIAN_DIGITS = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+
+/** Convert Latin digits to Persian digits. */
+function faDigits(input) {
+  return String(input).replace(/[0-9]/g, (d) => PERSIAN_DIGITS[Number(d)]);
+}
+
+/** Convert Persian/Arabic digits back to Latin for <input> parsing. */
+function toLatinDigits(input) {
+  return input
+    .replace(/[\u06F0-\u06F9]/g, (ch) => String(ch.charCodeAt(0) - 0x06F0))
+    .replace(/[\u0660-\u0669]/g, (ch) => String(ch.charCodeAt(0) - 0x0660));
+}
+
+function div(a, b) {
+  return Math.floor(a / b);
+}
+
+/** Gregorian y/m/d numbers -> Jalali (timezone-safe core) */
+function toJalaliParts(gy, gm, gd) {
+  const g_d_m = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+  let jy = gy <= 1600 ? 0 : 979;
+  const gy2 = gy <= 1600 ? gy - 621 : gy - 1600;
+  const gm2 = gm > 2 ? 1 : 0;
+  let days = (365 * gy2) + div(gy2 + 3, 4) - div(gy2 + 99, 100)
+    + div(gy2 + 399, 400) - 80 + gd + g_d_m[gm - 1];
+  days += (((gy2 % 4 === 0 && gy2 % 100 !== 0) || gy2 % 400 === 0) && gm > 2) ? 1 : 0;
+  let jy2 = jy + 33 * div(days, 12053);
+  days %= 12053;
+  jy2 += 4 * div(days, 1461);
+  days %= 1461;
+  if (days > 365) {
+    jy2 += div(days - 1, 365);
+    days = (days - 1) % 365;
+  }
+  const jm = days < 186 ? 1 + div(days, 31) : 7 + div(days - 186, 30);
+  const jd = 1 + ((days < 186) ? (days % 31) : ((days - 186) % 30));
+  jy = jy2;
+  return { jy, jm, jd };
+}
+
+/** Gregorian -> Jalali */
+function toJalali(date) {
+  return toJalaliParts(date.getFullYear(), date.getMonth() + 1, date.getDate());
+}
+
+/** Jalali -> Gregorian (returns a Date at local noon for safety) */
+function fromJalali(jy, jm, jd) {
+  let gy = jy <= 979 ? 621 : 1600;
+  const jy2 = jy <= 979 ? jy : jy - 979;
+  let days = (365 * jy2) + div(jy2, 33) * 8 + div((jy2 % 33) + 3, 4)
+    + 78 + jd + ((jm < 7) ? (jm - 1) * 31 : ((jm - 7) * 30) + 186);
+  gy += 400 * div(days, 146097);
+  days %= 146097;
+  if (days > 36524) {
+    gy += 100 * div(--days, 36524);
+    days %= 36524;
+    if (days >= 365) days++;
+  }
+  gy += 4 * div(days, 1461);
+  days %= 1461;
+  if (days > 365) {
+    gy += div(days - 1, 365);
+    days = (days - 1) % 365;
+  }
+  let gd = days + 1;
+  const sal_a = [0, 31, ((gy % 4 === 0 && gy % 100 !== 0) || (gy % 400 === 0)) ? 29 : 28,
+    31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  let gm = 0;
+  for (gm = 1; gm <= 12; gm++) {
+    if (gd <= sal_a[gm]) break;
+    gd -= sal_a[gm];
+  }
+  const d = new Date(gy, gm - 1, gd, 12, 0, 0);
+  return d;
+}
+
+const JALALI_MONTHS = [
+  'فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور',
+  'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند',
+];
+
+// Iran week: Saturday=0 ... Friday=6 (JS: Sunday=0 ... Saturday=6)
+const WEEK_DAY_NAMES = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه'];
+
+/** Convert JS getDay() (Sun=0) to Iran day index (Sat=0). */
+function iranDayIndex(date) {
+  return (date.getDay() + 1) % 7;
+}
+
+/* ---------- زنگ‌های گردشی (هفته‌به‌هفته بین دو درس) ---------- */
+
+/** شماره‌ی روز ISO از رشته‌ی «YYYY-MM-DD» (بدون وابستگی به منطقه‌ی زمانی) */
+function isoDayNum(s) {
+  const [y, m, d] = String(s).split('-').map(Number);
+  return Math.floor(Date.UTC(y, m - 1, d) / 86_400_000);
+}
+
+/** شماره‌ی شنبه‌ی همان هفته‌ی تقویمی Tehran-time «امروز» (ایران: هفته از شنبه) */
+function saturdayDayNumOf(ms = Date.now()) {
+  const t = tehranDayNumber(ms);
+  // نگاشت ثابت تقویمی: شنبه ⇔ dayNum % 7 === 2 (روز صفر یونیکس پنجشنبه است)
+  return t - ((t + 5) % 7);
+}
+
+/**
+ * پاریتی هفته نسبت به مبنای گردش.
+ * خروجی: 'alt' = این هفته درس دوم، 'main' = درس اصلی، null = بدون مبنا (درس اصلی).
+ * مبنا (anchor) = تاریخ شنبه‌ی هفته‌ای که درس «اصلی» بوده؛ هفته‌های بعد یک‌درمیان.
+ */
+function weekParity(dateMs, anchorStr) {
+  if (!anchorStr) return null;
+  let anchor = isoDayNum(anchorStr);
+  anchor -= (anchor + 5) % 7; // نرمال به شنبه‌ی همان هفته (شنبه ⇔ %7===2)
+  const saturday = saturdayDayNumOf(dateMs);
+  if (!Number.isFinite(anchor) || saturday < anchor) return null;
+  return ((saturday - anchor) / 7) % 2 === 1 ? 'alt' : 'main';
+}
+
+/* ---------- زمان تهران (UTC+3:30، بدون ساعت تابستانی از ۲۰۲۲) ---------- */
+
+/** y/m/d در تقویم تهران برای یک لحظه‌ی زمانی */
+function tehranYMD(ms) {
+  const t = new Date(ms + 3.5 * 3600_000);
+  return { y: t.getUTCFullYear(), m: t.getUTCMonth() + 1, d: t.getUTCDate() };
+}
+
+/** شماره‌ی روز تهران (روز سپری‌شده از epoch به وقت تهران) */
+function tehranDayNumber(ms = Date.now()) {
+  const { y, m, d } = tehranYMD(ms);
+  return Math.floor(Date.UTC(y, m - 1, d) / 86_400_000);
+}
+
+/** ساعت تهران «HH:MM» برای یک لحظه‌ی زمانی */
+function tehranHHMM(ms) {
+  const t = new Date(ms + 3.5 * 3600_000);
+  return `${String(t.getUTCHours()).padStart(2, '0')}:${String(t.getUTCMinutes()).padStart(2, '0')}`;
+}
+
+/**
+ * «امروزِ تهران» به‌شکل Date نونِ محلی.
+ * اجزای تقویمی این Date (سال/ماه/روز) دقیقاً تاریخِ تهران است — مستقل از
+ * منطقه‌ی زمانی مرورگر (کاربر پشت VPN هم تاریخ درست می‌بیند).
+ */
+function tehranLocalDate(ms = Date.now()) {
+  const { y, m, d } = tehranYMD(ms);
+  return new Date(y, m - 1, d, 12, 0, 0);
+}
+
+/** شاخص روزِ جاری تهران (شنبه=۰)، مستقل از منطقه‌ی زمانی مرورگر */
+function tehranDayIndex(ms = Date.now()) {
+  return (tehranDayNumber(ms) + 5) % 7; // شنبه ⇔ dayNum % 7 === 2
+}
+
+/** امروزِ تهران به تاریخ جلالی */
+function todayJalali(ms = Date.now()) {
+  const { y, m, d } = tehranYMD(ms);
+  return toJalaliParts(y, m, d);
+}
+
+/**
+ * پنجره‌ی غلتان n روزه از «امروزِ تهران».
+ * همیشه از امروز شروع می‌شود و هرگز روز گذشته نشان نمی‌دهد.
+ * خروجی: آرایه‌ای از { date, dayIdx } — date نونِ روز محلی است.
+ */
+function rollingWindow(n, now = Date.now()) {
+  const { y, m, d } = tehranYMD(now);
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    const date = new Date(y, m - 1, d + i, 12, 0, 0); // نونِ محلی: امن برای DST نبودن
+    out.push({ date, dayIdx: iranDayIndex(date) });
+  }
+  return out;
+}
+
+/** تاریخِ تهران «YYYY-MM-DD» یک لحظه — همان کلیدی که تکلیف‌ها با آن ذخیره می‌شوند */
+function tehranDateISO(ms) {
+  const dt = new Date(tehranDayNumber(ms) * 86_400_000);
+  return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth() + 1).padStart(2, '0')}-${String(dt.getUTCDate()).padStart(2, '0')}`;
+}
+
+/** شنبه‌ی هفته‌ی جاریِ تهران به شکل شماره‌ی روز (dayNum) */
+function currentSaturdayNum(now) {
+  const t = tehranDayNumber(now);
+  return t - ((t + 5) % 7); // شنبه ⇔ dayNum % 7 === 2
+}
+
+/**
+ * پنجره‌ی نمایش دانش‌آموز: دو هفته‌ی کامل (۱۴ روز، شنبه تا جمعه) از شنبه‌ی
+ * «هفته‌ی جاری + weekOffset». با weekOffset=0 همیشه «این هفته + هفته‌ی بعد»
+ * است؛ روزِ تمرکز (امروز، فردا یا اولین روزِ درسیِ بعد) هرگز بیرون از آن
+ * نیست، پس تکلیفِ ثبت‌شده برای هر روزِ این دو هفته دیده می‌شود.
+ * هر آیتم: { date (نونِ محلی برای نمایش), dayIdx (شنبه=۰), dayNum, dateISO }
+ * — dayNum/dateISO مستقل از منطقه‌ی زمانی مرورگرند.
+ */
+function fortnightWindow(weekOffset = 0, now = Date.now()) {
+  const sat = currentSaturdayNum(now) + weekOffset * 7;
+  const out = [];
+  for (let i = 0; i < 14; i++) {
+    const dayNum = sat + i;
+    const dt = new Date(dayNum * 86_400_000);
+    const y = dt.getUTCFullYear();
+    const m = dt.getUTCMonth() + 1;
+    const d = dt.getUTCDate();
+    out.push({
+      date: new Date(y, m - 1, d, 12, 0, 0),
+      dayIdx: (dayNum + 5) % 7,
+      dayNum,
+      dateISO: `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`,
+    });
+  }
+  return out;
+}
+
+/**
+ * بازه‌ی مجاز weekOffset: کوچک‌ترین/بزرگ‌ترین مقداری که هر ۱۴ روزِ پنجره
+ * داخل بازه‌ی تکالیفِ API (hwRange: {from,to} با «YYYY-MM-DD») بماند —
+ * روزِ بیرون از آن بازه تکلیفش لود نشده و به‌اشتباه «خالی» دیده می‌شود.
+ * بدون hwRange: محدوده‌ی محافظه‌کارانه‌ی ۲ هفته قبل تا ۴ هفته بعد.
+ */
+function weekOffsetBounds(hwRange, now = Date.now()) {
+  if (!hwRange?.from || !hwRange?.to) return { min: -2, max: 4 };
+  const from = isoDayNum(hwRange.from);
+  const to = isoDayNum(hwRange.to);
+  const bounds = { min: 0, max: 0 };
+  for (let k = -1; k > -30; k--) {
+    if (fortnightWindow(k, now)[0].dayNum < from) break;
+    bounds.min = k;
+  }
+  for (let k = 1; k < 30; k++) {
+    if (fortnightWindow(k, now)[13].dayNum > to) break;
+    bounds.max = k;
+  }
+  return bounds;
+}
+
+/** Format a Jalali date like «۱۸ آبان ۱۴۰۵». */
+function formatJalali(date, opts = {}) {
+  const { jy, jm, jd } = toJalali(date);
+  const parts = [];
+  if (opts.withWeekday) parts.push(WEEK_DAY_NAMES[iranDayIndex(date)]);
+  parts.push(faDigits(jd), JALALI_MONTHS[jm - 1]);
+  if (opts.withYear !== false) parts.push(faDigits(jy));
+  return parts.join(' ');
+}
+
+/** Format an ISO datetime for Tehran timezone, Jalali. */
+function formatJalaliDateTime(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '—';
+  const tehran = new Date(d.getTime() + (3.5 * 3600_000));
+  const { jy, jm, jd } = toJalali(tehran);
+  const hh = String(tehran.getUTCHours()).padStart(2, '0');
+  const mm = String(tehran.getUTCMinutes()).padStart(2, '0');
+  return `${faDigits(jd)} ${JALALI_MONTHS[jm - 1]} ${faDigits(jy)}، ساعت ${faDigits(hh + ':' + mm)}`;
+}
+
+/** فقط بخش تاریخ شمسی یک ISO به وقت تهران: «۱۸ آبان» */
+function jalaliDateOnly(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '—';
+  const { jy, jm, jd } = toJalali(new Date(d.getTime() + 3.5 * 3600_000));
+  return `${faDigits(jd)} ${JALALI_MONTHS[jm - 1]}`;
+}
+
+/** Format HH:MM with Persian digits. */
+function faTime(hhmm) {
+  if (!hhmm) return '—';
+  return faDigits(hhmm);
+}
+
+/** Relative countdown in Persian: «۳ روز مانده», «امروز», «فردا», «گذشته» … */
+function countdown(iso) {
+  const target = new Date(iso).getTime();
+  const now = Date.now();
+  const diff = target - now;
+  if (diff < 0) return { text: 'مهلت گذشته', state: 'passed' };
+  // Tehran day number (UTC+3:30, no DST since 2022): shift then floor to days
+  const tehranDay = (ms) => Math.floor((ms + 3.5 * 3600_000) / 86_400_000);
+  const daysAhead = tehranDay(target) - tehranDay(now);
+  if (daysAhead === 0) return { text: 'امروز!', state: 'today' };
+  if (daysAhead === 1) return { text: 'فردا', state: 'tomorrow' };
+  const hours = diff / 3600_000;
+  if (hours < 1) return { text: `${faDigits(Math.max(1, Math.round(hours * 60)))} دقیقه مانده`, state: 'soon' };
+  if (hours < 24) return { text: `${faDigits(Math.round(hours))} ساعت مانده`, state: 'soon' };
+  return { text: `${faDigits(daysAhead)} روز مانده`, state: 'future' };
+}
+
+const KIND_LABELS = {
+  project: 'پروژه',
+  research: 'تحقیق',
+  presentation: 'ارائه',
+  exam: 'امتحان',
+  quiz: 'آزمونک',
+  submission: 'تحویل',
+};
+
+const KIND_ICONS = {
+  project: '🧩',
+  research: '🔎',
+  presentation: '🎤',
+  exam: '📝',
+  quiz: '⚡',
+  submission: '📥',
+};
+
+const PRIORITY_LABELS = {
+  low: 'اولویت کم',
+  normal: 'معمولی',
+  high: 'مهم',
+};
+
+;
+// درس من — ساختور زنگ‌های کلاس (مشترک بین دانش‌آموز و مدیر)
+// زنگ‌ها از این پس «داده» هستند: مدیر کلاس در تب «زنگ‌ها» ساعت‌های هر روز را
+// می‌سازد و می‌چیند و این ماژول فقط همان را می‌خواند. هیچ چیزی هاردکد نیست —
+// هر کلاسی با هر تعداد زنگ (۰ تا ۱۲ زنگ در روز) پشتیبانی می‌شود.
+
+/** زنگ‌های دریافت‌شده از سرور (روی هر بار لود/رفرش دیتا setBells صدا می‌شود) */
+let BELLS = [];
+let BY_DAY = new Map();
+
+function setBells(list) {
+  // هر دو سبک کلید (snake_case از دیتابیس / camelCase از API) نرمال می‌شوند
+  BELLS = Array.isArray(list) ? list
+    .filter((b) => b && Number.isInteger(Number(b.day)) && (b.start_time ?? b.startTime))
+    .map((b) => ({
+      day: Number(b.day),
+      period: Number(b.period),
+      start_time: b.start_time ?? b.startTime,
+      end_time: b.end_time ?? b.endTime,
+    })) : [];
+  BY_DAY = new Map();
+  for (const b of BELLS) {
+    if (!BY_DAY.has(b.day)) BY_DAY.set(b.day, []);
+    BY_DAY.get(b.day).push(b);
+  }
+  for (const arr of BY_DAY.values()) arr.sort((a, b) => a.period - b.period);
+}
+
+function getBells() {
+  return BELLS;
+}
+
+/** روزهای کلاس‌دار (روزهایی که دست‌کم یک زنگ دارند) */
+function classDays() {
+  return [...BY_DAY.keys()].sort((a, b) => a - b);
+}
+
+/** تعداد زنگ‌های یک روز هفته (0=شنبه … 6=جمعه) */
+function periodsPerDay(day) {
+  return BY_DAY.get(day)?.length ?? 0;
+}
+
+/** زنگ‌های یک روز، مرتب بر اساس شماره */
+function bellsOfDay(day) {
+  return BY_DAY.get(day) ?? [];
+}
+
+/** بازه‌ی زمانی زنگ (day, period): [شروع, پایان] یا null اگر چنین زنگی نیست */
+function periodTimes(day, period) {
+  const b = BY_DAY.get(day)?.find((x) => x.period === period);
+  return b ? [b.start_time, b.end_time] : null;
+}
+
+;
+// درس من — اپلیکیشن دانش‌آموزی (نسخه ۳)
+
+
+const $ = (sel) => document.querySelector(sel);
+
+// ایموجی اختصاصی هر درس (با نام درس تطبیق می‌شود)
+const SUBJECT_EMOJI = [
+  ['کارگاه', '🔧'], ['ریاضی', '📐'], ['هندسه', '📐'], ['فیزیک', '🧲'], ['شیمی', '⚗️'],
+  ['زیست', '🌿'], ['ادبیات', '📖'], ['فارسی', '📖'], ['نگارش', '✍️'], ['انگلیسی', '🗣️'],
+  ['عربی', '🕌'], ['تاریخ', '🏺'], ['جغرافیا', '🗺️'], ['دینی', '🕊️'], ['ورزش', '⚽'],
+  ['هنر', '🎨'], ['دفاعی', '🛡️'], ['آزمایشگاه', '🧪'], ['نجوم', '🔭'], ['اقتصاد', '💰'],
+  ['فلسفه', '🤔'], ['روان', '🧠'], ['کامپیوتر', '💻'], ['برنامه', '💻'],
+];
+function subjectEmoji(name) {
+  if (!name) return '📚';
+  for (const [key, emoji] of SUBJECT_EMOJI) {
+    if (name.includes(key)) return emoji;
+  }
+  return '📚';
+}
+
+/**
+ * درس مؤثرِ یک زنگ در تاریخ مشخص.
+ * زنگ‌های گردشی (alt_subject_id) هفته‌به‌هفته بین درس اصلی و درس دوم می‌چرخند.
+ * مبنای چرخش (rotation_anchor) از تنظیمات سرور می‌آید: شنبه‌ی هفته‌ای که درسِ اصلی بوده.
+ * مدیر می‌تواند مبنای هفته را از پنل جابه‌جا کند تا برنامه با واقعیت مدرسه بخواند.
+ */
+function resolveSubject(lesson, dateMs) {
+  if (!lesson.alt_subject_id || !lesson.alt_subject_name) {
+    return {
+      subject_name: lesson.subject_name,
+      color_key: lesson.color_key,
+      rotating: false,
+    };
+  }
+  const useAlt = weekParity(dateMs, state.settings.rotation_anchor) === 'alt';
+  return {
+    subject_name: useAlt ? lesson.alt_subject_name : lesson.subject_name,
+    color_key: useAlt ? lesson.alt_color_key : lesson.color_key,
+    rotating: true,
+  };
+}
+
+const state = {
+  days: [],
+  subjects: [],
+  tasks: { active: [], expired: [] },
+  announcements: [],
+  settings: {},
+  hwRange: null, // بازه‌ی تاریخ‌هایی که تکلیفشان از API لود شده: { from, to }
+};
+
+// ---------- API (مقاوم به شبکه ضعیف و فیلترینگ) ----------
+// هر درخواست: مهلت زمانی + تلاش مجدد خودکار — روی شبکه‌ای که پکت می‌اندازد،
+// یک fetch ساده ممکن است تا ابد معطل بماند و صفحه «نصفه» بماند.
+// استراتژی: مبدأها را با پنجره‌ی کوتاه پشت‌سرهم امتحان می‌کنیم (مسیر بسته
+// سریع کنار می‌رود)، بعد اگر همه فقط کند بودند، یک دور با مهلت بلند.
+const RETRY_BACKOFF_MS = [800, 1_600, 3_200];
+
+// زنجیره‌ی مبداهای جایگزین برای وقتی فیلترینگ ISP مسیر اصلی را می‌بندد:
+// ۱) همین مبدأ (نرمال) ۲) دو دامنه‌ی دیگر کلادفلر روی ۴۴۳
+// ۳) پورت جایگزین TLS (فیلترینگ پورت-محور را دور می‌زند) ۴) HTTP ساده (بدون SNI).
+// فقط برای خواندن داده‌ها؛ نوشتن/ادمین همیشه روی مبدأ خود سایت انجام می‌شود.
+const API_ORIGINS = (() => {
+  const self = ''; // مبدأ جاری
+  const alts = [
+    'https://school.gigaspaceturnip.workers.dev',
+    'https://www.the-big-school.de5.net',
+  ].filter((o) => o !== location.origin);
+  // پورت جایگزین و http فقط وقتی معنا دارد که خودم روی کلادفلر باشم
+  if (location.protocol === 'https:') {
+    alts.push(`${location.origin}:8443`);
+    alts.push(location.origin.replace('https://', 'http://'));
+  }
+  return [self, ...alts];
+})();
+
+function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
+
+async function fetchOnce(url, timeoutMs) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    return await fetch(url, { headers: { Accept: 'application/json' }, signal: ctrl.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// مبدأِ زنده برای دانلود پیوست‌های آینه (github.io خودش /api ندارد).
+// اول از حافظه‌ی قبلی، وگرنه از اولین فراخوانی موفق api() به‌روز می‌شود.
+const LIVE_ORIGIN_KEY = 'classhub_dl_origin';
+(function seedLiveOrigin() {
+  if (!window.__IS_MIRROR__) return;
+  if (window.__LIVE_ORIGIN__) return; // مقدار تزریق‌شده‌ی ناشر آینه معتبر است
+  let saved = '';
+  try { saved = localStorage.getItem(LIVE_ORIGIN_KEY) || ''; } catch { /* private mode */ }
+  const fallback = API_ORIGINS.find((o) => o) || '';
+  window.__LIVE_ORIGIN__ = saved || fallback;
+})();
+function noteLiveOrigin(origin) {
+  if (!window.__IS_MIRROR__ || !origin) return;
+  if (window.__LIVE_ORIGIN__ === origin) return;
+  window.__LIVE_ORIGIN__ = origin;
+  try { localStorage.setItem(LIVE_ORIGIN_KEY, origin); } catch { /* private mode */ }
+  // پیوست‌های رندرشده با مبدأ قدیمی را با مبدأ درست دوباره بکشیم
+  document.querySelectorAll(`a.attachment-item[href^="/api/attachments/"]`).forEach((a) => {
+    a.setAttribute('href', origin + a.getAttribute('href'));
+  });
+}
+
+async function api(path) {
+  let lastErr;
+  // برای هر مبدأ: یک مهلت کوتاه «کشف» (۱۰ثانیه) — اگر مبدأ فقط کند است، مهلت‌های
+  // بلندتر بعد از یک پاسخ موفق فعال می‌شوند؛ اگر مبدأ بسته است، سریع مبدأ بعدی می‌رویم.
+  for (const origin of API_ORIGINS) {
+    let deadline = Date.now() + 10_000; // پنجره‌ی کل برای یک مبدأ
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const remaining = deadline - Date.now();
+      if (remaining <= 0) break;
+      try {
+        const res = await fetchOnce(origin + path, remaining);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        noteLiveOrigin(origin);
+        return await res.json();
+      } catch (err) {
+        lastErr = err;
+        // فقط خطای شبکه/مهلت را دوباره امتحان می‌کنیم، نه پاسخ‌های معتبر سرور را
+        const retryable = err.name === 'AbortError' || err.name === 'TypeError';
+        if (!retryable) break;               // خطای HTTP واقعی: مبدأ بعدی
+        await sleep(RETRY_BACKOFF_MS[attempt] ?? 3_200);
+      }
+    }
+  }
+  // دور دوم: شاید همه‌ی مسیرها فقط «کند» بودند نه بسته — با مهلت بلند، دوباره
+  for (const origin of API_ORIGINS) {
+    try {
+      const res = await fetchOnce(origin + path, 35_000);
+      if (res.ok) return await res.json();
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+  throw lastErr;
+}
+
+// ---------- ابزار DOM ----------
+function el(tag, attrs = {}, ...children) {
+  const node = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === 'class') node.className = v;
+    else if (k === 'text') node.textContent = v;
+    else if (k.startsWith('on')) node.addEventListener(k.slice(2), v);
+    else if (v !== null && v !== undefined) node.setAttribute(k, String(v));
+  }
+  for (const child of children) {
+    if (child === null || child === undefined) continue;
+    node.append(child);
+  }
+  return node;
+}
+
+function toast(msg, type = 'info') {
+  const t = el('div', { class: `toast toast--${type}`, text: msg });
+  $('#toastRegion').append(t);
+  setTimeout(() => {
+    t.style.transition = 'opacity .4s, transform .4s';
+    t.style.opacity = '0';
+    t.style.transform = 'translateY(10px)';
+    setTimeout(() => t.remove(), 400);
+  }, 3200);
+}
+
+function formatSize(bytes) {
+  if (bytes >= 1_048_576) return `${faDigits((bytes / 1_048_576).toFixed(1))} مگابایت`;
+  if (bytes >= 1024) return `${faDigits(Math.round(bytes / 1024))} کیلوبایت`;
+  return `${faDigits(bytes)} بایت`;
+}
+
+/** درس بعدیِ امروز را پیدا می‌کند (بر اساس ساعت فعلی تهران) */
+function nextLessonToday() {
+  const todayIdx = tehranDayIndex();
+  const lessons = (state.days[todayIdx] || [])
+    .filter((l) => l.period <= (periodsPerDay(todayIdx) || 12));
+  if (!lessons.length) return null;
+  const hhmm = tehranHHMM(Date.now());
+  const resolved = lessons.map((l) => ({ lesson: l, subj: resolveSubject(l, Date.now()) }));
+  const next = resolved.find((r) => r.lesson.start_time > hhmm);
+  return next ? { ...next.lesson, subject_name: next.subj.subject_name } : null;
+}
+
+/**
+ * روزِ تمرکز: امروز تا وقتی زنگی باقی مانده؛ بعد از آخرین زنگِ امروز
+ * (یا روزهای بی‌کلاس مثل جمعه)، تمرکز می‌رود روی اولین روزِ درسیِ بعد.
+ * دانش‌آموزِ عصرِ بعدازمدرسه دنبال «فردا» است، نه امروزِ گذشته.
+ */
+function focusDay() {
+  const now = Date.now();
+  const todayIdx = tehranDayIndex(now);
+  const maxP = (d) => periodsPerDay(d) || 12;
+  const lessonsOf = (d) => (state.days[d] || []).filter((l) => l.period <= maxP(d));
+  const todayLessons = lessonsOf(todayIdx);
+  if (todayLessons.length) {
+    const hhmm = tehranHHMM(now);
+    const lastEnd = todayLessons.reduce((mx, l) => (l.end_time > mx ? l.end_time : mx), '');
+    if (hhmm < lastEnd) return { offset: 0, dayIdx: todayIdx, lessons: todayLessons };
+  }
+  for (let k = 1; k <= 6; k++) {
+    const idx = (todayIdx + k) % 7;
+    const ls = lessonsOf(idx);
+    if (ls.length) return { offset: k, dayIdx: idx, lessons: ls };
+  }
+  return { offset: 0, dayIdx: todayIdx, lessons: todayLessons };
+}
+
+// ---------- هدر ----------
+let clockTimer = null;
+
+function renderHeader() {
+  $('#brandDate').textContent = formatJalali(tehranLocalDate(), { withWeekday: true });
+  const name = state.settings.class_name || 'درس من';
+  $('#brandName').textContent = name;
+  $('#footerName').textContent = name;
+  document.title = `${name} | برنامه هفتگی کلاس`;
+  const wm = state.settings.welcome_message;
+  if (wm) $('#welcomeBubble').textContent = wm;
+  const note = state.settings.admin_note;
+  if (note) $('#footerNote').textContent = note;
+  tickClock();
+  if (!clockTimer) clockTimer = setInterval(tickClock, 30_000);
+}
+
+function tickClock() {
+  $('#brandClock').textContent = faDigits(tehranHHMM(Date.now()));
+}
+
+// ---------- هیرو ----------
+function renderHero() {
+  const maxPeriods = (d) => periodsPerDay(d) || 12;
+  const dayLessons = (d) => (state.days[d] ?? []).filter((l) => l.period <= maxPeriods(d));
+  const focus = focusDay();
+
+  // آمار روی همان پنجره‌ی نمایش (دو هفته) — با چیزی که دانش‌آموز می‌بیند هم‌خوان
+  let totalLessons = 0;
+  let totalHw = 0;
+  for (const { dayIdx, dateISO } of displayWindow()) {
+    const lessons = dayLessons(dayIdx);
+    totalLessons += lessons.length;
+    totalHw += lessons.filter((l) => l.hwByDate?.[dateISO]).length;
+  }
+  const stats = $('#heroStats');
+  stats.textContent = '';
+
+  // ترکیز روی روزِ به‌دست‌آمده: امروز (هنوز کلاس داریم)، فردا، یا روز درسی بعد
+  const dayName = WEEK_DAY_NAMES[focus.dayIdx];
+  const focusLabel = focus.offset === 0 ? `امروز (${dayName})` : focus.offset === 1 ? `فردا (${dayName})` : `${dayName} (${faDigits(focus.offset)} روز دیگر)`;
+  stats.append(el('div', { class: 'stat-chip' },
+    el('span', { text: focus.offset === 0 ? '🗓️' : '🌙' }),
+    `${focusLabel}، `,
+    el('b', { text: faDigits(focus.lessons.length) }),
+    ' زنگ'));
+  stats.append(el('div', { class: 'stat-chip' },
+    el('span', { text: '📚' }),
+    el('b', { text: faDigits(totalLessons) }),
+    ' درس در دو هفته'));
+  stats.append(el('div', { class: 'stat-chip' },
+    el('span', { text: '📝' }),
+    el('b', { text: faDigits(totalHw) }),
+    ' تکلیف در دو هفته'));
+
+  // درس بعدی: امروزِ در جریان؛ وگرنه اولین زنگِ روزِ تمرکز
+  let next = nextLessonToday();
+  let nextPrefix = 'درس بعدی';
+  if (!next && focus.lessons.length) {
+    const first = [...focus.lessons].sort((a, b) => a.period - b.period)[0];
+    const subj = resolveSubject(first, Date.now() + focus.offset * 86_400_000);
+    next = { ...first, subject_name: subj.subject_name };
+    nextPrefix = focus.offset === 0 ? 'اولین زنگ' : 'اولین زنگ فردا';
+  }
+  if (next) {
+    stats.append(el('div', { class: 'stat-chip' },
+      el('span', { text: '⏰' }),
+      `${nextPrefix}: `,
+      el('b', { text: `${subjectEmoji(next.subject_name)} ${next.subject_name}` }),
+      ` (${faTime(next.start_time)})`));
+  }
+}
+
+// ---------- جدول هفتگی ----------
+function lessonCard(lesson, dateMs) {
+  const subj = resolveSubject(lesson, dateMs);
+  // تکلیفِ همان تاریخِ همین زنگ — نه همه‌ی هفته‌ها (تفکیک هفته‌ها)
+  const hw = lesson.hwByDate?.[tehranDateISO(dateMs)] ?? null;
+  const card = el('button', {
+    class: `lesson-card sub-${subj.color_key}`,
+    type: 'button',
+    onclick: () => openLesson(lesson.id, dateMs),
+    'aria-label': `${subj.subject_name}، زنگ ${faDigits(lesson.period)}، ${faTime(lesson.start_time)} تا ${faTime(lesson.end_time)}${hw ? `، تکلیف: ${hw.title}` : ''}`,
+  });
+
+  const top = el('div', { class: 'lesson-card__top' },
+    el('span', { class: 'lesson-card__period', text: faDigits(lesson.period), 'aria-hidden': 'true' }),
+    el('span', { class: 'lesson-card__emoji', text: subjectEmoji(subj.subject_name), 'aria-hidden': 'true' }),
+    el('span', { class: 'lesson-card__subject', text: subj.subject_name }),
+    (() => {
+      // ساعت از زنگِ پیکربندی‌شده می‌آید (منبع حقیقت)؛ فقط اگر نبود، از ردیف درس
+      const bt = periodTimes(lesson.day, lesson.period) ?? [lesson.start_time, lesson.end_time];
+      return el('span', { class: 'lesson-card__time', text: `${faTime(bt[0])}–${faTime(bt[1])}` });
+    })(),
+  );
+  card.append(top);
+
+  if (hw) {
+    const hwLine = el('div', { class: 'lesson-card__hw' },
+      el('span', { text: `📝 ${hw.title}` }),
+    );
+    card.append(hwLine);
+  } else {
+    card.append(el('div', { class: 'lesson-card__hw lesson-card__hw--none', text: 'تکلیفی ثبت نشده' }));
+  }
+  if (lesson.attachment_count > 0) {
+    card.append(el('span', {
+      class: 'attach-chip', text: `📎 ${faDigits(lesson.attachment_count)}`,
+      style: 'margin-top:6px;align-self:flex-start;',
+    }));
+  }
+  return card;
+}
+
+// پنجره‌ی نمایش: دو هفته‌ی کامل (این هفته + هفته‌ی بعد) — ttWeek آن را
+// هفته‌به‌هفته جابه‌جا می‌کند (۰ = همین دو هفته)
+let ttWeek = 0;
+// بازه‌ی مجاز ttWeek؛ بعد از اولین لود از hwRangeی که API می‌دهد دقیق می‌شود
+let ttWeekBounds = { min: -2, max: 4 };
+// اسکرولِ اولیه فقط یک‌بار (در بوت) انجام می‌شود؛ پول ۳۰ثانیه‌ای نباید
+// اسکرول دستی کاربر را بی‌احترام برمی‌گرداند.
+let firstLoadDone = false;
+
+/** روزهای پنجره‌ی در حال نمایش: [{ date, dayIdx, dayNum, dateISO }] */
+function displayWindow() {
+  return fortnightWindow(ttWeek);
+}
+
+/** برچسب هفته‌ی یک ستون نسبت به هفته‌ی جاری (null = همین هفته) */
+function weekTag(rel) {
+  const text = rel === 0 ? null
+    : rel === 1 ? 'هفته‌ی بعد'
+      : rel === -1 ? 'هفته‌ی قبل'
+        : rel > 0 ? `${faDigits(rel)} هفته بعد` : `${faDigits(-rel)} هفته قبل`;
+  return text ? el('span', { class: 'day-col__week-tag', text }) : null;
+}
+
+/** نگه‌داشتن ttWeek داخل بازه‌ی تکالیفِ لودشده */
+function clampWeek() {
+  ttWeekBounds = weekOffsetBounds(state.hwRange);
+  ttWeek = Math.max(ttWeekBounds.min, Math.min(ttWeekBounds.max, ttWeek));
+}
+
+function renderTimetable() {
+  const grid = $('#ttGrid');
+  grid.textContent = '';
+  // پنجره از شنبه‌ی همین هفته شروع می‌شود و دو هفته را می‌گیرد: تکلیفِ ثبت‌شده
+  // برای هر روزِ این دو هفته دیده می‌شود — حتی پنجشنبه/جمعه و عصرِ بعد از
+  // آخرین زنگ که روزِ تمرکز «شنبه‌ی بعد» است. ستون‌ها در دو ردیفِ ۷تایی
+  // می‌نشینند (ردیف اول این هفته، ردیف دوم هفته‌ی بعد).
+  const focus = focusDay();
+  const windowDays = displayWindow();
+  const todayDayNum = tehranDayNumber();
+  const focusDayNum = todayDayNum + focus.offset;
+  const thisSat = todayDayNum - ((todayDayNum + 5) % 7);
+  let anyLessons = false;
+  updateWeekNav(focus);
+
+  windowDays.forEach(({ date, dayIdx, dayNum, dateISO }) => {
+    // شماره‌ی روزِ تهران — مستقل از منطقه‌ی زمانی مرورگر (VPN)
+    const isToday = dayNum === todayDayNum;
+    const isFocus = !isToday && dayNum === focusDayNum;
+    const lessons = state.days[dayIdx] || [];
+    anyLessons = anyLessons || lessons.length > 0;
+    // شماره‌ی هفته‌ی این ستون نسبت به هفته‌ی جاری (روزِ هفته = شنبه‌ی همان هفته)
+    const weekRel = (dayNum - dayIdx - thisSat) / 7;
+    const col = el('div', {
+      class: 'day-col'
+        + (weekRel > 0 ? ' day-col--future' : weekRel < 0 ? ' day-col--past' : '')
+        + (isToday ? ' day-col--today' : '') + (isFocus ? ' day-col--focus' : ''),
+      'data-day': dayIdx,
+      'data-daynum': dayNum,
+      'data-date': dateISO,
+      'aria-label': `روز ${WEEK_DAY_NAMES[dayIdx]}`,
+    });
+    // برچسب ستون: امروز / نزدیک‌ترین روزِ درسی / هفته‌ی قبل یا بعد (ولی هفته‌ی جاری بدون برچسب)
+    const tag = isToday ? el('span', { class: 'day-col__today-tag', text: 'امروز' })
+      : isFocus ? el('span', { class: 'day-col__focus-tag', text: 'روز بعد' })
+        : weekTag(weekRel);
+    const head = el('div', { class: 'day-col__head' },
+      el('span', { class: 'day-col__name', text: WEEK_DAY_NAMES[dayIdx] }),
+      tag,
+    );
+    head.append(el('span', { class: 'day-col__date', text: formatJalali(date, { withYear: false }) }));
+    col.append(head);
+
+    if (!lessons.length || periodsPerDay(dayIdx) === 0) {
+      const off = dayIdx === 5 || dayIdx === 6;
+      col.append(el('div', { class: 'day-empty' },
+        el('span', { class: 'face', text: off ? '🛌' : '☁️' }),
+        el('div', { text: off ? 'تعطیل آخر هفته' : 'کلاسی نیست؛ نفس بکش!' }),
+      ));
+    } else {
+      // فقط زنگ‌های مجاز روز (دوشنبه ۳ زنگ) — اضافه‌ها نادیده گرفته می‌شوند
+      const maxP = periodsPerDay(dayIdx) || 12;
+      // dateMs = نیمه‌شبِ UTC همان تاریخِ تهران: کلید تکلیف و پاریتی گردش از آن بیرون می‌آید
+      const dateMs = dayNum * 86_400_000;
+      for (const lesson of lessons.filter((l) => l.period <= maxP)) col.append(lessonCard(lesson, dateMs));
+    }
+    grid.append(col);
+  });
+
+  if (!anyLessons) {
+    $('#heroSub').textContent = 'هنوز برنامه‌ای ثبت نشده است؛ به‌زودی توسط سرِ کلاس تکمیل می‌شود.';
+  }
+  $('#updatedAt').textContent = faDigits(tehranHHMM(Date.now()));
+  renderDots(todayDayNum);
+  updateScrollState();
+}
+
+// ---------- نقطه‌های راهنما و فلش‌ها ----------
+function renderDots(todayDayNum) {
+  const dots = $('#ttDots');
+  dots.textContent = '';
+  // هفت نقطه = هفت روزِ هفته (هر ستون دو ردیف دارد: این هفته روی هفته‌ی بعد)
+  const todayIdx = (todayDayNum + 5) % 7;
+  for (let dayIdx = 0; dayIdx < 7; dayIdx++) {
+    dots.append(el('button', {
+      class: `tt-dot${dayIdx === todayIdx ? ' tt-dot--today' : ''}`,
+      type: 'button',
+      'data-day': dayIdx,
+      'aria-label': WEEK_DAY_NAMES[dayIdx],
+      onclick: () => scrollToDay(dayIdx),
+    }));
+  }
+  updateDots();
+}
+
+function updateDots() {
+  const scroll = $('#ttScroll');
+  const cols = [...document.querySelectorAll('.day-col')];
+  if (!cols.length) return;
+  const center = scroll.scrollLeft + scroll.clientWidth / 2;
+  let closest = null;
+  let closestDist = Infinity;
+  for (const col of cols) {
+    const c = col.offsetLeft + col.offsetWidth / 2;
+    const dist = Math.abs(c - center);
+    if (dist < closestDist) { closestDist = dist; closest = col; }
+  }
+  const closestDay = closest?.dataset.day ?? '0';
+  for (const dot of document.querySelectorAll('.tt-dot')) {
+    dot.classList.toggle('tt-dot--active', dot.dataset.day === closestDay);
+  }
+}
+
+function updateScrollState() {
+  const wrap = $('#ttWrap');
+  const scroll = $('#ttScroll');
+  const scrollable = scroll.scrollWidth > scroll.clientWidth + 4;
+  wrap.classList.toggle('tt-wrap--scrollable', scrollable);
+  // در RTL مقدار scrollLeft از 0 تا منفی می‌رود (استاندارد جدید مرورگرها)
+  const pos = Math.abs(scroll.scrollLeft);
+  const max = scroll.scrollWidth - scroll.clientWidth;
+  const atStart = pos <= 4;
+  const atEnd = pos >= max - 4;
+  wrap.classList.toggle('tt-wrap--at-start', atStart);
+  wrap.classList.toggle('tt-wrap--at-end', atEnd);
+  $('#ttPrev').disabled = atStart;
+  $('#ttNext').disabled = atEnd;
+}
+
+/** اسکرول افقی تا ستونِ داده‌شده در وسطِ دید بیفتد (قابل‌اعتماد در RTL) */
+function centerColumn(col, smooth = true) {
+  const scroll = $('#ttScroll');
+  if (!col || !scroll) return;
+  // delta = فاصله ستون از مرکز (مثبت: ستون سمت راست است)؛
+  // اسکرول لازم همان delta است (اگر ستون راست‌تر است، به چپ یعنی منفی می‌رویم).
+  const rect = col.getBoundingClientRect();
+  const sRect = scroll.getBoundingClientRect();
+  const delta = (rect.left + rect.width / 2) - (sRect.left + scroll.clientWidth / 2);
+  scroll.scrollBy({ left: delta, behavior: smooth ? 'smooth' : 'auto' });
+}
+
+function scrollToDay(dayIdx, smooth = true) {
+  // هر روزِ هفته دو ستون دارد (این هفته / هفته‌ی بعد)؛ اولین ستون همان ردیف اول است
+  centerColumn(document.querySelector(`.day-col[data-day="${dayIdx}"]`), smooth);
+}
+
+function scrollToToday(smooth = true) {
+  // بازگشت به روزِ تمرکز (ستونِ امروز/فردا — نه اولین ستون پنجره که شنبه است)
+  const focus = focusDay();
+  const focusNum = tehranDayNumber() + focus.offset;
+  const col = document.querySelector(`.day-col[data-daynum="${focusNum}"]`)
+    ?? document.querySelector(`.day-col[data-daynum="${tehranDayNumber()}"]`)
+    ?? document.querySelector('.day-col');
+  centerColumn(col, smooth);
+}
+
+/** جابه‌جایی پنجره یک هفته (−۱ / +۱) و رندر مجدد */
+function shiftWeek(delta) {
+  ttWeek = Math.max(ttWeekBounds.min, Math.min(ttWeekBounds.max, ttWeek + delta));
+  renderTimetable();
+  scrollToToday(false);
+}
+
+/** دکمه‌های ناوبری هفته + برچسب بازه + برچسبِ دکمه‌ی «برو به …» بر اساس روزِ تمرکز */
+function updateWeekNav(focus) {
+  const prev = $('#weekPrev');
+  const next = $('#weekNext');
+  if (prev) prev.disabled = ttWeek <= ttWeekBounds.min;
+  if (next) next.disabled = ttWeek >= ttWeekBounds.max;
+  const range = $('#ttRange');
+  if (range) {
+    if (ttWeek === 0) {
+      range.textContent = 'این هفته + هفته‌ی بعد';
+    } else {
+      const win = displayWindow();
+      range.textContent = `${formatJalali(win[0].date, { withYear: false })} + ${formatJalali(win[7].date, { withYear: false })}`;
+    }
+  }
+  $('#weekToday')?.classList.toggle('hidden', ttWeek === 0);
+  // صبح (هنوز کلاس داریم) → «برو به امروز»؛ عصر/آخر هفته → «برو به فردا» یا روز بعد
+  const goLabel = focus.offset === 0 ? 'برو به امروز' : focus.offset === 1 ? 'برو به فردا' : `برو به ${WEEK_DAY_NAMES[focus.dayIdx]}`;
+  const fabLabel = $('#fabTodayLabel');
+  if (fabLabel) fabLabel.textContent = goLabel;
+}
+
+// ---------- پنل جزئیات ----------
+let lastFocused = null;
+
+function openOverlay(overlay) {
+  lastFocused = document.activeElement;
+  overlay.hidden = false;
+  requestAnimationFrame(() => overlay.classList.add('overlay--open'));
+  document.body.style.overflow = 'hidden';
+  document.addEventListener('keydown', overlayKeydown, true);
+}
+
+function closeOverlay(overlay) {
+  overlay.classList.remove('overlay--open');
+  document.body.style.overflow = '';
+  document.removeEventListener('keydown', overlayKeydown, true);
+  setTimeout(() => { overlay.hidden = true; }, 360);
+  if (lastFocused && lastFocused.focus) lastFocused.focus();
+}
+
+function overlayKeydown(e) {
+  if (e.key === 'Escape') {
+    closeOverlay($('#detailOverlay'));
+  }
+  if (e.key === 'Tab') {
+    const overlay = $('#detailOverlay');
+    const focusables = overlay.querySelectorAll('button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    if (!focusables.length) return;
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  }
+}
+
+async function openLesson(id, dateMs = Date.now()) {
+  const overlay = $('#detailOverlay');
+  $('#detailBody').textContent = '';
+  $('#detailTitle').textContent = 'جزئیات درس';
+  openOverlay(overlay);
+  $('#detailClose').focus();
+  try {
+    const data = await api(`/api/lessons/${id}?date=${tehranDateISO(dateMs)}`);
+    renderLessonDetail(data.lesson, dateMs);
+  } catch (err) {
+    $('#detailBody').append(el('div', { class: 'error-state', text: `خطا در دریافت جزئیات: ${err.message}` }));
+  }
+}
+
+function renderLessonDetail(lesson, dateMs) {
+  const subj = resolveSubject(lesson, dateMs);
+  $('#detailTitle').textContent = `${subjectEmoji(subj.subject_name)} ${subj.subject_name} — ${WEEK_DAY_NAMES[lesson.day]}`;
+  const body = $('#detailBody');
+  body.textContent = '';
+
+  const wrap = el('div', { class: 'detail-lesson fade-up' });
+
+  wrap.append(el('div', { class: `detail-hero sub-${subj.color_key}` },
+    el('div', { class: 'detail-hero__period', text: `زنگ ${faDigits(lesson.period)}` }),
+    el('div', {},
+      el('h3', { class: 'detail-hero__subject', text: subj.subject_name }),
+      el('div', { class: 'detail-hero__meta', text: `${WEEK_DAY_NAMES[lesson.day]} · ${faTime(lesson.start_time)} تا ${faTime(lesson.end_time)}` }),
+    ),
+  ));
+
+  const hw = lesson.homework;
+  if (!hw) {
+    wrap.append(el('div', { class: 'detail-block' },
+      el('p', { class: 'detail-block__title', text: '📝 تکلیف' }),
+      el('p', { class: 'detail-block__text detail-block__text--muted', text: 'برای این درس تکلیفی ثبت نشده است. همین‌طور نفس بکش! 😌' }),
+    ));
+  } else {
+    wrap.append(el('div', { class: 'detail-block' },
+      el('p', { class: 'detail-block__title', text: '📝 تکلیف' }),
+      el('p', { class: 'detail-block__text', text: hw.title }),
+    ));
+    if (hw.description) {
+      wrap.append(el('div', { class: 'detail-block' },
+        el('p', { class: 'detail-block__title', text: '📖 توضیحات کامل' }),
+        el('p', { class: 'detail-block__text', text: hw.description }),
+      ));
+    }
+    const dl = el('dl', { style: 'margin:0;' });
+    if (hw.textbook_pages) {
+      dl.append(el('div', { class: 'dl-row' }, el('dt', { text: 'صفحات کتاب' }), el('dd', { text: hw.textbook_pages })));
+    }
+    if (dl.children.length) wrap.append(el('div', { class: 'detail-block' }, dl));
+    if (hw.instructions) {
+      wrap.append(el('div', { class: 'detail-block' },
+        el('p', { class: 'detail-block__title', text: '📋 دستورالعمل' }),
+        el('p', { class: 'detail-block__text', text: hw.instructions }),
+      ));
+    }
+    if (hw.notes) {
+      wrap.append(el('div', { class: 'detail-block' },
+        el('p', { class: 'detail-block__title', text: '💬 یادداشت سرِ کلاس' }),
+        el('p', { class: 'detail-block__text', text: hw.notes }),
+      ));
+    }
+    if (lesson.attachments && lesson.attachments.length) {
+      wrap.append(el('div', { class: 'detail-block' },
+        el('p', { class: 'detail-block__title', text: '📎 پیوست‌ها' }),
+        attachmentList(lesson.attachments)));
+    }
+  }
+  body.append(wrap);
+}
+
+/** آیتم دانلود فایل — مشترک بین پیوست تکلیف/مهلت/اطلاعیه و کارت جزوه */
+function fileItemEl(a, origin) {
+  return el('a', {
+    class: 'attachment-item', href: `${origin}/api/attachments/${a.id}`, download: a.filename, // روی mirror از مبدأ اصلی
+  },
+  el('span', { class: 'attachment-item__icon', text: '📎' }),
+  el('span', { class: 'attachment-item__name', text: a.filename }),
+  el('span', { class: 'attachment-item__size', text: formatSize(a.size) }));
+}
+
+function attachmentList(files) {
+  const list = el('div', { class: 'attachment-list' });
+  // روی آینه‌ی استاتیک، دانلود پیوست فقط از مبدأ اصلی ممکن است
+  const origin = window.__IS_MIRROR__ ? (window.__LIVE_ORIGIN__ || '') : '';
+  for (const a of files) {
+    // پیوست «لینک»: فایل روی سرویس بیرونی (مثل گوگل‌درایو) — مستقیم همان‌جا باز می‌شود
+    if (a.url) {
+      let host = '';
+      try { host = new URL(a.url).hostname.replace(/^www\./, ''); } catch { /* لینک معیوب */ }
+      list.append(el('a', {
+        class: 'attachment-item attachment-item--link', href: a.url, target: '_blank', rel: 'noopener noreferrer',
+      },
+      el('span', { class: 'attachment-item__icon', text: '🔗' }),
+      el('span', { class: 'attachment-item__name', text: a.filename }),
+      el('span', { class: 'attachment-item__size', text: host || 'لینک' })));
+      continue;
+    }
+    list.append(fileItemEl(a, origin));
+  }
+  return list;
+}
+
+// ---------- درگ بات‌شیت (موبایل) ----------
+function setupSheetDrag() {
+  const grip = $('#detailGrip');
+  const sheet = $('#detailSheet');
+  const overlay = $('#detailOverlay');
+  let startY = 0;
+  let dragging = false;
+  let curY = 0;
+
+  function onStart(e) {
+    if (window.innerWidth > 768) return;
+    dragging = true;
+    startY = e.touches ? e.touches[0].clientY : e.clientY;
+    sheet.classList.add('sheet--dragging');
+  }
+  function onMove(e) {
+    if (!dragging) return;
+    curY = (e.touches ? e.touches[0].clientY : e.clientY) - startY;
+    if (curY < 0) curY = 0;
+    sheet.style.transform = `translateY(${curY}px)`;
+    overlay.style.opacity = String(Math.max(0.25, 1 - curY / 400));
+  }
+  function onEnd() {
+    if (!dragging) return;
+    dragging = false;
+    sheet.classList.remove('sheet--dragging');
+    sheet.style.transform = '';
+    overlay.style.opacity = '';
+    if (curY > 110) closeOverlay(overlay);
+  }
+  grip.addEventListener('touchstart', onStart, { passive: true });
+  grip.addEventListener('touchmove', onMove, { passive: true });
+  grip.addEventListener('touchend', onEnd);
+  grip.addEventListener('mousedown', onStart);
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('mouseup', onEnd);
+}
+
+// ---------- چکیده تکالیف (زیر تقویم هفتگی) ----------
+/** برچسب نسبیِ مهلت: امروز / فردا / پس‌فردا / n روز مانده / تاریخ شمسی */
+function dueLabelFa(dueAt) {
+  const dueMs = new Date(dueAt).getTime();
+  const diff = tehranDayNumber(dueMs) - tehranDayNumber(Date.now());
+  if (diff === 0) return { text: 'امروز', cls: 'dl-today' };
+  if (diff === 1) return { text: 'فردا', cls: 'dl-tomorrow' };
+  if (diff === 2) return { text: 'پس‌فردا', cls: 'dl-tomorrow' };
+  if (diff > 2 && diff <= 6) return { text: `${faDigits(diff)} روز مانده`, cls: 'dl-soon' };
+  return { text: formatJalali(new Date(dueMs), { withYear: false }), cls: 'dl-later' };
+}
+
+/** برچسب نسبیِ تاریخِ تکلیف: امروز / فردا / n روز مانده / دیروز / n روز پیش */
+function hwDateLabel(dayNum, todayNum) {
+  const diff = dayNum - todayNum;
+  if (diff === 0) return { text: 'امروز', cls: 'dl-today' };
+  if (diff === 1) return { text: 'فردا', cls: 'dl-tomorrow' };
+  if (diff === 2) return { text: 'پس‌فردا', cls: 'dl-tomorrow' };
+  if (diff > 2) return { text: `${faDigits(diff)} روز مانده`, cls: 'dl-soon' };
+  if (diff === -1) return { text: 'دیروز', cls: 'dl-past' };
+  return { text: `${faDigits(-diff)} روز پیش`, cls: 'dl-past' };
+}
+
+/**
+ * تکلیف‌های پنجره‌ی در حال نمایش (دو هفته)، مرتب: اول روزهای از امروز به بعد
+ * (نزدیک‌ترین از بالا)، بعد روزهای گذشته‌ی همین هفته (تازه‌ترین از بالا).
+ */
+function homeworkInRange() {
+  const todayNum = tehranDayNumber();
+  const out = [];
+  for (const { dayIdx, dayNum, dateISO } of displayWindow()) {
+    const maxP = periodsPerDay(dayIdx) || 12;
+    for (const lesson of state.days[dayIdx] ?? []) {
+      if (lesson.period > maxP) continue;
+      const hw = lesson.hwByDate?.[dateISO];
+      if (hw) out.push({ lesson, hw, dayIdx, dayNum, dateISO });
+    }
+  }
+  // گذشته: کلید ۵۰۰ + فاصله (تازه‌ترین اول)؛ آینده: کلید = فاصله
+  const key = (d) => (d.dayNum >= todayNum ? d.dayNum - todayNum : 500 + (todayNum - d.dayNum));
+  out.sort((a, b) => key(a) - key(b));
+  return out;
+}
+
+// بیشینه‌ی تکلیف‌هایی که در چکیده لیست می‌شود (بقیه در خود جدول دیده می‌شوند)
+const DIGEST_HW_MAX = 8;
+
+function renderDigest() {
+  const list = $('#digestList');
+  if (!list) return;
+  list.textContent = '';
+
+  // ۱) تکلیف‌های ثبت‌شده‌ی همین دو هفته — روی هر ردیف، جزئیات همان درس در همان تاریخ باز می‌شود
+  const homework = homeworkInRange();
+  for (const { lesson, hw, dayIdx, dayNum } of homework.slice(0, DIGEST_HW_MAX)) {
+    const label = hwDateLabel(dayNum, tehranDayNumber());
+    const subj = resolveSubject(lesson, dayNum * 86_400_000);
+    list.append(el('button', {
+      class: 'digest-row digest-row--hw',
+      type: 'button',
+      onclick: () => openLesson(lesson.id, dayNum * 86_400_000),
+      title: hw.title,
+    },
+    el('span', { class: 'digest-row__icon', text: '📝', 'aria-hidden': 'true' }),
+    el('span', { class: 'digest-row__title', text: `${subjectEmoji(subj.subject_name)} ${subj.subject_name} — ${hw.title}` }),
+    el('span', { class: `digest-row__label ${label.cls}`, text: `${WEEK_DAY_NAMES[dayIdx]} · ${label.text}` }),
+    ));
+  }
+  if (homework.length > DIGEST_HW_MAX) {
+    list.append(el('div', {
+      class: 'digest-note',
+      text: `و ${faDigits(homework.length - DIGEST_HW_MAX)} تکلیف دیگر در جدول برنامه`,
+    }));
+  }
+
+  // ۲) مهلت‌های فعال از قبل بر اساس نزدیکی مرتب‌اند؛ فقط ۶ مورد نخست
+  const items = (state.tasks?.active ?? []).slice(0, 6);
+  if (!homework.length && !items.length) {
+    list.append(el('div', { class: 'digest-empty', text: 'برای این دو هفته تکلیف یا مهلتی ثبت نشده — نفس بکش! 🌿' }));
+    return;
+  }
+  for (const task of items) {
+    const label = dueLabelFa(task.due_at);
+    const row = el('button', {
+      class: `digest-row${task.priority === 'high' ? ' digest-row--high' : ''}`,
+      type: 'button',
+      onclick: () => openTask(task.id),
+      title: task.title,
+    });
+    if (task.subject_name) {
+      row.append(el('span', {
+        class: 'digest-row__dot',
+        style: `background: var(--${task.color_key ?? 'lavender'});`,
+        'aria-hidden': 'true',
+      }));
+    }
+    row.append(
+      el('span', { class: 'digest-row__icon', text: KIND_ICONS[task.kind] || '📌', 'aria-hidden': 'true' }),
+      el('span', { class: 'digest-row__title', text: `${task.subject_name ? task.subject_name + ' — ' : ''}${task.title}` }),
+      el('span', { class: `digest-row__label ${label.cls}`, text: label.text }),
+    );
+    list.append(row);
+  }
+  if (state.tasks.active.length > 6) {
+    list.append(el('button', {
+      class: 'digest-more', type: 'button', text: `نمایش همه‌ی ${faDigits(state.tasks.active.length)} مهلت ←`,
+      onclick: () => switchTab('tasks'),
+    }));
+  }
+}
+
+// ---------- نشان «دیده‌نشده» روی سربرگ تب‌ها ----------
+const SEEN_KEY = 'classhub_seen_v1';
+
+function getSeen() {
+  try { return JSON.parse(localStorage.getItem(SEEN_KEY)); } catch { return null; }
+}
+
+function markTabSeen(tab, when = Date.now()) {
+  const s = getSeen() ?? {};
+  s[tab] = when;
+  try { localStorage.setItem(SEEN_KEY, JSON.stringify(s)); } catch { /* حالت خصوصی مرورگر */ }
+}
+
+/** چند موردِ تازه (آیتم‌هایی که بعد از آخرین بازدید تغییر کرده‌اند) برای هر تب */
+function tabFreshCounts() {
+  const seen = getSeen();
+  if (!seen) return { schedule: 0, tasks: 0, handouts: 0, announcements: 0 };
+  const counts = { schedule: 0, tasks: 0, handouts: 0, announcements: 0 };
+  for (const lessons of state.days ?? []) {
+    for (const l of lessons ?? []) {
+      // تکلیف‌ها تاریخ‌محورند (hwByDate): تازه‌بودنِ هر کدام هم حساب می‌شود
+      let ts = Math.max(Date.parse(l.updated_at ?? '') || 0, Date.parse(l.homework?.updated_at ?? '') || 0);
+      for (const hw of Object.values(l.hwByDate ?? {})) {
+        ts = Math.max(ts, Date.parse(hw.updated_at ?? '') || 0);
+      }
+      if (ts > (seen.schedule ?? 0)) counts.schedule += 1;
+    }
+  }
+  for (const task of [...(state.tasks?.active ?? []), ...(state.tasks?.expired ?? [])]) {
+    const ts = Math.max(Date.parse(task.created_at ?? '') || 0, Date.parse(task.updated_at ?? '') || 0);
+    if (ts > (seen.tasks ?? 0)) counts.tasks += 1;
+  }
+  for (const h of state.handouts ?? []) {
+    if ((Date.parse(h.updated_at ?? '') || 0) > (seen.handouts ?? 0)) counts.handouts += 1;
+  }
+  for (const a of state.announcements ?? []) {
+    if ((Date.parse(a.published_at ?? a.publishedAt ?? '') || 0) > (seen.announcements ?? 0)) counts.announcements += 1;
+  }
+  return counts;
+}
+
+function renderTabBadges() {
+  const counts = tabFreshCounts();
+  for (const btn of document.querySelectorAll('.std-tab')) {
+    const tab = btn.dataset.tab;
+    let badge = btn.querySelector('.std-tab__badge');
+    const n = tab === activeTab ? 0 : (counts[tab] ?? 0);
+    if (n > 0) {
+      if (!badge) {
+        badge = el('span', { class: 'std-tab__badge' });
+        btn.append(badge);
+      }
+      badge.textContent = faDigits(Math.min(n, 99));
+    } else if (badge) {
+      badge.remove();
+    }
+  }
+}
+
+// ---------- مهلت‌ها ----------
+function taskCard(task) {
+  const cd = countdown(task.due_at);
+  const card = el('button', {
+    class: `task-card${task.priority === 'high' ? ' task-card--high' : ''}`, type: 'button',
+    onclick: () => openTask(task.id),
+  });
+  const head = el('div', { class: 'task-card__kind' },
+    el('span', { text: KIND_ICONS[task.kind] || '📌' }),
+    el('span', { text: KIND_LABELS[task.kind] || task.kind }),
+  );
+  if (task.subject_name) head.append(el('span', { text: `· ${task.subject_name}`, style: 'color:var(--sub);font-weight:500;' }));
+  card.append(head, el('h3', { class: 'task-card__title', text: task.title }));
+  if (task.description) {
+    card.append(el('p', {
+      class: 'task-card__subject', text: task.description,
+      style: 'margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;',
+    }));
+  }
+  const footer = el('div', { class: 'task-card__footer' },
+    el('span', { class: `countdown-chip cd-${cd.state}`, text: `⏰ ${cd.text}` }),
+    el('span', { class: 'task-card__due', text: formatJalaliDateTime(task.due_at) }),
+  );
+  if (task.priority === 'high') {
+    footer.append(el('span', { class: 'priority-dot priority-high', title: PRIORITY_LABELS[task.priority] }));
+  }
+  if (task.attachment_count > 0) {
+    footer.append(el('span', { class: 'attach-chip', text: `📎 ${faDigits(task.attachment_count)}` }));
+  }
+  card.append(footer);
+  return card;
+}
+
+function renderTasks() {
+  const grid = $('#tasksGrid');
+  grid.textContent = '';
+  const active = state.tasks.active;
+  if (!active.length) {
+    grid.append(el('div', { class: 'empty-state', style: 'grid-column: 1 / -1;' },
+      el('span', { class: 'face', text: '🌈' }),
+      el('div', { text: 'فعلاً هیچ مهلت فوری وجود ندارد؛ خیالتان راحت!' })));
+  } else {
+    for (const t of active) grid.append(taskCard(t));
+  }
+
+  const exp = $('#expiredGrid');
+  exp.textContent = '';
+  for (const t of state.tasks.expired) {
+    const card = taskCard(t);
+    card.style.opacity = '0.62';
+    card.style.filter = 'saturate(0.6)';
+    exp.append(card);
+  }
+}
+
+async function openTask(id) {
+  const overlay = $('#detailOverlay');
+  $('#detailBody').textContent = '';
+  $('#detailTitle').textContent = 'جزئیات مورد';
+  openOverlay(overlay);
+  $('#detailClose').focus();
+  try {
+    const data = await api(`/api/tasks/${id}`);
+    renderTaskDetail(data.task);
+  } catch (err) {
+    $('#detailBody').append(el('div', { class: 'error-state', text: `خطا: ${err.message}` }));
+  }
+}
+
+function renderTaskDetail(task) {
+  $('#detailTitle').textContent = `${KIND_ICONS[task.kind] || '📌'} ${task.title}`;
+  const body = $('#detailBody');
+  body.textContent = '';
+  const cd = countdown(task.due_at);
+  const wrap = el('div', { class: 'detail-lesson fade-up' });
+  wrap.append(el('div', { class: `detail-hero sub-${task.color_key || 'lavender'}` },
+    el('div', { class: 'detail-hero__period', text: KIND_ICONS[task.kind] || '📌' }),
+    el('div', {},
+      el('h3', { class: 'detail-hero__subject', text: KIND_LABELS[task.kind] || task.kind }),
+      el('div', { class: 'detail-hero__meta', text: task.subject_name ? `درس ${task.subject_name}` : 'مرتبط با کل کلاس' }),
+    ),
+  ));
+  if (task.description) {
+    wrap.append(el('div', { class: 'detail-block' },
+      el('p', { class: 'detail-block__title', text: '📖 توضیحات' }),
+      el('p', { class: 'detail-block__text', text: task.description }),
+    ));
+  }
+  const dl = el('dl', { style: 'margin:0;' });
+  dl.append(el('div', { class: 'dl-row' }, el('dt', { text: 'مهلت' }),
+    el('dd', {}, `${formatJalaliDateTime(task.due_at)} (${cd.text})`)));
+  dl.append(el('div', { class: 'dl-row' }, el('dt', { text: 'اولویت' }), el('dd', { text: PRIORITY_LABELS[task.priority] || task.priority })));
+  if (task.archived) dl.append(el('div', { class: 'dl-row' }, el('dt', { text: 'وضعیت' }), el('dd', { text: 'بایگانی‌شده' })));
+  wrap.append(el('div', { class: 'detail-block' }, dl));
+  if (task.attachments && task.attachments.length) {
+    wrap.append(el('div', { class: 'detail-block' },
+      el('p', { class: 'detail-block__title', text: '📎 پیوست‌ها' }),
+      attachmentList(task.attachments)));
+  }
+  body.append(wrap);
+}
+
+// ---------- اطلاعیه‌ها ----------
+function annCard(ann) {
+  const card = el('button', {
+    class: `ann-card${ann.pinned ? ' ann-card--pinned' : ''}`,
+    type: 'button',
+    onclick: () => openAnnouncement(ann),
+  });
+  const head = el('div', { class: 'ann-card__head' });
+  if (ann.pinned) head.append(el('span', { class: 'ann-card__pin', text: '📌 سنجاق‌شده' }));
+  head.append(el('h3', { class: 'ann-card__title', text: ann.title }));
+  if (ann.attachment_count > 0) head.append(el('span', { class: 'attach-chip', text: `📎 ${faDigits(ann.attachment_count)}` }));
+  card.append(head);
+  card.append(el('p', { class: 'ann-card__body', text: ann.body }));
+  card.append(el('span', { class: 'ann-card__date', text: formatJalaliDateTime(ann.published_at) }));
+  return card;
+}
+
+function renderAnnouncements() {
+  const list = $('#annList');
+  list.textContent = '';
+  if (!state.announcements.length) {
+    list.append(el('div', { class: 'empty-state' },
+      el('span', { class: 'face', text: '🕊️' }), el('div', { text: 'هنوز اطلاعیه‌ای منتشر نشده است.' })));
+    return;
+  }
+  for (const a of state.announcements) list.append(annCard(a));
+}
+
+// ---------- جزوات ----------
+const HANDOUT_EMOJI = { pdf: '📄', image: '🖼️', zip: '🗂️', media: '🎬', audio: '🎧', doc: '📘' };
+function handoutFileEmoji(mime) {
+  const m = (mime || '').toLowerCase();
+  if (m.startsWith('image/')) return HANDOUT_EMOJI.image;
+  if (m === 'application/pdf') return HANDOUT_EMOJI.pdf;
+  if (m.startsWith('video/')) return HANDOUT_EMOJI.media;
+  if (m.startsWith('audio/')) return HANDOUT_EMOJI.audio;
+  if (m.includes('zip') || m.includes('rar') || m.includes('7z') || m.includes('compressed')) return HANDOUT_EMOJI.zip;
+  return HANDOUT_EMOJI.doc;
+}
+
+function renderHandouts() {
+  const list = $('#handoutList');
+  list.textContent = '';
+  if (!state.handouts?.length) {
+    list.append(el('div', { class: 'empty-state' },
+      el('span', { class: 'face', text: '📚' }), el('div', { text: 'هنوز جزوه یا تمرینی بارگذاری نشده است.' })));
+    return;
+  }
+  const origin = window.__IS_MIRROR__ ? (window.__LIVE_ORIGIN__ || '') : '';
+  for (const h of state.handouts) {
+    const card = el('article', { class: 'handout-card fade-up' },
+      el('div', { class: 'handout-card__head' },
+        el('h3', { class: 'handout-card__title', text: h.title }),
+        h.subject_name ? el('span', { class: 'handout-chip' },
+          el('span', { class: 'handout-chip__dot', style: h.color_key ? `background:var(--${h.color_key}-deep, var(--lavender-deep));` : '' }),
+          el('span', { text: h.subject_name })) : null));
+    if (h.description) card.append(el('p', { class: 'handout-card__desc', text: h.description }));
+    if (h.attachments?.length) {
+      const files = el('div', { class: 'handout-card__files' });
+      for (const f of h.attachments) {
+        const item = fileItemEl(f, origin);
+        item.querySelector('.attachment-item__icon').textContent = handoutFileEmoji(f.mime);
+        files.append(item);
+      }
+      card.append(files);
+    }
+    card.append(el('span', { class: 'handout-card__date', text: formatJalaliDateTime(h.updated_at || h.created_at) }));
+    list.append(card);
+  }
+}
+
+async function openAnnouncement(ann) {
+  let detail = ann;
+  try {
+    const data = await api(`/api/announcements/${ann.id}`);
+    detail = data.announcement;
+  } catch { /* بازگشت به خلاصه */ }
+  const overlay = $('#detailOverlay');
+  $('#detailTitle').textContent = `📣 ${detail.title}`;
+  const body = $('#detailBody');
+  body.textContent = '';
+  const wrap = el('div', { class: 'detail-lesson fade-up' });
+  if (detail.pinned) {
+    wrap.append(el('div', { class: 'countdown-chip cd-future', text: '📌 سنجاق‌شده', style: 'align-self:flex-start;' }));
+  }
+  wrap.append(el('div', { class: 'detail-block' },
+    el('p', { class: 'detail-block__title', text: '📣 متن اطلاعیه' }),
+    el('p', { class: 'detail-block__text', text: detail.body })));
+  wrap.append(el('div', { class: 'detail-block' },
+    el('dl', { style: 'margin:0;' },
+      el('div', { class: 'dl-row' }, el('dt', { text: 'تاریخ انتشار' }),
+        el('dd', { text: formatJalaliDateTime(detail.published_at) })))));
+  if (detail.attachments && detail.attachments.length) {
+    wrap.append(el('div', { class: 'detail-block' },
+      el('p', { class: 'detail-block__title', text: '📎 پیوست‌ها' }),
+      attachmentList(detail.attachments)));
+  }
+  body.append(wrap);
+  openOverlay(overlay);
+  $('#detailClose').focus();
+}
+
+// ---------- اعلان‌ها ----------
+function renderNotifications() {
+  const panel = $('#notifPanel');
+  const badge = $('#notifBadge');
+  panel.textContent = '';
+  const items = [];
+  for (const t of state.tasks.active) {
+    const cd = countdown(t.due_at);
+    if (cd.state === 'today' || cd.state === 'soon' || (t.priority === 'high' && cd.state === 'tomorrow')) {
+      items.push({
+        icon: KIND_ICONS[t.kind] || '⏰',
+        title: t.title,
+        sub: `${KIND_LABELS[t.kind]} · ${cd.text}`,
+        action: () => openTask(t.id),
+      });
+    }
+  }
+  for (const a of state.announcements.filter((x) => x.pinned)) {
+    items.push({
+      icon: '📌', title: a.title, sub: 'اطلاعیه سنجاق‌شده',
+      action: () => openAnnouncement(a),
+    });
+  }
+  if (!items.length) {
+    panel.append(el('div', { class: 'notif-item' },
+      el('span', { class: 'notif-item__icon', text: '✨' }),
+      el('div', {}, el('div', { class: 'notif-item__title', text: 'همه‌چیز مرتب است!' }),
+        el('div', { class: 'notif-item__sub', text: 'هیچ مهلت فوری نداریم' }))));
+  } else {
+    for (const it of items) {
+      panel.append(el('button', {
+        class: 'notif-item', type: 'button',
+        onclick: () => { toggleNotif(false); it.action(); },
+      },
+      el('span', { class: 'notif-item__icon', text: it.icon }),
+      el('div', {}, el('div', { class: 'notif-item__title', text: it.title }),
+        el('div', { class: 'notif-item__sub', text: it.sub }))));
+    }
+  }
+  const n = items.length;
+  badge.textContent = faDigits(n);
+  badge.classList.toggle('hidden', n === 0);
+  $('#notifBtn').setAttribute('aria-label', n ? `اعلان‌ها (${faDigits(n)} مورد)` : 'اعلان‌ها');
+}
+
+function toggleNotif(force) {
+  const panel = $('#notifPanel');
+  const btn = $('#notifBtn');
+  const open = force !== undefined ? force : panel.classList.contains('hidden');
+  panel.classList.toggle('hidden', !open);
+  btn.setAttribute('aria-expanded', String(open));
+}
+
+// ---------- تب‌های صفحه (برنامه / مهلت‌ها / جزوات و تمارین / اطلاعیه‌ها) ----------
+const STUDENT_TABS = ['schedule', 'tasks', 'handouts', 'announcements'];
+let activeTab = 'schedule';
+
+/** ارتفاع هدر را به CSS بده تا نوار تب دقیقاً زیرش بچسبد */
+function syncHeaderHeight() {
+  const h = document.querySelector('.site-header')?.offsetHeight || 56;
+  document.documentElement.style.setProperty('--header-h', `${h}px`);
+}
+
+function switchTab(name, opts = {}) {
+  if (!STUDENT_TABS.includes(name)) name = 'schedule';
+  activeTab = name;
+  for (const btn of document.querySelectorAll('.std-tab')) {
+    const on = btn.dataset.tab === name;
+    btn.classList.toggle('std-tab--active', on);
+    btn.setAttribute('aria-selected', String(on));
+  }
+  for (const panel of document.querySelectorAll('.panel')) {
+    const on = panel.dataset.panel === name;
+    panel.classList.toggle('hidden', !on);
+    panel.setAttribute('aria-hidden', String(!on));
+  }
+  if (opts.updateHash !== false) history.replaceState(null, '', `#${name}`);
+  markTabSeen(name); // با باز شدن تب، نشان «دیده‌نشده»‌اش پاک می‌شود
+  renderTabBadges();
+  if (opts.scroll !== false) {
+    const tabs = $('#stdTabs');
+    const top = tabs.getBoundingClientRect().top + window.scrollY - (document.querySelector('.site-header')?.offsetHeight ?? 56) - 6;
+    if (Math.abs(window.scrollY - top) > 40) window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+  }
+}
+
+function setupTabs() {
+  syncHeaderHeight();
+  window.addEventListener('resize', syncHeaderHeight);
+  for (const btn of document.querySelectorAll('.std-tab')) {
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+  }
+  // باز شدن مستقیم تب از لینک (#handouts و مانند آن — قابل اشتراک در تلگرام)
+  window.addEventListener('hashchange', () => {
+    const h = location.hash.replace('#', '');
+    if (STUDENT_TABS.includes(h) && h !== activeTab) switchTab(h, { updateHash: false });
+  });
+  const h = location.hash.replace('#', '');
+  if (STUDENT_TABS.includes(h)) switchTab(h, { updateHash: false, scroll: false });
+  // اولین بازدیدِ هر مرورگر: نشان نزنیم تا فقط مطالبِ بعد از این لحظه «تازه» باشند
+  if (!getSeen()) for (const tab of STUDENT_TABS) markTabSeen(tab);
+}
+
+// ---------- FAB «برو به امروز» ----------
+function setupFab() {
+  const fab = $('#fabToday');
+  const tt = $('#panel-schedule');
+  const onScroll = () => {
+    const rect = tt.getBoundingClientRect();
+    const past = rect.top < 80;
+    const scrolledFar = window.scrollY > 400;
+    fab.classList.toggle('fab-today--visible', past && scrolledFar && window.innerWidth < 1360);
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  fab.addEventListener('click', () => {
+    if (activeTab !== 'schedule') switchTab('schedule', { scroll: false });
+    if (ttWeek !== 0) { ttWeek = 0; renderTimetable(); }
+    scrollToToday();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+}
+
+// ---------- راه‌اندازی ----------
+function setConnState(mode) {
+  // mode: 'ok' | 'loading' | 'error' — بنر کوچک وضعیت اتصال برای شبکه ضعیف
+  let banner = document.getElementById('connBanner');
+  if (mode === 'ok') { if (banner) banner.remove(); return; }
+  if (!banner) {
+    banner = el('div', { id: 'connBanner', role: 'status' });
+    banner.style.cssText = 'position:fixed;inset-inline:0;bottom:0;z-index:60;text-align:center;'
+      + 'padding:10px 16px;font-size:14px;font-weight:600;color:#fff;background:#8a6d3b;'
+      + 'box-shadow:0 -2px 12px rgba(0,0,0,.15);';
+    document.body.append(banner);
+  }
+  if (mode === 'loading') {
+    banner.textContent = '🌐 شبکه کند است… در حال تلاش برای دریافت اطلاعات';
+    banner.style.background = '#8a6d3b';
+  } else {
+    banner.textContent = '';
+    banner.style.background = '#a94442';
+    banner.append('⚠️ اتصال قطع شد — دوباره تلاش می‌کنیم…');
+    // لینک نجات: نسخه‌ی آینه روی GitHub Pages (شبکه‌ی غیر-کلادفلر، از ایران باز است)
+    const alt = el('a', {
+      href: 'https://gigashalgham.github.io/school-s-stuff/',
+      text: 'نسخه‌ی جایگزین را باز کنید',
+    });
+    alt.style.cssText = 'color:#fff;text-decoration:underline;margin-inline-start:8px;';
+    banner.append(alt);
+  }
+}
+
+// رفرش دوره‌ی دیتا — نشان «دیده‌نشده» و مطالب تازه بدون رفرش صفحه می‌آیند
+let pollScheduled = false;
+function schedulePoll() {
+  if (pollScheduled) return;
+  pollScheduled = true;
+  setInterval(() => {
+    if (document.visibilityState === 'visible') loadAll();
+  }, 30_000);
+}
+
+async function loadAll() {
+  setConnState('loading');
+  let data = null;
+  // mirror استاتیک (gh-pages روی github.io): داده‌ها داخل خود صفحه بیک‌شده‌اند؛
+  // همان را فوری نمایش می‌دهیم و در پس‌زمینه تازه می‌کنیم.
+  if (window.__BOOTSTRAP__) {
+    data = window.__BOOTSTRAP__;
+  } else {
+    try {
+      // یک درخواست واحد به‌جای ۴ درخواست جدا — نصف شدن صفحه روی شبکه ضعیف
+      // معمولاً از قطره‌شدن یکی از درخواست‌های موازی بود.
+      data = await api('/api/bootstrap');
+    } catch (err) {
+      setConnState('error');
+      // تلاش مجدد خودکار هر ۸ ثانیه تا وقتی جواب بیاید
+      setTimeout(loadAll, 8_000);
+      return;
+    }
+  }
+  setConnState('ok');
+
+  state.days = data.days ?? [];
+  state.bells = data.bells ?? [];
+  setBells(state.bells);
+  state.tasks = { active: data.tasks?.active ?? [], expired: data.tasks?.expired ?? [] };
+  state.announcements = data.announcements ?? [];
+  state.handouts = data.handouts ?? [];
+  state.settings = data.settings ?? {};
+  state.hwRange = data.hwRange ?? null;
+  clampWeek();
+
+  renderHeader();
+  renderHero();
+  renderTimetable();
+  renderDigest();
+  renderTasks();
+  renderAnnouncements();
+  renderHandouts();
+  renderNotifications();
+  renderTabBadges();
+  // اسکرول به روزِ تمرکز فقط در اولین لود (پس از آن layout ستون‌ها کامل شده است)؛
+  // در پول‌های بعدی اسکرول دستی کاربر دست‌نخورده می‌ماند.
+  if (!firstLoadDone && window.innerWidth < 1360) {
+    firstLoadDone = true;
+    requestAnimationFrame(() => requestAnimationFrame(() => scrollToToday(false)));
+  }
+
+  // اگر داده‌ی bake‌شده‌ی mirror را نشان دادیم، در پس‌زمینه تازه‌اش کنیم
+  // (اگر مسیر زنده باز باشد). و اگر باز نبود، بگوییم داده تا کی تازه است.
+  if (window.__BOOTSTRAP__) {
+    api('/api/bootstrap').then((fresh) => {
+      window.__BOOTSTRAP__ = null;
+      if (!fresh || !Array.isArray(fresh.days)) return;
+      state.days = fresh.days ?? state.days;
+      state.bells = fresh.bells ?? state.bells;
+      setBells(state.bells);
+      state.tasks = { active: fresh.tasks?.active ?? state.tasks.active, expired: fresh.tasks?.expired ?? state.tasks.expired };
+      state.announcements = fresh.announcements ?? state.announcements;
+      state.handouts = fresh.handouts ?? state.handouts;
+      state.settings = fresh.settings ?? state.settings;
+      state.hwRange = fresh.hwRange ?? state.hwRange;
+      clampWeek();
+      renderHeader(); renderHero(); renderTimetable(); renderDigest(); renderTasks(); renderAnnouncements(); renderHandouts(); renderNotifications(); renderTabBadges();
+    }).catch(() => {
+      // مسیر زنده بسته بود — فقط یادداشت کوچک «نسخه‌ی آفلاین» می‌ماند
+      if (!document.querySelector('.mirror-note')) {
+        const note = el('div', { class: 'mirror-note' });
+        note.style.cssText = 'text-align:center;font-size:12px;color:#6b7280;padding:6px 12px;';
+        note.textContent = `📦 نسخه‌ی آینه‌ی ${faDigits(String(window.__MIRROR_DATE__ || ''))} — برای اطلاعات لحظه‌ای VPN لازم است`;
+        document.querySelector('footer')?.prepend(note);
+      }
+    });
+  }
+  // از این به بعد هر ۳۰ ثانیه (وقتی تب مرورگر باز است) دیتا تازه می‌شود
+  schedulePoll();
+}
+
+// اتصال رویدادها
+$('#detailClose').addEventListener('click', () => closeOverlay($('#detailOverlay')));
+$('#detailOverlay').addEventListener('mousedown', (e) => {
+  if (e.target === $('#detailOverlay')) closeOverlay($('#detailOverlay'));
+});
+$('#weekToday').addEventListener('click', () => { ttWeek = 0; renderTimetable(); scrollToToday(); });
+$('#weekPrev').addEventListener('click', () => shiftWeek(-1));
+$('#weekNext').addEventListener('click', () => shiftWeek(1));
+$('#notifBtn').addEventListener('click', () => toggleNotif());
+$('#ttPrev').addEventListener('click', () => {
+  const scroll = $('#ttScroll');
+  scroll.scrollBy({ left: scroll.clientWidth * 0.8, behavior: 'smooth' });
+});
+$('#ttNext').addEventListener('click', () => {
+  const scroll = $('#ttScroll');
+  scroll.scrollBy({ left: -scroll.clientWidth * 0.8, behavior: 'smooth' });
+});
+$('#ttScroll').addEventListener('scroll', () => {
+  updateScrollState();
+  updateDots();
+}, { passive: true });
+window.addEventListener('resize', () => {
+  updateScrollState();
+  updateDots();
+}, { passive: true });
+document.addEventListener('click', (e) => {
+  const panel = $('#notifPanel');
+  if (!panel.classList.contains('hidden')
+      && !panel.contains(e.target) && e.target !== $('#notifBtn') && !$('#notifBtn').contains(e.target)) {
+    toggleNotif(false);
+  }
+});
+$('#showExpiredBtn').addEventListener('click', () => {
+  const grid = $('#expiredGrid');
+  const show = grid.style.display === 'none';
+  grid.style.display = show ? '' : 'none';
+  $('#showExpiredBtn').textContent = show ? 'پنهان کردن آرشیو' : 'آرشیو موارد گذشته';
+});
+
+// روی آینه‌ی استاتیک، دکمه‌ی ادمین به پنل ادمینِ خودِ آینه می‌رود
+// (آینه هم نسخه‌ی ادمین را دارد که به API زنده وصل می‌شود).
+if (window.__BOOTSTRAP__ && $('#adminLink')) {
+  $('#adminLink').href = 'admin/';
+}
+
+setupSheetDrag();
+setupTabs();
+setupFab();
+
+// به‌روزرسانی شمارش معکوس هر دقیقه
+setInterval(() => {
+  renderTasks();
+  renderDigest();
+  renderNotifications();
+  renderHero();
+  renderTabBadges();
+}, 60_000);
+
+loadAll();
+
+</script>
+</body>
+</html>
