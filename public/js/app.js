@@ -336,6 +336,10 @@ function lessonCard(lesson, dateMs) {
 // هفته‌به‌هفته جابه‌جا می‌شود. قبلاً دو هفته در دو ردیف نشان داده می‌شد که
 // در سایز لپ‌تاپ فشرده بود؛ حالا هر اسلاید فقط یک هفته است و موبایل مثل
 // قبل اسکرول افقی روزهای همان هفته را دارد.
+// نکته‌ی آخرِ هفته: پنجشنبه/جمعه که دیگر کلاسی نمانده، روزِ تمرکز
+// «شنبه‌ی هفته‌ی بعد» است — پس اسلایدِ پیش‌فرض هم همان هفته‌ی بعد است،
+// نه هفته‌ی جاریِ رو به اتمام. بوت و دکمه‌ی «برو به …» هر دو همین را
+// رعایت می‌کنند (focusWeekOffset).
 let ttWeek = 0;
 // بازه‌ی مجاز ttWeek؛ بعد از اولین لود از hwRangeی که API می‌دهد دقیق می‌شود
 let ttWeekBounds = { min: -2, max: 4 };
@@ -348,6 +352,16 @@ function displayWindow() {
   return weekWindow(ttWeek);
 }
 
+/** هفته‌ای که روزِ تمرکز (امروزِ هنوز-در-جریان، فردا یا اولین روزِ درسیِ
+    بعد) داخلش است: روزهای کاری → هفته‌ی جاری (۰)؛ پنجشنبه/جمعه و عصرِ
+    آخرین روزِ درسی → هفته‌ی بعد (۱). اسلایدِ پیش‌فرضِ بوت و دکمه‌ی
+    «برو به …» هر دو از این مقدار پیروی می‌کنند. */
+function focusWeekOffset() {
+  const todayNum = tehranDayNumber();
+  const thisSat = todayNum - ((todayNum + 5) % 7);
+  return Math.floor((todayNum + focusDay().offset - thisSat) / 7);
+}
+
 /** برچسب هفته‌ی یک ستون نسبت به هفته‌ی جاری (null = همین هفته) */
 function weekTag(rel) {
   const text = rel === 0 ? null
@@ -357,9 +371,15 @@ function weekTag(rel) {
   return text ? el('span', { class: 'day-col__week-tag', text }) : null;
 }
 
-/** نگه‌داشتن ttWeek داخل بازه‌ی تکالیفِ لودشده */
+/** نگه‌داشتن ttWeek داخل بازه‌ی تکالیفِ لودشده — فقط در اولین لود به
+    هفته‌ی روزِ تمرکز می‌رود (پنجشنبه/جمعه → اسلایدِ هفته‌ی بعد). */
+let booted = false;
 function clampWeek() {
   ttWeekBounds = weekOffsetBounds(state.hwRange);
+  if (!booted) {
+    ttWeek = focusWeekOffset();
+    booted = true;
+  }
   ttWeek = Math.max(ttWeekBounds.min, Math.min(ttWeekBounds.max, ttWeek));
 }
 
@@ -524,7 +544,7 @@ function updateWeekNav(focus) {
   if (next) next.disabled = ttWeek >= ttWeekBounds.max;
   const range = $('#ttRange');
   if (range) {
-    // برچسبِ اسلایدِ باز: نامِ هفته نسبت به امروز + بازه‌ی تاریخِ همان یک هفته
+    // برچسبِ اسلایدِ باز: نامِ هفته نسبت به هفته‌ی جاریِ تقویم + بازه‌ی تاریخِ همان یک هفته
     const win = displayWindow();
     const label = ttWeek === 0 ? 'این هفته'
       : ttWeek === 1 ? 'هفته‌ی بعد'
@@ -532,7 +552,8 @@ function updateWeekNav(focus) {
           : ttWeek > 0 ? `${faDigits(ttWeek)} هفته بعد` : `${faDigits(-ttWeek)} هفته قبل`;
     range.textContent = `${label} · ${formatJalali(win[0].date, { withYear: false })} تا ${formatJalali(win[6].date, { withYear: false })}`;
   }
-  $('#weekToday')?.classList.toggle('hidden', ttWeek === 0);
+  // دکمه‌ی «برو به …» فقط وقتی لازم است که پنجره از هفته‌ی روزِ تمرکز جدا افتاده باشد
+  $('#weekToday')?.classList.toggle('hidden', ttWeek === focusWeekOffset());
   // صبح (هنوز کلاس داریم) → «برو به امروز»؛ عصر/آخر هفته → «برو به فردا» یا روز بعد
   const goLabel = focus.offset === 0 ? 'برو به امروز' : focus.offset === 1 ? 'برو به فردا' : `برو به ${WEEK_DAY_NAMES[focus.dayIdx]}`;
   const fabLabel = $('#fabTodayLabel');
@@ -1091,15 +1112,37 @@ async function openAnnouncement(ann) {
 }
 
 // ---------- اعلان‌ها ----------
-function renderNotifications() {
-  const panel = $('#notifPanel');
-  const badge = $('#notifBadge');
-  panel.textContent = '';
+// نشان «جدید» روی زنگ اعلان‌ها فقط برای مواردی است که هنوز دیده نشده‌اند:
+// اعلانِ سنجاق‌شده و مهلتِ فوریِ تازه، هر کدام با کلید پایدار (نوع + id +
+// آخرین ویرایش) در localStorage به‌عنوان «دیده‌شده» ثبت می‌شوند. باز‌کردنِ
+// پنل — یا رفرش بعد از آن — نشان را تا وقتی آیتمِ واقعاً جدید نیامده پاک
+// می‌کند.
+const NOTIF_SEEN_KEY = 'classhub_notif_seen_v1';
+
+function getNotifSeen() {
+  try { return JSON.parse(localStorage.getItem(NOTIF_SEEN_KEY)) ?? {}; } catch { return {}; }
+}
+
+function notifItemKey(it) {
+  return `${it.kind}#${it.id}#${it.rev}`;
+}
+
+function markNotifsSeen(items) {
+  const seen = getNotifSeen();
+  for (const it of items) seen[notifItemKey(it)] = Date.now();
+  try { localStorage.setItem(NOTIF_SEEN_KEY, JSON.stringify(seen)); } catch { /* حالت خصوصی مرورگر */ }
+}
+
+/** آیتم‌های پنل اعلان: مهلت‌های فوری + اطلاعیه‌های سنجاق‌شده */
+function urgentNotifItems() {
   const items = [];
   for (const t of state.tasks.active) {
     const cd = countdown(t.due_at);
     if (cd.state === 'today' || cd.state === 'soon' || (t.priority === 'high' && cd.state === 'tomorrow')) {
       items.push({
+        kind: 'task',
+        id: t.id,
+        rev: Date.parse(t.updated_at ?? t.created_at ?? '') || 0,
         icon: KIND_ICONS[t.kind] || '⏰',
         title: t.title,
         sub: `${KIND_LABELS[t.kind]} · ${cd.text}`,
@@ -1109,10 +1152,24 @@ function renderNotifications() {
   }
   for (const a of state.announcements.filter((x) => x.pinned)) {
     items.push({
+      kind: 'ann',
+      id: a.id,
+      rev: Date.parse(a.published_at ?? a.publishedAt ?? '') || 0,
       icon: '📌', title: a.title, sub: 'اطلاعیه سنجاق‌شده',
       action: () => openAnnouncement(a),
     });
   }
+  return items;
+}
+
+function renderNotifications() {
+  const panel = $('#notifPanel');
+  const badge = $('#notifBadge');
+  panel.textContent = '';
+  const items = urgentNotifItems();
+  // نشان فقط تعدادِ دیده‌نشده‌ها را می‌دهد — نه همه‌ی آیتم‌های پنل را
+  const seen = getNotifSeen();
+  const fresh = items.filter((it) => !seen[notifItemKey(it)]).length;
   if (!items.length) {
     panel.append(el('div', { class: 'notif-item' },
       el('span', { class: 'notif-item__icon', text: '✨' }),
@@ -1129,10 +1186,9 @@ function renderNotifications() {
         el('div', { class: 'notif-item__sub', text: it.sub }))));
     }
   }
-  const n = items.length;
-  badge.textContent = faDigits(n);
-  badge.classList.toggle('hidden', n === 0);
-  $('#notifBtn').setAttribute('aria-label', n ? `اعلان‌ها (${faDigits(n)} مورد)` : 'اعلان‌ها');
+  badge.textContent = faDigits(fresh);
+  badge.classList.toggle('hidden', fresh === 0);
+  $('#notifBtn').setAttribute('aria-label', fresh ? `اعلان‌ها (${faDigits(fresh)} مورد جدید)` : 'اعلان‌ها');
 }
 
 function toggleNotif(force) {
@@ -1141,6 +1197,12 @@ function toggleNotif(force) {
   const open = force !== undefined ? force : panel.classList.contains('hidden');
   panel.classList.toggle('hidden', !open);
   btn.setAttribute('aria-expanded', String(open));
+  // باز‌کردنِ پنل یعنی «دیدم» — نشانِ جدید پاک می‌شود و بعد از رفرش هم
+  // برنمی‌گردد (تا وقتی آیتمِ تازه یا ویرایش‌شده‌ی واقعاً تازه بیاید).
+  if (open) {
+    markNotifsSeen(urgentNotifItems());
+    renderNotifications();
+  }
 }
 
 // ---------- تب‌های صفحه (برنامه / مهلت‌ها / جزوات و تمارین / اطلاعیه‌ها) ----------
@@ -1206,7 +1268,7 @@ function setupFab() {
   window.addEventListener('scroll', onScroll, { passive: true });
   fab.addEventListener('click', () => {
     if (activeTab !== 'schedule') switchTab('schedule', { scroll: false });
-    if (ttWeek !== 0) { ttWeek = 0; renderTimetable(); }
+    if (ttWeek !== focusWeekOffset()) { ttWeek = focusWeekOffset(); renderTimetable(); }
     scrollToToday();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
@@ -1333,7 +1395,7 @@ $('#detailClose').addEventListener('click', () => closeOverlay($('#detailOverlay
 $('#detailOverlay').addEventListener('mousedown', (e) => {
   if (e.target === $('#detailOverlay')) closeOverlay($('#detailOverlay'));
 });
-$('#weekToday').addEventListener('click', () => { ttWeek = 0; renderTimetable(); scrollToToday(); });
+$('#weekToday').addEventListener('click', () => { ttWeek = focusWeekOffset(); renderTimetable(); scrollToToday(); });
 $('#weekPrev').addEventListener('click', () => shiftWeek(-1));
 $('#weekNext').addEventListener('click', () => shiftWeek(1));
 $('#notifBtn').addEventListener('click', () => toggleNotif());

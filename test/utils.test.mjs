@@ -253,6 +253,31 @@ test('saturdayDayNumOf: شنبه‌ی هفته‌ی جاری', () => {
   assert.equal(saturdayDayNumOf(NOON(2026, 11, 27)), sat);
 });
 
+test('focusWeekOffset (فرمولِ اسلایدِ پیش‌فرض): آخر هفته → هفته‌ی بعد', () => {
+  // همان فرمولِ app.js: focusDay().offset + شماره‌ی امروز نسبت به شنبه‌ی هفته
+  // — پنجشنبه/جمعه (تمام‌شدن هفته‌ی درسی) → ۱ یعنی اسلایدِ هفته‌ی بعد
+  const focusWeek = (now, focusOffset) => {
+    const todayNum = tehranDayNumber(now);
+    const thisSat = todayNum - ((todayNum + 5) % 7);
+    return Math.floor((todayNum + focusOffset - thisSat) / 7);
+  };
+  // جمعه‌ی ۲۰۲۶-۱۱-۲۷: اولین روزِ درسیِ بعد = شنبه‌ی ۲۸ نوامبر (offset 2 از جمعه؟ نه — ۱ روز)
+  assert.equal(focusWeek(FRI_NOON, 1), 1);
+  // پنجشنبه‌ی ۲۰۲۶-۱۱-۲۶: تمرکز = شنبه‌ی بعد (offset 2)
+  assert.equal(focusWeek(Date.UTC(2026, 10, 26, 10, 5), 2), 1);
+  // عصرِ چهارشنبه‌ی ۲۰۲۶-۱۱-۲۵ (بعد از آخرین زنگ): تمرکز = شنبه‌ی بعد (offset 3)
+  assert.equal(focusWeek(Date.UTC(2026, 10, 25, 12, 30), 3), 1);
+  // دوشنبه‌ی ۲۰۲۶-۱۱-۲۳ صبح: تمرکز = خودِ امروز (offset 0) → هفته‌ی جاری
+  assert.equal(focusWeek(Date.UTC(2026, 10, 23, 4, 30), 0), 0);
+  // یکشنبه‌ی ۲۰۲۶-۱۱-۲۹ (هفته‌ی بعد): تمرکز = خودِ امروز → هفته‌ی جاریِ آن لحظه
+  const mon = Date.UTC(2026, 10, 29, 4, 30);
+  assert.equal(focusWeek(mon, 0), 0);
+  // و weekWindow با همان offset، اسلایدی را می‌دهد که شنبه‌اش همان هفته‌ی focus است
+  const mondayNum = tehranDayNumber(mon);
+  const mondaySat = mondayNum - ((mondayNum + 5) % 7);
+  assert.equal(weekWindow(focusWeek(mon, 0), mon)[0].dayNum, mondaySat);
+});
+
 test('weekParity: مبنا = هفته‌ی اصلی', () => {
   const anchor = '2026-11-21';
   assert.equal(weekParity(NOON(2026, 11, 21), anchor), 'main'); // هفته‌ی مبنا → اصلی

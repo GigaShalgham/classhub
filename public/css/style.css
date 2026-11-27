@@ -2194,3 +2194,237 @@ h1, h2, h3, h4 { line-height: 1.5; }
 /* ---------- ناوبری روزها (سربرگ برنامه هفتگی) ---------- */
 .tt-nav { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 .tt-nav .btn { flex-shrink: 0; }
+
+/* ================================================================
+   ارتقای ظاهر v4 — لایه‌ی تکمیلی روی همان پالت پاستلی
+   (هیرو زنده‌تر، کارت‌های عمق‌دار، تب‌ها با شاخصِ لغزنده، سکه‌ی اعلانِ نوسانی)
+   ================================================================ */
+
+/* ---------- هیرو: گرادیان چندلایه + نورِ متحرک ---------- */
+.page-hero {
+  background:
+    linear-gradient(120deg, var(--lavender) 0%, var(--blue) 38%, var(--mint) 68%, var(--cream) 100%);
+  box-shadow: 0 1px 2px rgba(52, 66, 92, 0.08), 0 14px 42px -10px rgba(52, 66, 92, 0.28);
+  isolation: isolate;
+}
+.page-hero::before {
+  opacity: 0.8;
+  animation-duration: 9s;
+}
+/* نورِ مورب که آرام روی هیرو می‌لغزد */
+.page-hero__sheen {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0; inset-inline-start: -30%;
+  width: 45%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  transform: skewX(-18deg);
+  animation: hero-sheen 7s var(--ease-out) infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+@keyframes hero-sheen {
+  0%, 55% { inset-inline-start: -45%; }
+  85%, 100% { inset-inline-start: 115%; }
+}
+.page-hero__title {
+  background: linear-gradient(105deg, #333B52 20%, var(--lavender-deep) 60%, #333B52 95%);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: title-shine 9s linear infinite;
+}
+@keyframes title-shine {
+  0%, 100% { background-position: 100% 0; }
+  50% { background-position: 0 0; }
+}
+
+/* چیپ آمار: دکمه‌مانند با لهجه‌ی رنگی per-chip */
+.stat-chip {
+  border-radius: 14px;
+  padding: 8px 16px;
+  box-shadow: 0 1px 2px rgba(52, 66, 92, 0.1), inset 0 -2px 0 rgba(52, 66, 92, 0.05);
+  transition: transform 0.25s var(--ease-spring), box-shadow 0.25s;
+}
+.stat-chip:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-soft);
+}
+.stat-chip:nth-child(1) { border-inline-start: 3px solid var(--lavender-deep); }
+.stat-chip:nth-child(2) { border-inline-start: 3px solid var(--mint-deep); }
+.stat-chip:nth-child(3) { border-inline-start: 3px solid var(--cream-deep); }
+.stat-chip:nth-child(4) { border-inline-start: 3px solid var(--pink-deep); }
+.stat-chip b { font-size: 1.3em; }
+
+/* ---------- تب‌ها: شاخصِ لغزنده‌ی زیرین ---------- */
+.std-tabs {
+  gap: 4px;
+  padding-bottom: 10px;
+}
+.std-tab {
+  position: relative;
+  padding: 9px 18px 11px;
+  font-weight: 600;
+}
+.std-tab::after {
+  content: '';
+  position: absolute;
+  bottom: 6px;
+  inset-inline: 50%;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--lavender-deep);
+  transition: inset-inline 0.35s var(--ease-spring), opacity 0.2s;
+  opacity: 0;
+}
+.std-tab--active::after { inset-inline: 22%; opacity: 1; }
+.std-tab--active {
+  background: linear-gradient(180deg, var(--surface), var(--surface-2));
+  color: var(--lavender-deep);
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-xs);
+}
+
+/* ---------- کارت روز: عمق بیشتر + هد با نوار رنگی ---------- */
+.day-col {
+  transition: transform 0.35s var(--ease-spring), box-shadow 0.3s, border-color 0.3s;
+  box-shadow: var(--shadow-xs);
+}
+.day-col:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
+  border-color: var(--border-strong);
+}
+.day-col__head {
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, var(--surface-2), transparent);
+  margin: -4px -4px 0;
+  padding: 8px 10px 10px;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+.day-col--today {
+  box-shadow: 0 0 0 3px rgba(217, 228, 242, 0.9), 0 10px 34px -8px rgba(76, 110, 158, 0.45);
+}
+/* برچسب امروز: نبضِ ملایم */
+.day-col__today-tag {
+  background: linear-gradient(135deg, var(--lavender-deep), var(--blue-deep));
+  color: #fff;
+  box-shadow: 0 2px 8px -2px rgba(76, 110, 158, 0.6);
+  animation: today-pulse 2.6s ease-in-out infinite;
+}
+@keyframes today-pulse {
+  0%, 100% { box-shadow: 0 2px 8px -2px rgba(76, 110, 158, 0.6); }
+  50% { box-shadow: 0 2px 14px 1px rgba(76, 110, 158, 0.75); }
+}
+.day-col__focus-tag {
+  background: linear-gradient(135deg, var(--lavender), var(--blue));
+}
+
+/* ---------- برچسب بازه‌ی هفته در ناوبری ---------- */
+.tt-range {
+  background: linear-gradient(120deg, var(--lavender), var(--blue));
+  border: 1px solid rgba(76, 110, 158, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  padding: 5px 12px;
+}
+
+/* ---------- کارت درس: لهجه‌ی رنگی در لبه ---------- */
+.lesson-card {
+  box-shadow: 0 1px 2px rgba(52, 66, 92, 0.05);
+}
+.lesson-card:hover {
+  box-shadow: var(--shadow-hover);
+}
+
+/* ---------- زنگ اعلان: پالت عمیق + نوسان وقتی جدید هست ---------- */
+#notifBtn {
+  background: linear-gradient(135deg, var(--lavender), var(--blue));
+  border-color: rgba(76, 110, 158, 0.25);
+}
+#notifBtn:hover {
+  border-color: rgba(76, 110, 158, 0.45);
+}
+.icon-btn__badge {
+  background: linear-gradient(135deg, var(--pink-deep), var(--cream-deep));
+  box-shadow: 0 0 0 2px var(--bg), 0 3px 10px -2px rgba(176, 106, 106, 0.55);
+}
+.icon-btn__badge:not(.hidden) {
+  animation: badge-pop 0.45s var(--ease-spring), badge-glow 2.8s ease-in-out 0.5s infinite;
+}
+@keyframes badge-glow {
+  0%, 100% { box-shadow: 0 0 0 2px var(--bg), 0 3px 10px -2px rgba(176, 106, 106, 0.55); }
+  50% { box-shadow: 0 0 0 2px var(--bg), 0 3px 16px 1px rgba(176, 106, 106, 0.8); }
+}
+
+/* ---------- پنل اعلان: سربرگ + آیتم‌های مسطح‌تر ---------- */
+.notifications-panel {
+  border: 1px solid var(--border-strong);
+  padding: 10px;
+  background:
+    linear-gradient(180deg, rgba(217, 228, 242, 0.25), transparent 70px),
+    var(--surface);
+}
+.notif-item {
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  margin-bottom: 4px;
+}
+.notif-item:hover {
+  background: var(--surface-2);
+  border-color: var(--border);
+}
+.notif-item__icon {
+  background: linear-gradient(135deg, var(--lavender), var(--blue));
+  border-radius: 11px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+/* ---------- دکمه‌های ناوبری هفته ---------- */
+.tt-nav .btn {
+  transition: transform 0.25s var(--ease-spring), background 0.25s, border-color 0.25s;
+}
+.tt-nav .btn:not(:disabled):hover {
+  transform: translateY(-2px);
+  background: var(--lavender);
+  border-color: var(--border-strong);
+}
+.tt-nav .btn:not(:disabled):active { transform: scale(0.96); }
+.tt-nav .btn:disabled { opacity: 0.45; }
+
+/* ---------- کارت اطلاعیه/جزوه: حسِ کاغذ ---------- */
+.digest-row {
+  box-shadow: 0 1px 2px rgba(52, 66, 92, 0.05);
+}
+.digest-row:hover {
+  box-shadow: var(--shadow-soft);
+  transform: translateY(-2px);
+}
+
+/* ---------- FAB «برو به امروز» ---------- */
+.fab-today {
+  background: linear-gradient(135deg, var(--lavender-deep), var(--blue-deep));
+  color: #fff;
+  box-shadow: 0 8px 26px -6px rgba(76, 110, 158, 0.55);
+}
+.fab-today:active { box-shadow: 0 4px 14px -4px rgba(76, 110, 158, 0.55); }
+
+/* ---------- کارت وظیفه: لهجه‌ی اولویت ---------- */
+.task-card { box-shadow: 0 1px 2px rgba(52, 66, 92, 0.06); }
+.task-card--high {
+  border-color: rgba(176, 106, 106, 0.35);
+  background:
+    linear-gradient(180deg, rgba(242, 222, 222, 0.5), transparent 90px),
+    var(--surface);
+}
+
+/* موبایل: نسخه‌ی ملایم‌ترِ همان افکت‌ها */
+@media (max-width: 640px) {
+  .page-hero__title { animation: none; background: none; -webkit-text-fill-color: currentColor; color: #333B52; }
+  .page-hero__sheen { display: none; }
+  .day-col:hover { transform: none; }
+  .stat-chip:hover { transform: none; }
+  .lesson-card:hover { box-shadow: var(--shadow-soft); }
+}
+
