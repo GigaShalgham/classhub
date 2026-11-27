@@ -625,6 +625,13 @@ h1, h2, h3, h4 { line-height: 1.5; }
   text-overflow: ellipsis;
 }
 .stat-tile__short { display: none; }
+/* لپ‌تاپ (۱۲۸۰ تا ۱۵۳۵): ستونِ کاشی‌ها باریک‌تر است؛ نشانِ کوچک‌تر، فاصله‌ی کمتر و
+   لبه‌ی تنگ‌تر جا می‌دهد تا «۰۷:۴۵ فردا» بدون چسبیدن به لبه جا شود */
+@media (min-width: 1280px) and (max-width: 1535px) {
+  .stat-tile { padding: 12px; }
+  .stat-tile__top { gap: 7px; }
+  .stat-tile__icon { width: 28px; height: 28px; }
+}
 
 /* موبایل: چهار کاشی در یک ردیف، بدون آیکون، با برچسبِ کوتاه */
 @media (max-width: 639px) {
@@ -2844,7 +2851,7 @@ h1, h2, h3, h4 { line-height: 1.5; }
 .hw-date-past { color: var(--danger); font-weight: 800; }
 
 /* ---------- ورود ---------- */
-.admin-enter { min-height: max(420px, calc(100dvh - var(--header-h, 64px) - 48px)); display: grid; place-items: center; padding: 24px 0; }
+.admin-enter { min-height: max(420px, calc(100dvh - var(--header-h, 64px) - 56px)); display: grid; place-items: center; padding: 24px 0; }
 
 .login-card {
   position: relative;
