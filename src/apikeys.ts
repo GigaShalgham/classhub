@@ -52,6 +52,12 @@ export interface AuthKeyResult {
   key?: ApiKeyInfo;
 }
 
+function parseDbDate(s: string): number {
+  // ISO-Z یا تاریخ-ساعت با فاصله — هر دو قابل پارس؛ NaN هم false می‌شود
+  const t = new Date(s.includes('T') ? s : s + 'Z').getTime();
+  return Number.isNaN(t) ? 0 : t;
+}
+
 /**
  * اعتبارسنجی کامل: هش کلید را در api_keys جست‌وجو، انقضا/فعالیت بسنج،
  * اسکوپ خواسته‌شده مجاز است؟ (مصرف/امضا فقط موقع «اجازه» آپدیت می‌شود
@@ -73,7 +79,7 @@ export async function authApiKey(
   ).bind(keyHash).first<Record<string, unknown>>();
   if (!row) return { ok: false, status: 401, error: 'کلید API معتبر نیست.' };
   if (!row.active) return { ok: false, status: 403, error: 'کلید API از کار افتاده است.' };
-  if (row.expires_at && new Date(row.expires_at + 'Z').getTime() < Date.now()) {
+  if (row.expires_at && parseDbDate(String(row.expires_at)) < Date.now()) {
     return { ok: false, status: 403, error: 'کلید API منقضی شده است.' };
   }
   const scopes = String(row.scopes ?? 'read').split(',').map((s) => s.trim()) as ApiScope[];
@@ -92,7 +98,7 @@ export async function authApiKey(
     expires_at: (row.expires_at ?? null) as string | null,
   };
   // امضای مصرف (نرخِ نوشتن را پایین نگه می‌دارد: حداکثر یک آپدیت در دقیقه)
-  const last = info.last_used_at ? new Date(info.last_used_at + 'Z').getTime() : 0;
+  const last = info.last_used_at ? parseDbDate(String(info.last_used_at)) : 0;
   if (Date.now() - last > 60_000) {
     await db.prepare(
       "UPDATE api_keys SET requests = requests + 1, last_used_at = datetime('now') WHERE id = ?",

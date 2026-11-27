@@ -194,6 +194,62 @@ test('v1: کلید منقضی‌شده → ۴۰۳', async () => {
   sqlite.prepare('DELETE FROM api_keys WHERE id = ?').run(id);
 });
 
+// رگرسیون: انقضا با قالب ISO-Z هم باید کار کند (قبلاً NaN → هرگز منقضی نمی‌شد)
+test('v1: کلید منقضی‌شده با قالب ISO-Z → ۴۰۳', async () => {
+  const raw = generateApiKey();
+  const h = await hashApiKey(raw);
+  const r = sqlite.prepare('INSERT INTO api_keys (label, key_hash, key_prefix, scopes, expires_at) VALUES (?, ?, ?, ?, ?)')
+    .run('expired-iso', h, raw.slice(0, 8), 'read', '2000-01-01T00:00:00Z');
+  const id = Number(r.lastInsertRowid);
+  const g = await call('/api/v1/tasks', {}, raw);
+  assert.equal(g.status, 403);
+  sqlite.prepare('DELETE FROM api_keys WHERE id = ?').run(id);
+});
+
+// رگرسیون: انقضای آینده با قالب فقط-تاریخ نباید زودتر از موعد رد شود
+test('v1: کلید با انقضای آینده (فقط تاریخ) → ۲۰۰', async () => {
+  const raw = generateApiKey();
+  const h = await hashApiKey(raw);
+  const r = sqlite.prepare('INSERT INTO api_keys (label, key_hash, key_prefix, scopes, expires_at) VALUES (?, ?, ?, ?, ?)')
+    .run('future', h, raw.slice(0, 8), 'read', '2999-12-31');
+  const id = Number(r.lastInsertRowid);
+  const g = await call('/api/v1/tasks', {}, raw);
+  assert.equal(g.status, 200);
+  sqlite.prepare('DELETE FROM api_keys WHERE id = ?').run(id);
+});
+
+// رگرسیون: dueAt بدون منطقه‌ی زمانی باید به Z نرمال شود و پس از گذشت
+// از upcomingTasks بیفتد (قبلاً 'T' > ' ' باعث ماندگاری ابدی می‌شد)
+test('v1: POST /tasks با dueAt بدون Z → نرمال به UTC؛ sort فعال‌ها', async () => {
+  const raw = generateApiKey();
+  const h = await hashApiKey(raw);
+  sqlite.prepare('INSERT INTO api_keys (label, key_hash, key_prefix, scopes) VALUES (?, ?, ?, ?)')
+    .run('norm', h, raw.slice(0, 8), 'read,write');
+  // آینده (نرمال می‌شود به Z) و گذشته (بدون Z)
+  const p1 = await call('/api/v1/tasks', {
+    method: 'POST',
+    body: JSON.stringify({ kind: 'quiz', title: 'آینده بدون Z', dueAt: '2099-01-01T08:00' }),
+    headers: { 'Content-Type': 'application/json' },
+  }, raw);
+  assert.equal(p1.status, 201);
+  const p2 = await call('/api/v1/tasks', {
+    method: 'POST',
+    body: JSON.stringify({ kind: 'quiz', title: 'گذشته بدون Z', dueAt: '2000-01-01T08:00' }),
+    headers: { 'Content-Type': 'application/json' },
+  }, raw);
+  assert.equal(p2.status, 201);
+  const rows = sqlite.prepare("SELECT due_at FROM tasks ORDER BY id DESC LIMIT 2").all();
+  assert.ok(rows.some((r) => String(r.due_at).endsWith('Z')), `due_at نرمال نشد: ${JSON.stringify(rows)}`);
+  // گذشته باید در expired بیفتد نه active
+  const list = await call('/api/v1/tasks', {}, raw);
+  const titles = { active: list.body.active.map((t) => t.title), expired: list.body.expired.map((t) => t.title) };
+  assert.ok(titles.expired.includes('گذشته بدون Z'), `گذشته بدون Z در expired نیست: ${JSON.stringify(titles)}`);
+  // ترتیب فعال‌ها باید صعودی نسبت به dueAt باشد
+  const dues = list.body.active.map((t) => String(t.dueAt));
+  const sorted = [...dues].sort((a, b) => a.localeCompare(b));
+  assert.deepEqual(dues, sorted, 'active مرتب نیست (صعودی)');
+});
+
 test('v1: کلید مصرف را امضا می‌کند (requests پس از موفقیت > 0)', async () => {
   const raw = generateApiKey();
   const h = await hashApiKey(raw);

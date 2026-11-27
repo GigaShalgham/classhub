@@ -17,6 +17,7 @@
     "cf-typegen": "wrangler types"
   },
   "dependencies": {
+    "docx": "^9.16.1",
     "hono": "^4.13.19"
   },
   "devDependencies": {

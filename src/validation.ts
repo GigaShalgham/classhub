@@ -46,13 +46,26 @@ export function timeStr(v: unknown, name: string): string {
   return s;
 }
 
+/**
+ * نرمال‌سازی تاریخ-ساعت ISO برای ذخیره در D1 (مقایسه‌ی رشته‌ای امن).
+ * ورودی بدون منطقه‌ی زمانی (مثل 2026-12-01T08:00) به UTC با Z تبدیل می‌شود
+ * تا مقایسه با datetime('now') در SQL و مرتب‌سازیِ الفبایی درست بماند.
+ */
+export function normalizeIsoDate(s: string): string {
+  if (/T/.test(s) && !/(Z|[+-]\d{2}:?\d{2})$/.test(s)) {
+    const d = new Date(s + 'Z');
+    return Number.isNaN(d.getTime()) ? s : d.toISOString().slice(0, 19) + 'Z';
+  }
+  return s;
+}
+
 export function isoDate(v: unknown, name: string, required = true): string | null {
   if ((v === undefined || v === null || v === '') && !required) return null;
   const s = str(v, name, { max: 40 });
   if (!ISO_RE.test(s)) bad(`${name} باید تاریخ معتبر ISO باشد.`);
   const d = new Date(s);
   if (Number.isNaN(d.getTime())) bad(`${name} تاریخ معتبر نیست.`);
-  return s;
+  return normalizeIsoDate(s);
 }
 
 export function oneOf<T extends string>(v: unknown, name: string, allowed: readonly T[]): T {

@@ -332,10 +332,10 @@ Required repository secrets (Settings → Secrets and variables → Actions):
 
 ## 🧪 Testing
 
-- `test/apikeys.test.mjs` + `test/v1_routes.test.mjs` — سیستم کلید API: ساخت/هش/اسکوپ + سرتاسری مسیرهای `/api/v1` با دیتابیس ساختگی (node:test).
-- `scripts/verify_api_v1.mjs` — smoke لوکال کامل (wrangler dev): کلید بساز → بخوان → بنویس → غیرفعال → پاک.
-- `scripts/test_api.sh` — 50+ endpoint checks (public data, auth, CRUD, validation, uploads, security) against any running instance; point `BASE` at the deployed URL to smoke-test production.
-- `scripts/test_utils.mjs` — Jalali conversion anchors, countdown states, Persian digit formatting.
+- `test/apikeys.test.mjs` + `test/v1_routes.test.mjs` — سیستم کلید API: ساخت/هش/اسکوپ + سرتاسری مسیرهای `/api/v1` با دیتابیس ساختگی (node:test) — شامل رگرسیون‌های انقضای ISO-Z و نرمال‌سازی `dueAt` بدون Z.
+- `scripts/verify_api_v1.mjs` — smoke لوکال (wrangler dev): بدون کلید → 401، کلید ساختگی → 401، ساخت کلید read → digest → نوشتن → 403، پاک. برای بخش «ساخت کلید»، `SMOKE_ADMIN_COOKIE` را با کوکی `ch_session` ادمین ست کنید (بعد از لاگین از DevTools بردارید).
+- `scripts/probe_v1_security.mjs` + `scripts/probe_v1_edge.mjs` + `scripts/probe_v1_logic.mjs` — کاوش‌های دیباگ این اسکن: احراز کلیدها بدون ادمین، انقضای هر دو قالب تاریخ، اسکوپ‌ها، تزریق، ترتیب خروجی.
+- `test/utils.test.mjs` + `test/schedule.test.mjs` + `test/telegram.test.mjs` — تقویم جلالی، شمارش معکوس، ارقام فارسی، زنگ‌ها/چرخش و تلگرام (node:test).
 - Manual UI checks: desktop 1440/1280, mobile 375 (timetable scroll, bottom sheet), keyboard navigation, reduced-motion.
 
 ## 📄 License
